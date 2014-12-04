@@ -15,11 +15,8 @@ echo "Compiling TSC"
 
 tsc --sourcemap "./Src/game.ts" --out "./Src/game.js"
 
-ls -a
-
 echo "Copying built files"
-cp -r Src/ out/
-ls -a
+cp -r ./Src/* out
 cd out
 rm Src.csproj
 
