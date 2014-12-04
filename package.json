@@ -1,0 +1,11 @@
+{
+    "name": "excalibur-js-ludum-31",
+    "description": "Ludum Dare 31 Game Jam source",
+    "version": "0.1",
+    "author": "https://github.com/excaliburjs/Ludum-31/graphs/contributors",
+    "homepage": "https://excaliburjs.com/Ludum-31",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/excaliburjs/Ludum-31.git"
+    }
+}
