@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "Running deployment script..."
 
 CURRENT_COMMIT=`git rev-parse HEAD`
 
