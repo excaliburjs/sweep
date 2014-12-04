@@ -1,9 +1,10 @@
 language: node_js
 node_js:
-   - "0.10"
-before_script:
-install: true
-script: 
-   - "npm install grunt-cli -g"
-   - "npm install"
-   - "grunt travis"
+  - '0.10'
+env:
+  global:
+    - GH_REF: 'github.com/excaliburjs/Ludum-31.git'
+    - secure: 'kNvmCOQ7NbStsCe5DkhWhh4FJmwdx3x6ZNM+ckJ8zjIkueRjaxZjYhCrkKK1bsU9PxEdrnJNg/4qBIaTrzG31sgZX7NnD5c4dC2NIXbZ4Hi+MXSBxilGWB4E3dsmM51lz9gqTAJ2exp71zZ3sXnmBZxuTN8M0/PPCX4DTeMzhhA='
+script:
+  - 'npm test'
+  - './deploy.sh'
