@@ -33,7 +33,7 @@ class MatchManager extends ex.Class {
          // todo
       });
 
-      game.input.pointers.on("up", this._handlePieceUp);
+      game.input.pointers.primary.on("up", _.bind(this._handlePieceUp, this));
    }
 
    private _handlePieceDown(pe: PointerEvent) {
