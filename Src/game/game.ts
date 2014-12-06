@@ -7,8 +7,9 @@
 /// <reference path="grid.ts"/>
 /// <reference path="match.ts"/>
 /// <reference path="turn.ts"/>
+/// <reference path="transition.ts"/>
 
-var game = new ex.Engine(720, 480, "game");
+var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 game.backgroundColor = Palette.GameBackgroundColor;
 
 var loader = new ex.Loader();
@@ -27,9 +28,9 @@ var turnManager = new TurnManager(grid, matcher, TurnMode.Match);
 game.currentScene.camera.setFocus(visualGrid.getWidth()/2, visualGrid.getHeight()/2);
 game.add(visualGrid);
 
-grid.fill(grid.rows - 1);
-grid.fill(grid.rows - 2);
-grid.fill(grid.rows - 3);
+for (var i = 0; i < Config.NumStartingRows; i++) {
+   grid.fill(grid.rows - (i + 1));
+}
 
 game.input.keyboard.on('down', (evt: ex.Input.KeyEvent) => {
    if (evt.key === ex.Input.Keys.D) {

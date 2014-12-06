@@ -1,12 +1,15 @@
 var Config = (function () {
     function Config() {
     }
-    Config.PieceWidth = 20;
-    Config.PieceHeight = 20;
-    Config.CellWidth = 30;
-    Config.CellHeight = 30;
+    Config.gameWidth = 1280;
+    Config.gameHeight = 720;
+    Config.PieceWidth = 36;
+    Config.PieceHeight = 36;
+    Config.CellWidth = 45;
+    Config.CellHeight = 45;
     Config.GridCellsHigh = 15;
     Config.GridCellsWide = 10;
+    Config.NumStartingRows = 3;
     return Config;
 })();
 var Util = (function () {
@@ -95,11 +98,23 @@ var PieceFactory = (function () {
     return PieceFactory;
 })();
 var Cell = (function () {
-    function Cell(x, y, piece) {
+    function Cell(x, y, piece, logicalGrid) {
         this.x = x;
         this.y = y;
         this.piece = piece;
+        this.logicalGrid = logicalGrid;
     }
+    Cell.prototype.getNeighbors = function () {
+        var result = [];
+        for (var i = -1; i < 2; i++) {
+            for (var j = -1; j < 2; j++) {
+                if (this.logicalGrid.getCell(this.x + i, this.y + j) && this.logicalGrid.getCell(this.x + i, this.y + j) !== this) {
+                    result.push(this.logicalGrid.getCell(this.x + i, this.y + j));
+                }
+            }
+        }
+        return result;
+    };
     Cell.prototype.getCenter = function () {
         return new ex.Point(this.x * Config.CellWidth + Config.CellWidth / 2, this.y * Config.CellHeight + Config.CellHeight / 2);
     };
@@ -115,14 +130,14 @@ var LogicalGrid = (function (_super) {
         this.cells = new Array(rows * cols);
         for (var i = 0; i < this.cols; i++) {
             for (var j = 0; j < this.rows; j++) {
-                this.cells[i + j * this.cols] = new Cell(i, j, null);
+                this.cells[i + j * this.cols] = new Cell(i, j, null, this);
             }
         }
     }
     LogicalGrid.prototype.getCell = function (x, y) {
-        if (x < 0 || x > this.cols)
+        if (x < 0 || x >= this.cols)
             return null;
-        if (y < 0 || y > this.rows)
+        if (y < 0 || y >= this.rows)
             return null;
         return this.cells[(x + y * this.cols)];
     };
@@ -159,24 +174,46 @@ var LogicalGrid = (function (_super) {
         }
     };
     LogicalGrid.prototype.areNeighbors = function (cell1, cell2) {
+        return cell1.getNeighbors().indexOf(cell2) > -1;
+        /*
         // find neighbors of cell1
-        var x = cell1.x, y = cell1.y, x2 = cell2.x, y2 = cell2.y, left = new ex.Point(x - 1, y), topLeft = new ex.Point(x - 1, y - 1), right = new ex.Point(x + 1, y), bottomRight = new ex.Point(x + 1, y + 1), top = new ex.Point(x, y - 1), topRight = new ex.Point(x + 1, y - 1), bottom = new ex.Point(x, y + 1), bottomLeft = new ex.Point(x - 1, y + 1);
+        var x = cell1.x,
+           y = cell1.y,
+           x2 = cell2.x,
+           y2 = cell2.y,
+           left = new ex.Point(x - 1, y),
+           topLeft = new ex.Point(x - 1, y - 1),
+           right = new ex.Point(x + 1, y),
+           bottomRight = new ex.Point(x + 1, y + 1),
+           top = new ex.Point(x, y - 1),
+           topRight = new ex.Point(x + 1, y - 1),
+           bottom = new ex.Point(x, y + 1),
+           bottomLeft = new ex.Point(x - 1, y + 1);
+  
         ex.Logger.getInstance().debug("LogicalGrid.areNeighbors", {
-            cell1: cell1,
-            cell2: cell2,
-            forX: x,
-            forY: y,
-            otherX: x2,
-            otherY: y2,
-            left: left,
-            topLeft: topLeft,
-            right: right,
-            topRight: topRight,
-            bottom: bottom,
-            bottomLeft: bottomLeft,
-            bottomRight: bottomRight
+           cell1: cell1,
+           cell2: cell2,
+           forX: x,
+           forY: y,
+           otherX: x2,
+           otherY: y2,
+           left: left,
+           topLeft: topLeft,
+           right: right,
+           topRight: topRight,
+           bottom: bottom,
+           bottomLeft: bottomLeft,
+           bottomRight: bottomRight
         });
-        return (x2 === left.x && y2 === left.y) || (x2 === right.x && y2 === right.y) || (x2 === top.x && y2 === top.y) || (x2 === bottom.x && y2 === bottom.y) || (x2 === topLeft.x && y2 === topLeft.y) || (x2 === bottomRight.x && y2 === bottomRight.y) || (x2 === topRight.x && y2 === topRight.y) || (x2 === bottomLeft.x && y2 === bottomLeft.y);
+  
+        return (x2 === left.x && y2 === left.y) ||
+           (x2 === right.x && y2 === right.y) ||
+           (x2 === top.x && y2 === top.y) ||
+           (x2 === bottom.x && y2 === bottom.y) ||
+           (x2 === topLeft.x && y2 === topLeft.y) ||
+           (x2 === bottomRight.x && y2 === bottomRight.y) ||
+           (x2 === topRight.x && y2 === topRight.y) ||
+           (x2 === bottomLeft.x && y2 === bottomLeft.y);*/
     };
     return LogicalGrid;
 })(ex.Class);
@@ -328,6 +365,22 @@ var TurnManager = (function () {
     };
     return TurnManager;
 })();
+/// <reference path="grid.ts"/>
+var TransitionManager = (function () {
+    function TransitionManager(logicalGrid, visualGrid) {
+        this.logicalGrid = logicalGrid;
+        this.visualGrid = visualGrid;
+    }
+    TransitionManager.prototype._findLanding = function (cell) {
+        return null;
+    };
+    TransitionManager.prototype._findFloaters = function (row) {
+        return [];
+    };
+    TransitionManager.prototype.evaluate = function () {
+    };
+    return TransitionManager;
+})();
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
 /// <reference path="util.ts"/>
@@ -337,7 +390,8 @@ var TurnManager = (function () {
 /// <reference path="grid.ts"/>
 /// <reference path="match.ts"/>
 /// <reference path="turn.ts"/>
-var game = new ex.Engine(720, 480, "game");
+/// <reference path="transition.ts"/>
+var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 game.backgroundColor = Palette.GameBackgroundColor;
 var loader = new ex.Loader();
 // load up all resources in dictionary
@@ -351,9 +405,9 @@ var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
 game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
 game.add(visualGrid);
-grid.fill(grid.rows - 1);
-grid.fill(grid.rows - 2);
-grid.fill(grid.rows - 3);
+for (var i = 0; i < Config.NumStartingRows; i++) {
+    grid.fill(grid.rows - (i + 1));
+}
 game.input.keyboard.on('down', function (evt) {
     if (evt.key === 68 /* D */) {
         game.isDebug = !game.isDebug;

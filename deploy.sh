@@ -13,7 +13,7 @@ rm -r out/*
 
 echo "Compiling TSC"
 
-tsc --sourcemap "./Src/game.ts" --out "./Src/game.js"
+tsc --sourcemap "./Src/game/game.ts" --out "./Src/game.js"
 
 echo "Copying built files"
 cp -r ./Src/* out
