@@ -275,6 +275,16 @@ var VisualGrid = (function (_super) {
             return cell.piece && cell.piece.contains(screenX, screenY);
         });
     };
+    VisualGrid.prototype.sweep = function (type) {
+        var cells = this.logicalGrid.cells.filter(function (cell) {
+            return cell.piece && cell.piece.getType() === type;
+        });
+        // todo transitions
+        cells.forEach(function (cell) {
+            grid.clearPiece(cell.piece);
+        });
+        // todo advance turn
+    };
     return VisualGrid;
 })(ex.Actor);
 var MatchEvent = (function (_super) {
@@ -472,6 +482,14 @@ game.input.keyboard.on('down', function (evt) {
         // fill first row
         grid.fill(grid.rows - 1);
     }
+    if (evt.key === 49)
+        visualGrid.sweep(0 /* Circle */);
+    if (evt.key === 50)
+        visualGrid.sweep(2 /* Square */);
+    if (evt.key === 51)
+        visualGrid.sweep(3 /* Star */);
+    if (evt.key === 52)
+        visualGrid.sweep(1 /* Triangle */);
 });
 // TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {
