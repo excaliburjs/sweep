@@ -44,6 +44,8 @@ game.input.keyboard.on('down', (evt: ex.Input.KeyEvent) => {
    }
 });
 
+// TODO clean up pieces that are not in play anymore after update loop
+
 game.start(loader).then(() => {
    // todo build game
 });

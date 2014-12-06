@@ -133,6 +133,26 @@ var LogicalGrid = (function (_super) {
             }
         }
     };
+    LogicalGrid.prototype.areNeighbors = function (cell1, cell2) {
+        // find neighbors of cell1
+        var x = cell1.x, y = cell1.y, x2 = cell2.x, y2 = cell2.y, left = new ex.Point(x - 1, y), topLeft = new ex.Point(x - 1, y - 1), right = new ex.Point(x + 1, y), bottomRight = new ex.Point(x + 1, y + 1), top = new ex.Point(x, y - 1), topRight = new ex.Point(x + 1, y - 1), bottom = new ex.Point(x, y + 1), bottomLeft = new ex.Point(x - 1, y + 1);
+        ex.Logger.getInstance().debug("LogicalGrid.areNeighbors", {
+            cell1: cell1,
+            cell2: cell2,
+            forX: x,
+            forY: y,
+            otherX: x2,
+            otherY: y2,
+            left: left,
+            topLeft: topLeft,
+            right: right,
+            topRight: topRight,
+            bottom: bottom,
+            bottomLeft: bottomLeft,
+            bottomRight: bottomRight
+        });
+        return (x2 === left.x && y2 === left.y) || (x2 === right.x && y2 === right.y) || (x2 === top.x && y2 === top.y) || (x2 === bottom.x && y2 === bottom.y) || (x2 === topLeft.x && y2 === topLeft.y) || (x2 === bottomRight.x && y2 === bottomRight.y) || (x2 === topRight.x && y2 === topRight.y) || (x2 === bottomLeft.x && y2 === bottomLeft.y);
+    };
     return LogicalGrid;
 })(ex.Class);
 var VisualGrid = (function (_super) {
@@ -163,16 +183,19 @@ var VisualGrid = (function (_super) {
 })(ex.Actor);
 var MatchEvent = (function (_super) {
     __extends(MatchEvent, _super);
-    function MatchEvent() {
+    function MatchEvent(run) {
         _super.call(this);
+        this.run = run;
     }
     return MatchEvent;
 })(ex.GameEvent);
 var MatchManager = (function (_super) {
     __extends(MatchManager, _super);
-    function MatchManager(grid) {
+    function MatchManager(_grid) {
         var _this = this;
         _super.call(this);
+        this._grid = _grid;
+        this._cells = [];
         this._pieces = [];
         this._run = [];
         this._runInProgress = false;
@@ -181,10 +204,11 @@ var MatchManager = (function (_super) {
                 return;
             if (_.find(_this._pieces, pe.cell.piece))
                 return;
+            _this._cells.push(pe.cell);
             _this._pieces.push(pe.cell.piece);
-            pe.cell.piece.on("pointerdown", _this._handlePieceDown.bind(_this));
-            pe.cell.piece.on("pointerup", _this._handlePieceUp.bind(_this));
-            pe.cell.piece.on("pointermove", _this._handlePieceMove.bind(_this));
+            pe.cell.piece.on("pointerdown", _.bind(_this._handlePieceDown, _this));
+            pe.cell.piece.on("pointerup", _.bind(_this._handlePieceUp, _this));
+            pe.cell.piece.on("pointermove", _.bind(_this._handlePieceMove, _this));
         });
         grid.on("pieceremove", function (pe) {
             // todo
@@ -204,15 +228,47 @@ var MatchManager = (function (_super) {
     MatchManager.prototype._handlePieceMove = function (pe) {
         // add piece to run if valid
         // draw line?
+        var _this = this;
         if (!this._runInProgress)
             return;
-        ex.Logger.getInstance().info("Run modified", this._run);
+        var removePiece;
+        this._pieces.forEach(function (piece) {
+            // if piece contains screen coords (assumed) and we don't already have it in the run
+            if (piece.contains(pe.x, pe.y) && _this._run.indexOf(piece) < 0) {
+                // if the two pieces aren't neighbors or aren't the same type, invalid move
+                if (_this._run.length > 0 && (!_this.areNeighbors(piece, _this._run[_this._run.length - 1]) || piece.getType() !== _this._run[_this._run.length - 1].getType()))
+                    return;
+                // add to run
+                _this._run.push(piece);
+                ex.Logger.getInstance().info("Run modified", _this._run);
+            }
+            // did user go backwards?
+            if (piece.contains(pe.x, pe.y) && _this._run.length > 1 && _this._run.indexOf(piece) === _this._run.length - 2) {
+                // mark for removal
+                removePiece = _this._run.indexOf(piece) + 1;
+            }
+        });
+        if (removePiece > -1) {
+            this._run.splice(removePiece, 1);
+            ex.Logger.getInstance().info("Run modified", this._run);
+        }
     };
     MatchManager.prototype._handlePieceUp = function (pe) {
-        // todo figure out match
-        ex.Logger.getInstance().info("Run ended", this._run);
-        this._run.length = 0;
+        // have a valid run?
+        if (this._run.length > 0) {
+            ex.Logger.getInstance().info("Run ended", this._run);
+            // notify
+            this.eventDispatcher.publish("match", new MatchEvent(_.clone(this._run)));
+            this._run.length = 0;
+        }
         this._runInProgress = false;
+    };
+    MatchManager.prototype.areNeighbors = function (piece1, piece2) {
+        var idx1 = this._pieces.indexOf(piece1);
+        var idx2 = this._pieces.indexOf(piece2);
+        var cell1 = this._cells[idx1];
+        var cell2 = this._cells[idx2];
+        return this._grid.areNeighbors(cell1, cell2);
     };
     return MatchManager;
 })(ex.Class);
@@ -275,6 +331,7 @@ game.input.keyboard.on('down', function (evt) {
         grid.fill(grid.rows - 1);
     }
 });
+// TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {
     // todo build game
 });
