@@ -8,9 +8,10 @@ var Config = (function () {
     Config.PieceHeight = 36;
     Config.CellWidth = 45;
     Config.CellHeight = 45;
-    Config.GridCellsHigh = 15;
-    Config.GridCellsWide = 10;
+    Config.GridCellsHigh = 16;
+    Config.GridCellsWide = 8;
     Config.NumStartingRows = 3;
+    Config.ScoreXBuffer = 20;
     return Config;
 })();
 var Util = (function () {
@@ -206,6 +207,9 @@ var LogicalGrid = (function (_super) {
                 }
             }
             if (hasMatchingNeighbor) {
+                if (currentCell.piece) {
+                    this.clearPiece(currentCell.piece);
+                }
                 this.setCell(i, row, PieceFactory.getRandomPiece());
             }
         }
@@ -496,20 +500,33 @@ var Stats = (function () {
         }
     };
     Stats.prototype.drawScores = function () {
-        this._updateScore("circles ", this._scores, 0, 500, 350);
-        this._updateScore("triangles ", this._scores, 1, 500, 370);
-        this._updateScore("squares ", this._scores, 2, 500, 390);
-        this._updateScore("stars ", this._scores, 3, 500, 410);
-        this._updateScore("circle chain ", this._chains, 0, 500, 440);
-        this._updateScore("triangle chain ", this._chains, 1, 500, 460);
-        this._updateScore("square chain ", this._chains, 2, 500, 480);
-        this._updateScore("star chain ", this._chains, 3, 500, 500);
+        var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
+        this._totalScore("total ", scoreXPos, 330);
+        this._addScore("circles ", this._scores, 0, scoreXPos, 350);
+        this._addScore("triangles ", this._scores, 1, scoreXPos, 370);
+        this._addScore("squares ", this._scores, 2, scoreXPos, 390);
+        this._addScore("stars ", this._scores, 3, scoreXPos, 410);
+        this._addScore("circle chain ", this._chains, 0, scoreXPos, 440);
+        this._addScore("triangle chain ", this._chains, 1, scoreXPos, 460);
+        this._addScore("square chain ", this._chains, 2, scoreXPos, 480);
+        this._addScore("star chain ", this._chains, 3, scoreXPos, 500);
     };
-    Stats.prototype._updateScore = function (description, statArray, statIndex, xPos, yPos) {
+    Stats.prototype._addScore = function (description, statArray, statIndex, xPos, yPos) {
         var label = new ex.Label(description + statArray[statIndex].toString(), xPos, yPos);
         label.color = ex.Color.Black;
         game.addEventListener('update', function (data) {
             label.text = description + statArray[statIndex].toString();
+        });
+        game.currentScene.addChild(label);
+    };
+    Stats.prototype._totalScore = function (description, xPos, yPos) {
+        var _this = this;
+        var totalScore = 0;
+        var label = new ex.Label(description + totalScore.toString(), xPos, yPos);
+        label.color = ex.Color.Black;
+        game.addEventListener('update', function (data) {
+            var totalScore = _this._scores[0] + _this._scores[1] + _this._scores[2] + _this._scores[3];
+            label.text = description + totalScore.toString();
         });
         game.currentScene.addChild(label);
     };

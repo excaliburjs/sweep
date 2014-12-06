@@ -101,6 +101,9 @@ class LogicalGrid extends ex.Class {
             }
          
          if (hasMatchingNeighbor) {
+            if (currentCell.piece) {
+               this.clearPiece(currentCell.piece);
+            }
             this.setCell(i, row, PieceFactory.getRandomPiece());
          }
       }
