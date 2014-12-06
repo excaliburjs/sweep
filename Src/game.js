@@ -272,12 +272,18 @@ var MatchManager = (function (_super) {
     };
     return MatchManager;
 })(ex.Class);
+var TurnMode;
+(function (TurnMode) {
+    TurnMode[TurnMode["Timed"] = 0] = "Timed";
+    TurnMode[TurnMode["Match"] = 1] = "Match";
+})(TurnMode || (TurnMode = {}));
 var TurnManager = (function () {
-    function TurnManager(logicalGrid, matcher) {
+    function TurnManager(logicalGrid, matcher, turnMode) {
         this.logicalGrid = logicalGrid;
         this.matcher = matcher;
+        this.turnMode = turnMode;
         matcher.on('match', this._handleMatchEvent);
-        this._timer = new ex.Timer(this._tick, 1000, true);
+        this._timer = new ex.Timer(_.bind(this._tick, this), 1000, true);
         game.add(this._timer);
     }
     TurnManager.prototype._shiftBoard = function () {
@@ -291,6 +297,9 @@ var TurnManager = (function () {
         this._shiftBoard();
     };
     TurnManager.prototype._tick = function () {
+        if (this.turnMode === 0 /* Timed */) {
+            this._shiftBoard();
+        }
         //ex.Logger.getInstance().info("Tick", new Date());
     };
     return TurnManager;
@@ -313,7 +322,7 @@ _.forIn(Resources, function (resource) {
 var grid = new LogicalGrid(15, 10);
 var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager(grid);
-var turnManager = new TurnManager(grid, matcher);
+var turnManager = new TurnManager(grid, matcher, 0 /* Timed */);
 game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
 game.add(visualGrid);
 grid.fill(grid.rows - 1);
