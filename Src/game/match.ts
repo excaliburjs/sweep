@@ -27,6 +27,7 @@ class MatchManager extends ex.Class {
       if (!cell) return;
 
       this.runInProgress = true;
+      cell.piece.selected = true;
       this._run.push(cell.piece);
 
       ex.Logger.getInstance().info("Run started", this._run);

@@ -45,7 +45,9 @@ class Piece extends ex.Actor {
       super.update(engine, delta);
 
       if (matcher.runInProgress && (!this.selected && this.getType() !== matcher.getRunType())) {
-         this.color = new ex.Color(this._originalColor.r, this._originalColor.g, this._originalColor.b, 0.2);
+         this.color = new ex.Color(this._originalColor.r, this._originalColor.g, this._originalColor.b, 0.3);
+      } else if (this.selected) {
+         this.color = Util.lighten(this._originalColor, 0.3);
       } else {
          this.color = this._originalColor;
       }

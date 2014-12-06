@@ -15,10 +15,16 @@ var Config = (function () {
 var Util = (function () {
     function Util() {
     }
-    Util.darken = function (color, value) {
-        var r = Math.floor(color.r - (color.r * value));
-        var g = Math.floor(color.g - (color.g * value));
-        var b = Math.floor(color.b - (color.b * value));
+    Util.darken = function (color, amount) {
+        var r = Math.floor(color.r - (color.r * amount));
+        var g = Math.floor(color.g - (color.g * amount));
+        var b = Math.floor(color.b - (color.b * amount));
+        return new ex.Color(r, g, b, color.a);
+    };
+    Util.lighten = function (color, amount) {
+        var r = Math.min(255, Math.floor(color.r + (255 * amount)));
+        var g = Math.min(255, Math.floor(color.g + (255 * amount)));
+        var b = Math.min(255, Math.floor(color.b + (255 * amount)));
         return new ex.Color(r, g, b, color.a);
     };
     return Util;
@@ -77,7 +83,10 @@ var Piece = (function (_super) {
     Piece.prototype.update = function (engine, delta) {
         _super.prototype.update.call(this, engine, delta);
         if (matcher.runInProgress && (!this.selected && this.getType() !== matcher.getRunType())) {
-            this.color = new ex.Color(this._originalColor.r, this._originalColor.g, this._originalColor.b, 0.2);
+            this.color = new ex.Color(this._originalColor.r, this._originalColor.g, this._originalColor.b, 0.3);
+        }
+        else if (this.selected) {
+            this.color = Util.lighten(this._originalColor, 0.3);
         }
         else {
             this.color = this._originalColor;
@@ -266,6 +275,7 @@ var MatchManager = (function (_super) {
         if (!cell)
             return;
         this.runInProgress = true;
+        cell.piece.selected = true;
         this._run.push(cell.piece);
         ex.Logger.getInstance().info("Run started", this._run);
         // darken/highlight
