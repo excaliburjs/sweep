@@ -66,6 +66,7 @@ var Piece = (function (_super) {
     __extends(Piece, _super);
     function Piece(id, x, y, color, type) {
         _super.call(this, x, y, Config.PieceWidth, Config.PieceHeight, color);
+        this.cell = null;
         this.selected = false;
         this._id = id;
         this._type = type || 0 /* Circle */;
@@ -124,6 +125,9 @@ var Cell = (function () {
         }
         return result;
     };
+    Cell.prototype.getBelow = function () {
+        return this.logicalGrid.getCell(this.x, this.y + 1);
+    };
     Cell.prototype.getCenter = function () {
         return new ex.Point(this.x * Config.CellWidth + Config.CellWidth / 2, this.y * Config.CellHeight + Config.CellHeight / 2);
     };
@@ -143,6 +147,20 @@ var LogicalGrid = (function (_super) {
             }
         }
     }
+    LogicalGrid.prototype.getRow = function (row) {
+        var result = [];
+        for (var i = 0; i < this.cols; i++) {
+            result.push(this.getCell(i, row));
+        }
+        return result;
+    };
+    LogicalGrid.prototype.getColumn = function (col) {
+        var result = [];
+        for (var i = 0; i < this.cols; i++) {
+            result.push(this.getCell(col, i));
+        }
+        return result;
+    };
     LogicalGrid.prototype.getCell = function (x, y) {
         if (x < 0 || x >= this.cols)
             return null;
@@ -159,6 +177,7 @@ var LogicalGrid = (function (_super) {
             var center = cell.getCenter();
             data.x = center.x;
             data.y = center.y;
+            data.cell = cell;
             cell.piece = data;
             this.eventDispatcher.publish("pieceadd", new PieceEvent(cell));
         }
@@ -166,6 +185,11 @@ var LogicalGrid = (function (_super) {
             this.eventDispatcher.publish("pieceremove", new PieceEvent(cell));
             cell.piece = null;
         }
+    };
+    LogicalGrid.prototype.clearPiece = function (piece) {
+        piece.cell.piece = null;
+        piece.cell = null;
+        piece.kill();
     };
     LogicalGrid.prototype.fill = function (row) {
         for (var i = 0; i < this.cols; i++) {
@@ -364,7 +388,7 @@ var TurnManager = (function () {
     };
     TurnManager.prototype._handleMatchEvent = function (evt) {
         if (evt.run.length >= 3) {
-            evt.run.forEach(function (p) { return p.kill(); });
+            evt.run.forEach(function (p) { return grid.clearPiece(p); });
             this._shiftBoard();
         }
     };
@@ -383,12 +407,29 @@ var TransitionManager = (function () {
         this.visualGrid = visualGrid;
     }
     TransitionManager.prototype._findLanding = function (cell) {
-        return null;
+        var landing = null;
+        while (cell.getBelow() && !cell.getBelow().piece) {
+            landing = cell.getBelow();
+        }
+        return landing;
     };
     TransitionManager.prototype._findFloaters = function (row) {
-        return [];
+        return this.logicalGrid.getRow(row).filter(function (c) {
+            return c.getBelow() && c.getBelow().piece === null;
+        });
     };
     TransitionManager.prototype.evaluate = function () {
+        var _this = this;
+        var currentRow = this.logicalGrid.rows;
+        while (currentRow > 0) {
+            currentRow--;
+            this._findFloaters(currentRow).forEach(function (c) {
+                var landingCell = _this._findLanding(c);
+                var piece = c.piece;
+                _this.logicalGrid.setCell(c.x, c.y, null);
+                _this.logicalGrid.setCell(landingCell.x, landingCell.y, piece);
+            });
+        }
     };
     return TransitionManager;
 })();
@@ -414,6 +455,7 @@ var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
+var transitionManager = new TransitionManager(grid, visualGrid);
 game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
 game.add(visualGrid);
 for (var i = 0; i < Config.NumStartingRows; i++) {
