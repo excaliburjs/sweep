@@ -1,10 +1,17 @@
-﻿class MatchManager {
+﻿class MatchEvent extends ex.GameEvent {
+   constructor() {
+      super();
+   }
+}
+
+class MatchManager extends ex.Class {
 
    private _pieces: Piece[] = [];
    private _run: Piece[] = [];
    private _runInProgress = false;
 
    constructor(grid: LogicalGrid) {
+      super();
 
       grid.on("pieceadd", (pe: PieceEvent) => {
 

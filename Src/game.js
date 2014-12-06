@@ -161,9 +161,18 @@ var VisualGrid = (function (_super) {
     };
     return VisualGrid;
 })(ex.Actor);
-var MatchManager = (function () {
+var MatchEvent = (function (_super) {
+    __extends(MatchEvent, _super);
+    function MatchEvent() {
+        _super.call(this);
+    }
+    return MatchEvent;
+})(ex.GameEvent);
+var MatchManager = (function (_super) {
+    __extends(MatchManager, _super);
     function MatchManager(grid) {
         var _this = this;
+        _super.call(this);
         this._pieces = [];
         this._run = [];
         this._runInProgress = false;
@@ -206,6 +215,29 @@ var MatchManager = (function () {
         this._runInProgress = false;
     };
     return MatchManager;
+})(ex.Class);
+var TurnManager = (function () {
+    function TurnManager(logicalGrid, matcher) {
+        this.logicalGrid = logicalGrid;
+        this.matcher = matcher;
+        matcher.on('match', this._handleMatchEvent);
+        this._timer = new ex.Timer(this._tick, 1000, true);
+        game.add(this._timer);
+    }
+    TurnManager.prototype._shiftBoard = function () {
+        for (var i = 0; i < grid.rows; i++) {
+            this.logicalGrid.shift(i, i - 1);
+        }
+        // fill first row
+        this.logicalGrid.fill(grid.rows - 1);
+    };
+    TurnManager.prototype._handleMatchEvent = function (evt) {
+        this._shiftBoard();
+    };
+    TurnManager.prototype._tick = function () {
+        //ex.Logger.getInstance().info("Tick", new Date());
+    };
+    return TurnManager;
 })();
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
@@ -214,6 +246,7 @@ var MatchManager = (function () {
 /// <reference path="Piece.ts"/>
 /// <reference path="grid.ts"/>
 /// <reference path="match.ts"/>
+/// <reference path="turn.ts"/>
 var game = new ex.Engine(720, 480, "game");
 var loader = new ex.Loader();
 // load up all resources in dictionary
@@ -224,7 +257,8 @@ _.forIn(Resources, function (resource) {
 var grid = new LogicalGrid(15, 10);
 var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager(grid);
-game.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
+var turnManager = new TurnManager(grid, matcher);
+game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
 game.add(visualGrid);
 grid.fill(grid.rows - 1);
 grid.fill(grid.rows - 2);
