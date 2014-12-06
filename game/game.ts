@@ -6,6 +6,7 @@
 /// <reference path="grid.ts"/>
 /// <reference path="match.ts"/>
 /// <reference path="turn.ts"/>
+/// <reference path="transition.ts"/>
 
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 
