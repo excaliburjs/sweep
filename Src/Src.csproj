@@ -30,6 +30,7 @@
     <TypeScriptCompile Include="game\Piece.ts" />
     <TypeScriptCompile Include="game\resources.ts" />
     <TypeScriptCompile Include="game\turn.ts" />
+    <TypeScriptCompile Include="game\util.ts" />
     <TypeScriptCompile Include="scripts\typings\lodash\lodash.d.ts" />
   </ItemGroup>
   <ItemGroup>

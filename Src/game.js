@@ -9,7 +9,27 @@ var Config = (function () {
     Config.GridCellsWide = 10;
     return Config;
 })();
+var Util = (function () {
+    function Util() {
+    }
+    Util.darken = function (color, value) {
+        var r = color.r - (color.r * value);
+        var g = color.g - (color.g * value);
+        var b = color.b - (color.b * value);
+        return new ex.Color(r, g, b, color.a);
+    };
+    return Util;
+})();
+/// <reference path="util.ts"/>
 var Resources = {};
+var Palette = {
+    GameBackgroundColor: Util.darken(ex.Color.fromHex("#EBF8FF"), 0.3),
+    GridBackgroundColor: ex.Color.fromHex("#EBF8FF"),
+    PieceColor1: ex.Color.fromHex("#D8306D"),
+    PieceColor2: ex.Color.fromHex("#F2CB05"),
+    PieceColor3: ex.Color.fromHex("#6DA8BA"),
+    PieceColor4: ex.Color.fromHex("#F25F1B")
+};
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -37,25 +57,28 @@ var Piece = (function (_super) {
     __extends(Piece, _super);
     function Piece(id, x, y, color, type) {
         _super.call(this, x, y, Config.PieceWidth, Config.PieceHeight, color);
+        this.selected = false;
         this._id = id;
         this._type = type || 0 /* Circle */;
-        this.enableCapturePointer = true;
-        this.capturePointer.captureMoveEvents = true;
+        this._originalColor = color;
     }
     Piece.prototype.getId = function () {
         return this._id;
-    };
-    Piece.prototype.getColor = function () {
-        return this._color;
-    };
-    Piece.prototype.setColor = function (color) {
-        this._color = color;
     };
     Piece.prototype.getType = function () {
         return this._type;
     };
     Piece.prototype.setType = function (type) {
         this._type = type;
+    };
+    Piece.prototype.update = function (engine, delta) {
+        _super.prototype.update.call(this, engine, delta);
+        if (matcher.runInProgress && (!this.selected && this.getType() !== matcher.getRunType())) {
+            this.color = new ex.Color(this._originalColor.r, this._originalColor.g, this._originalColor.b, 0.2);
+        }
+        else {
+            this.color = this._originalColor;
+        }
     };
     return Piece;
 })(ex.Actor);
@@ -164,19 +187,15 @@ var VisualGrid = (function (_super) {
         this.logicalGrid = logicalGrid;
         this.anchor.setTo(0, 0);
     }
-    VisualGrid.prototype.onInitialize = function (engine) {
-        _super.prototype.onInitialize.call(this, engine);
-        matcher.on("run", _.bind(this._handleRun, this));
-    };
     VisualGrid.prototype.update = function (engine, delta) {
         _super.prototype.update.call(this, engine, delta);
     };
     VisualGrid.prototype.draw = function (ctx, delta) {
         _super.prototype.draw.call(this, ctx, delta);
         this.logicalGrid.cells.forEach(function (c) {
-            ctx.fillStyle = 'gray';
+            ctx.fillStyle = Palette.GridBackgroundColor.toString();
             ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
-            ctx.strokeStyle = 'black';
+            ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.3);
             ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
         });
     };
@@ -184,8 +203,6 @@ var VisualGrid = (function (_super) {
         return _.find(this.logicalGrid.cells, function (cell) {
             return cell.piece && cell.piece.contains(screenX, screenY);
         });
-    };
-    VisualGrid.prototype._handleRun = function (me) {
     };
     return VisualGrid;
 })(ex.Actor);
@@ -202,7 +219,7 @@ var MatchManager = (function (_super) {
     function MatchManager() {
         _super.call(this);
         this._run = [];
-        this._runInProgress = false;
+        this.runInProgress = false;
         game.input.pointers.primary.on("down", _.bind(this._handlePieceDown, this));
         game.input.pointers.primary.on("up", _.bind(this._handlePointerUp, this));
         game.input.pointers.primary.on("move", _.bind(this._handlePointerMove, this));
@@ -211,7 +228,7 @@ var MatchManager = (function (_super) {
         var cell = visualGrid.getCellByPos(pe.x, pe.y);
         if (!cell)
             return;
-        this._runInProgress = true;
+        this.runInProgress = true;
         this._run.push(cell.piece);
         ex.Logger.getInstance().info("Run started", this._run);
         // darken/highlight
@@ -220,7 +237,7 @@ var MatchManager = (function (_super) {
     MatchManager.prototype._handlePointerMove = function (pe) {
         // add piece to run if valid
         // draw line?
-        if (!this._runInProgress)
+        if (!this.runInProgress)
             return;
         var cell = visualGrid.getCellByPos(pe.x, pe.y);
         if (!cell)
@@ -235,6 +252,7 @@ var MatchManager = (function (_super) {
             if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) || piece.getType() !== this._run[this._run.length - 1].getType()))
                 return;
             // add to run
+            piece.selected = true;
             this._run.push(piece);
             ex.Logger.getInstance().info("Run modified", this._run);
             // notify
@@ -247,10 +265,9 @@ var MatchManager = (function (_super) {
         }
         if (removePiece > -1) {
             // remove from run
+            this._run[removePiece].selected = false;
             this._run.splice(removePiece, 1);
             ex.Logger.getInstance().info("Run modified", this._run);
-            // notify
-            this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
         }
     };
     MatchManager.prototype._handlePointerUp = function () {
@@ -259,14 +276,20 @@ var MatchManager = (function (_super) {
             ex.Logger.getInstance().info("Run ended", this._run);
             // notify
             this.eventDispatcher.publish("match", new MatchEvent(_.clone(this._run)));
+            this._run.forEach(function (p) { return p.selected = false; });
             this._run.length = 0;
         }
-        this._runInProgress = false;
+        this.runInProgress = false;
     };
     MatchManager.prototype.areNeighbors = function (piece1, piece2) {
         var cell1 = _.find(grid.cells, { piece: piece1 });
         var cell2 = _.find(grid.cells, { piece: piece2 });
         return grid.areNeighbors(cell1, cell2);
+    };
+    MatchManager.prototype.getRunType = function () {
+        if (this._run.length === 0)
+            return null;
+        return this._run[0].getType();
     };
     return MatchManager;
 })(ex.Class);
@@ -307,6 +330,7 @@ var TurnManager = (function () {
 })();
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
+/// <reference path="util.ts"/>
 /// <reference path="Config.ts"/>
 /// <reference path="resources.ts"/>
 /// <reference path="Piece.ts"/>
@@ -314,6 +338,7 @@ var TurnManager = (function () {
 /// <reference path="match.ts"/>
 /// <reference path="turn.ts"/>
 var game = new ex.Engine(720, 480, "game");
+game.backgroundColor = Palette.GameBackgroundColor;
 var loader = new ex.Loader();
 // load up all resources in dictionary
 _.forIn(Resources, function (resource) {

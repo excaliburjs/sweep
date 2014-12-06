@@ -1,5 +1,6 @@
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
+/// <reference path="util.ts"/>
 /// <reference path="Config.ts"/>
 /// <reference path="resources.ts"/>
 /// <reference path="Piece.ts"/>
@@ -8,6 +9,7 @@
 /// <reference path="turn.ts"/>
 
 var game = new ex.Engine(720, 480, "game");
+game.backgroundColor = Palette.GameBackgroundColor;
 
 var loader = new ex.Loader();
 

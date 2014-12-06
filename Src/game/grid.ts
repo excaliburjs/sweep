@@ -115,12 +115,6 @@ class VisualGrid extends ex.Actor {
 
    }
 
-   public onInitialize(engine: ex.Engine) {
-      super.onInitialize(engine);
-
-      matcher.on("run", _.bind(this._handleRun, this));
-   }
-
    public update(engine: ex.Engine, delta: number) {
       super.update(engine, delta);
       
@@ -130,12 +124,11 @@ class VisualGrid extends ex.Actor {
       super.draw(ctx, delta);
       
       this.logicalGrid.cells.forEach(c => {
-         ctx.fillStyle = 'gray';
-         ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
-         ctx.strokeStyle = 'black';
-         ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
 
-         
+         ctx.fillStyle = Palette.GridBackgroundColor.toString();         
+         ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
+         ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.3);
+         ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);         
       });
    }
 
@@ -143,11 +136,5 @@ class VisualGrid extends ex.Actor {
       return _.find(this.logicalGrid.cells, (cell) => {
          return cell.piece && cell.piece.contains(screenX, screenY);
       });
-   }
-
-   private _handleRun(me: MatchEvent) {
-      
-
-
    }
 }
