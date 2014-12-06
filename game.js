@@ -140,6 +140,8 @@ var visualGrid = new VisualGrid(grid);
 game.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
 game.add(visualGrid);
 grid.fill(grid.rows - 1);
+grid.fill(grid.rows - 2);
+grid.fill(grid.rows - 3);
 game.input.keyboard.on('down', function (evt) {
     if (evt.key === 68 /* D */) {
         game.isDebug = !game.isDebug;
