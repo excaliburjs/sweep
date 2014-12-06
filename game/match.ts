@@ -8,32 +8,15 @@
 
 class MatchManager extends ex.Class {
 
-   private _cells: Cell[] = [];
-   private _pieces: Piece[] = [];
    private _run: Piece[] = [];
    private _runInProgress = false;
 
-   constructor(private _grid: LogicalGrid) {
+   constructor() {
       super();
 
-      grid.on("pieceadd", (pe: PieceEvent) => {
-
-         if (!pe.cell.piece) return;
-         if (_.find(this._pieces, pe.cell.piece)) return;
-
-         this._cells.push(pe.cell);
-         this._pieces.push(pe.cell.piece);
-
-         pe.cell.piece.on("pointerdown", _.bind(this._handlePieceDown, this));
-         pe.cell.piece.on("pointerup", _.bind(this._handlePieceUp, this));
-         pe.cell.piece.on("pointermove", _.bind(this._handlePieceMove, this));
-      });
-
-      grid.on("pieceremove", (pe: PieceEvent) => {
-         // todo
-      });
-
-      game.input.pointers.primary.on("up", _.bind(this._handlePieceUp, this));
+      game.input.pointers.primary.on("down", _.bind(this._handlePieceDown, this));
+      game.input.pointers.primary.on("up", _.bind(this._handlePointerUp, this));
+      game.input.pointers.primary.on("move", _.bind(this._handlePointerMove, this));      
    }
 
    private _handlePieceDown(pe: PointerEvent) {
@@ -51,46 +34,60 @@ class MatchManager extends ex.Class {
       // draw line?
    }
 
-   private _handlePieceMove(pe: PointerEvent) {
+   private _handlePointerMove(pe: PointerEvent) {
 
       // add piece to run if valid
       // draw line?
 
       if (!this._runInProgress) return;
 
-      var removePiece;
-      this._pieces.forEach(piece => {
+      var cell = visualGrid.getCellByPos(pe.x, pe.y);
 
-         // if piece contains screen coords (assumed) and we don't already have it in the run
-         if (piece.contains(pe.x, pe.y) && this._run.indexOf(piece) < 0) {
+      if (!cell) return;
 
-            // if the two pieces aren't neighbors or aren't the same type, invalid move
-            if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) ||
-               piece.getType() !== this._run[this._run.length - 1].getType())) return;
+      var piece = cell.piece;
 
-            // add to run
-            this._run.push(piece);
+      if (!piece) return;
 
-            ex.Logger.getInstance().info("Run modified", this._run);
-         }
+      var removePiece = -1;
 
-         // did user go backwards?
-         if (piece.contains(pe.x, pe.y) &&
-            this._run.length > 1 &&
-            this._run.indexOf(piece) === this._run.length - 2) {
-            // mark for removal
-            removePiece = this._run.indexOf(piece) + 1;
-         }
-      });
+      // if piece contains screen coords and we don't already have it in the run
+      if (piece.contains(pe.x, pe.y) && this._run.indexOf(piece) < 0) {
+
+         // if the two pieces aren't neighbors or aren't the same type, invalid move
+         if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) ||
+            piece.getType() !== this._run[this._run.length - 1].getType())) return;
+
+         // add to run
+         this._run.push(piece);
+
+         ex.Logger.getInstance().info("Run modified", this._run);
+
+         // notify
+         this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
+      }
+
+      // did user go backwards?
+      if (piece.contains(pe.x, pe.y) &&
+         this._run.length > 1 &&
+         this._run.indexOf(piece) === this._run.length - 2) {
+         // mark for removal
+         removePiece = this._run.indexOf(piece) + 1;
+      }
+      
 
       if (removePiece > -1) {
+         // remove from run
          this._run.splice(removePiece, 1);
 
          ex.Logger.getInstance().info("Run modified", this._run);
+
+         // notify
+         this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
       }
    }
 
-   private _handlePieceUp() {
+   private _handlePointerUp() {
 
       // have a valid run?
       if (this._run.length > 0) {
@@ -105,12 +102,10 @@ class MatchManager extends ex.Class {
       this._runInProgress = false;
    }
 
-   public areNeighbors(piece1: Piece, piece2: Piece): boolean {
-      var idx1 = this._pieces.indexOf(piece1);
-      var idx2 = this._pieces.indexOf(piece2);
-      var cell1 = this._cells[idx1];
-      var cell2 = this._cells[idx2];
-
-      return this._grid.areNeighbors(cell1, cell2);
+   public areNeighbors(piece1: Piece, piece2: Piece): boolean {      
+      var cell1 = _.find(grid.cells, { piece: piece1 });
+      var cell2 = _.find(grid.cells, { piece: piece2 });
+      
+      return grid.areNeighbors(cell1, cell2);
    }
 }
