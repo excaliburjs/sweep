@@ -19,12 +19,14 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="app.css" />
+    <Content Include="images\readme.txt" />
     <Content Include="index.html" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="game.ts" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="sounds\readme.txt" />
     <Content Include="web.config" />
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
