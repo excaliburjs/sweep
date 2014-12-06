@@ -213,7 +213,7 @@ var MatchManager = (function (_super) {
         grid.on("pieceremove", function (pe) {
             // todo
         });
-        game.input.pointers.on("up", this._handlePieceUp);
+        game.input.pointers.primary.on("up", _.bind(this._handlePieceUp, this));
     }
     MatchManager.prototype._handlePieceDown = function (pe) {
         var cell = visualGrid.getCellByPos(pe.x, pe.y);
