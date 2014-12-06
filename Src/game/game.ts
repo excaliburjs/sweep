@@ -8,9 +8,11 @@
 /// <reference path="match.ts"/>
 /// <reference path="turn.ts"/>
 /// <reference path="transition.ts"/>
+/// <reference path="Stats.ts"/>
 
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 game.backgroundColor = Palette.GameBackgroundColor;
+
 
 var loader = new ex.Loader();
 
@@ -18,6 +20,8 @@ var loader = new ex.Loader();
 _.forIn(Resources, (resource) => {
    loader.addResource(resource);
 });
+
+var stats = new Stats();
 
 // build grid
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
@@ -28,6 +32,8 @@ var transitionManager = new TransitionManager(grid, visualGrid);
 
 game.currentScene.camera.setFocus(visualGrid.getWidth()/2, visualGrid.getHeight()/2);
 game.add(visualGrid);
+
+stats.drawScores();
 
 for (var i = 0; i < Config.NumStartingRows; i++) {
    grid.fill(grid.rows - (i + 1));
