@@ -3,6 +3,7 @@ var Config = (function () {
     }
     Config.gameWidth = 720;
     Config.gameHeight = 720;
+    Config.PieceContainsPadding = 5;
     Config.PieceWidth = 36;
     Config.PieceHeight = 36;
     Config.CellWidth = 45;
@@ -283,6 +284,7 @@ var VisualGrid = (function (_super) {
         // todo transitions
         cells.forEach(function (cell) {
             grid.clearPiece(cell.piece);
+            stats.scorePieces([cell.piece]);
         });
         // todo advance turn
     };
@@ -329,8 +331,9 @@ var MatchManager = (function (_super) {
         if (!piece)
             return;
         var removePiece = -1;
+        var containsBounds = new ex.BoundingBox(piece.getBounds().left + Config.PieceContainsPadding, piece.getBounds().top + Config.PieceContainsPadding, piece.getBounds().right - Config.PieceContainsPadding, piece.getBounds().bottom - Config.PieceContainsPadding);
         // if piece contains screen coords and we don't already have it in the run
-        if (piece.contains(pe.x, pe.y) && this._run.indexOf(piece) < 0) {
+        if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
             // if the two pieces aren't neighbors or aren't the same type, invalid move
             if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) || piece.getType() !== this._run[this._run.length - 1].getType()))
                 return;
@@ -342,7 +345,7 @@ var MatchManager = (function (_super) {
             this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
         }
         // did user go backwards?
-        if (piece.contains(pe.x, pe.y) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
+        if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
             // mark for removal
             removePiece = this._run.indexOf(piece) + 1;
         }
@@ -400,6 +403,8 @@ var TurnManager = (function () {
     TurnManager.prototype._handleMatchEvent = function (evt) {
         if (evt.run.length >= 3) {
             evt.run.forEach(function (p) { return grid.clearPiece(p); });
+            stats.scorePieces(evt.run);
+            stats.scoreChain(evt.run);
             this._shiftBoard();
         }
     };
@@ -444,6 +449,62 @@ var TransitionManager = (function () {
     };
     return TransitionManager;
 })();
+var Stats = (function () {
+    function Stats() {
+        this._numCirclesDestroyed = 0;
+        this._numTrianglesDestroyed = 0;
+        this._numSquaresDestroyed = 0;
+        this._numStarsDestroyed = 0;
+        this._longestCircleCombo = 0;
+        this._longestTriangleCombo = 0;
+        this._longestSquareCombo = 0;
+        this._longestStarCombo = 0;
+        this._types = [0 /* Circle */, 1 /* Triangle */, 2 /* Square */, 3 /* Star */];
+        this._scores = [this._numCirclesDestroyed, this._numTrianglesDestroyed, this._numSquaresDestroyed, this._numStarsDestroyed];
+        this._combos = [this._longestCircleCombo, this._longestTriangleCombo, this._longestSquareCombo, this._longestStarCombo];
+    }
+    Stats.prototype.scorePieces = function (pieces) {
+        this._scores[this._types.indexOf(pieces[0].getType())] += pieces.length;
+    };
+    Stats.prototype.scoreChain = function (pieces) {
+        var comboScore = this._combos[this._types.indexOf(pieces[0].getType())];
+        if (comboScore < pieces.length) {
+            this._combos[this._types.indexOf(pieces[0].getType())] = pieces.length;
+        }
+    };
+    Stats.prototype.drawScores = function () {
+        var _this = this;
+        var labelCirclesDestroyed = new ex.Label("circles " + this._numCirclesDestroyed, 500, 350);
+        labelCirclesDestroyed.color = ex.Color.Black;
+        //labelCirclesDestroyed.textAlign = ex.TextAlign.Center;
+        game.addEventListener('update', function (data) {
+            labelCirclesDestroyed.text = "circles " + _this._scores[0];
+        });
+        game.currentScene.addChild(labelCirclesDestroyed);
+        var labelTrianglesDestroyed = new ex.Label("triangles " + this._numTrianglesDestroyed, 500, 370);
+        labelTrianglesDestroyed.color = ex.Color.Black;
+        //labelTrianglesDestroyed.textAlign = ex.TextAlign.Center;
+        game.addEventListener('update', function (data) {
+            labelTrianglesDestroyed.text = "triangles " + _this._scores[1];
+        });
+        game.currentScene.addChild(labelTrianglesDestroyed);
+        var labelSquaresDestroyed = new ex.Label("squares " + this._numSquaresDestroyed, 500, 390);
+        labelSquaresDestroyed.color = ex.Color.Black;
+        //labelSquaresDestroyed.textAlign = ex.TextAlign.Center;
+        game.addEventListener('update', function (data) {
+            labelSquaresDestroyed.text = "squares " + _this._scores[2];
+        });
+        game.currentScene.addChild(labelSquaresDestroyed);
+        var labelStarsDestroyed = new ex.Label("stars " + this._numStarsDestroyed, 500, 410);
+        labelStarsDestroyed.color = ex.Color.Black;
+        //labelStarsDestroyed.textAlign = ex.TextAlign.Center;
+        game.addEventListener('update', function (data) {
+            labelStarsDestroyed.text = "stars " + _this._scores[3];
+        });
+        game.currentScene.addChild(labelStarsDestroyed);
+    };
+    return Stats;
+})();
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
 /// <reference path="util.ts"/>
@@ -454,6 +515,7 @@ var TransitionManager = (function () {
 /// <reference path="match.ts"/>
 /// <reference path="turn.ts"/>
 /// <reference path="transition.ts"/>
+/// <reference path="Stats.ts"/>
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 game.backgroundColor = Palette.GameBackgroundColor;
 var loader = new ex.Loader();
@@ -461,6 +523,7 @@ var loader = new ex.Loader();
 _.forIn(Resources, function (resource) {
     loader.addResource(resource);
 });
+var stats = new Stats();
 // build grid
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
@@ -469,6 +532,7 @@ var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
 var transitionManager = new TransitionManager(grid, visualGrid);
 game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
 game.add(visualGrid);
+stats.drawScores();
 for (var i = 0; i < Config.NumStartingRows; i++) {
     grid.fill(grid.rows - (i + 1));
 }
