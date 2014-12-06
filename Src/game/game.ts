@@ -19,7 +19,7 @@ _.forIn(Resources, (resource) => {
 // build grid
 var grid = new LogicalGrid(15, 10);
 var visualGrid = new VisualGrid(grid);
-var matcher = new MatchManager(grid);
+var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, TurnMode.Match);
 
 game.currentScene.camera.setFocus(visualGrid.getWidth()/2, visualGrid.getHeight()/2);
