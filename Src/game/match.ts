@@ -1,5 +1,5 @@
 ﻿class MatchEvent extends ex.GameEvent {
-   
+
    constructor(public run: Piece[]) {
       super();
    }
@@ -26,7 +26,7 @@ class MatchManager extends ex.Class {
 
          pe.cell.piece.on("pointerdown", _.bind(this._handlePieceDown, this));
          pe.cell.piece.on("pointerup", _.bind(this._handlePieceUp, this));
-         pe.cell.piece.on("pointermove", _.bind(this._handlePieceMove, this));         
+         pe.cell.piece.on("pointermove", _.bind(this._handlePieceMove, this));
       });
 
       grid.on("pieceremove", (pe: PieceEvent) => {
@@ -52,7 +52,7 @@ class MatchManager extends ex.Class {
    }
 
    private _handlePieceMove(pe: PointerEvent) {
-      
+
       // add piece to run if valid
       // draw line?
 
@@ -66,13 +66,13 @@ class MatchManager extends ex.Class {
 
             // if the two pieces aren't neighbors or aren't the same type, invalid move
             if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) ||
-                piece.getType() !== this._run[this._run.length - 1].getType())) return;
+               piece.getType() !== this._run[this._run.length - 1].getType())) return;
 
             // add to run
             this._run.push(piece);
 
-      ex.Logger.getInstance().info("Run modified", this._run);
-   }
+            ex.Logger.getInstance().info("Run modified", this._run);
+         }
 
          // did user go backwards?
          if (piece.contains(pe.x, pe.y) &&
@@ -87,21 +87,21 @@ class MatchManager extends ex.Class {
          this._run.splice(removePiece, 1);
 
          ex.Logger.getInstance().info("Run modified", this._run);
-      }      
+      }
    }
 
-   private _handlePieceUp(pe: PointerEvent) {
+   private _handlePieceUp() {
 
       // have a valid run?
       if (this._run.length > 0) {
-      ex.Logger.getInstance().info("Run ended", this._run);
+         ex.Logger.getInstance().info("Run ended", this._run);
 
          // notify
          this.eventDispatcher.publish("match", new MatchEvent(_.clone(this._run)));
 
-      this._run.length = 0;
+         this._run.length = 0;
       }
-      
+
       this._runInProgress = false;
    }
 
