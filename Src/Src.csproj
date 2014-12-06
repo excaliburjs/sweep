@@ -18,7 +18,16 @@
     <IISExpressUseClassicPipelineMode />
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="app.css" />
+    <Content Include="app.css.map">
+      <DependentUpon>app.css</DependentUpon>
+    </Content>
+    <None Include="app.less" />
+    <Content Include="app.css">
+      <DependentUpon>app.less</DependentUpon>
+    </Content>
+    <Content Include="app.min.css">
+      <DependentUpon>app.css</DependentUpon>
+    </Content>
     <Content Include="images\readme.txt" />
     <Content Include="index.html" />
   </ItemGroup>

@@ -1,5 +1,5 @@
 ﻿class Config {
-   static gameWidth: number = 1280;
+   static gameWidth: number = 720;
    static gameHeight: number = 720;
    static PieceWidth: number = 36;
    static PieceHeight: number = 36;

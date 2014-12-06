@@ -8,7 +8,7 @@ var Resources: { [key: string]: ex.ILoadable } = {
 };
 
 var Palette = {
-   GameBackgroundColor: Util.darken(ex.Color.fromHex("#EBF8FF"), 0.3),
+   GameBackgroundColor: ex.Color.fromHex("#a4adb2"),
    GridBackgroundColor: ex.Color.fromHex("#EBF8FF"),
 
    PieceColor1: ex.Color.fromHex("#D8306D"),
