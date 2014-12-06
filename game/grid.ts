@@ -1,19 +1,7 @@
 ﻿
 class Cell {
    
-   constructor(public x: number, public y: number, public piece: Piece, public logicalGrid: LogicalGrid) { }
-   public getNeighbors(): Cell[] {
-      var result = [];
-      for (var i = -1; i < 2; i++) {
-         for (var j = -1; j < 2; j++) {
-
-            if (this.logicalGrid.getCell(this.x + i, this.y + j) && this.logicalGrid.getCell(this.x + i, this.y + j) !== this) {
-               result.push(this.logicalGrid.getCell(this.x + i, this.y + j));
-            }
-         }
-      }
-      return result;
-   }
+   constructor(public x: number, public y: number, public piece: Piece) { }
 
    public getCenter(): ex.Point {
       return new ex.Point(this.x* Config.CellWidth + Config.CellWidth / 2, this.y*Config.CellHeight + Config.CellHeight/2);
@@ -28,14 +16,14 @@ class LogicalGrid extends ex.Class {
       this.cells = new Array<Cell>(rows * cols);
       for (var i = 0; i < this.cols; i++) {
          for (var j = 0; j < this.rows; j++) {
-            this.cells[i + j * this.cols] = new Cell(i, j, null, this);
+            this.cells[i + j * this.cols] = new Cell(i, j, null);
          }
       }
    }
 
    public getCell(x: number, y: number): Cell {
-      if (x < 0 || x >= this.cols) return null;
-      if (y < 0 || y >= this.rows) return null;
+      if (x < 0 || x > this.cols) return null;
+      if (y < 0 || y > this.rows) return null;
 
       return this.cells[(x + y * this.cols)];
    }
@@ -77,9 +65,7 @@ class LogicalGrid extends ex.Class {
    }
 
    public areNeighbors(cell1: Cell, cell2: Cell): boolean {
-      return cell1.getNeighbors().indexOf(cell2) > -1;
-
-      /*      
+      
       // find neighbors of cell1
       var x = cell1.x,
          y = cell1.y,
@@ -117,7 +103,7 @@ class LogicalGrid extends ex.Class {
          (x2 === topLeft.x && y2 === topLeft.y) ||
          (x2 === bottomRight.x && y2 === bottomRight.y) ||
          (x2 === topRight.x && y2 === topRight.y) ||
-         (x2 === bottomLeft.x && y2 === bottomLeft.y);*/
+         (x2 === bottomLeft.x && y2 === bottomLeft.y);
 
    }
 }
