@@ -8,8 +8,8 @@ class TurnManager {
    private _timer: ex.Timer;
 
    constructor(public logicalGrid: LogicalGrid, public matcher: MatchManager, public turnMode: TurnMode) {
-      matcher.on('match', this._handleMatchEvent);
-      this._timer = new ex.Timer(_.bind(this._tick, this), 1000, true);
+      matcher.on('match', _.bind(this._handleMatchEvent, this));
+      this._timer = new ex.Timer(_.bind(this._tick, this), 2000, true);
       game.add(this._timer);
    }
 
@@ -23,6 +23,7 @@ class TurnManager {
    }
 
    private _handleMatchEvent(evt: MatchEvent) {
+      evt.run.forEach(p => p.kill());
       this._shiftBoard();
    }
 

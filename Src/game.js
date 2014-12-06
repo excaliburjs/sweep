@@ -282,8 +282,8 @@ var TurnManager = (function () {
         this.logicalGrid = logicalGrid;
         this.matcher = matcher;
         this.turnMode = turnMode;
-        matcher.on('match', this._handleMatchEvent);
-        this._timer = new ex.Timer(_.bind(this._tick, this), 1000, true);
+        matcher.on('match', _.bind(this._handleMatchEvent, this));
+        this._timer = new ex.Timer(_.bind(this._tick, this), 2000, true);
         game.add(this._timer);
     }
     TurnManager.prototype._shiftBoard = function () {
@@ -294,6 +294,7 @@ var TurnManager = (function () {
         this.logicalGrid.fill(grid.rows - 1);
     };
     TurnManager.prototype._handleMatchEvent = function (evt) {
+        evt.run.forEach(function (p) { return p.kill(); });
         this._shiftBoard();
     };
     TurnManager.prototype._tick = function () {
@@ -322,7 +323,7 @@ _.forIn(Resources, function (resource) {
 var grid = new LogicalGrid(15, 10);
 var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager(grid);
-var turnManager = new TurnManager(grid, matcher, 0 /* Timed */);
+var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
 game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
 game.add(visualGrid);
 grid.fill(grid.rows - 1);
