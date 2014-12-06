@@ -281,8 +281,9 @@ var VisualGrid = (function (_super) {
         });
         // todo transitions
         cells.forEach(function (cell) {
-            grid.setCell(cell.x, cell.y, null);
+            grid.clearPiece(cell.piece);
         });
+        // todo
     };
     return VisualGrid;
 })(ex.Actor);

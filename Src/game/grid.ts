@@ -185,6 +185,8 @@ class VisualGrid extends ex.Actor {
       });
 
       // todo transitions
-      cells.forEach(cell => { grid.setCell(cell.x, cell.y, null) });
+      cells.forEach(cell => { grid.clearPiece(cell.piece); });
+
+      // todo advance turn
    }
 }
