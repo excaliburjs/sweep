@@ -5,6 +5,7 @@
 /// <reference path="Piece.ts"/>
 /// <reference path="grid.ts"/>
 /// <reference path="match.ts"/>
+/// <reference path="turn.ts"/>
 
 var game = new ex.Engine(720, 480, "game");
 
@@ -19,8 +20,9 @@ _.forIn(Resources, (resource) => {
 var grid = new LogicalGrid(15, 10);
 var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager(grid);
+var turnManager = new TurnManager(grid, matcher);
 
-game.camera.setFocus(visualGrid.getWidth()/2, visualGrid.getHeight()/2);
+game.currentScene.camera.setFocus(visualGrid.getWidth()/2, visualGrid.getHeight()/2);
 game.add(visualGrid);
 
 grid.fill(grid.rows - 1);
