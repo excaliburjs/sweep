@@ -342,14 +342,17 @@ var TurnManager = (function () {
     };
     return TurnManager;
 })();
+/// <reference path="grid.ts"/>
 var TransitionManager = (function () {
     function TransitionManager(logicalGrid, visualGrid) {
         this.logicalGrid = logicalGrid;
         this.visualGrid = visualGrid;
     }
     TransitionManager.prototype._findLanding = function (cell) {
+        return null;
     };
     TransitionManager.prototype._findFloaters = function (row) {
+        return [];
     };
     TransitionManager.prototype.evaluate = function () {
     };
