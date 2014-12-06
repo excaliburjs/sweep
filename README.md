@@ -1,7 +1,7 @@
 Ludum-31
 ========
 
-[![Build Status](https://api.travis-ci.org/excaliburjs/Ludum-31.png)](https://travis-ci.org/excaliburjs/Ludum-31)
+[![Build Status](https://api.travis-ci.org/excaliburjs/ludum-31.png)](https://travis-ci.org/excaliburjs/ludum-31)
 
 Repository for Ludum Dare 31 Game Jam
 
