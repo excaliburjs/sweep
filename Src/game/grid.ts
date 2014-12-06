@@ -8,9 +8,11 @@ class Cell {
    }
 }
 
-class LogicalGrid {
+class LogicalGrid extends ex.Class {
    public cells: Cell[] = [];
    constructor(public rows: number, public cols: number) {
+      super();
+
       this.cells = new Array<Cell>(rows * cols);
       for (var i = 0; i < this.cols; i++) {
          for (var j = 0; j < this.rows; j++) {
@@ -26,15 +28,23 @@ class LogicalGrid {
       return this.cells[(x + y * this.cols)];
    }
 
-   public setCell(x: number, y: number, data: Piece): void {
-      
-      var center = this.getCell(x, y).getCenter();
-      data.x = center.x;
-      data.y = center.y;
+   public setCell(x: number, y: number, data: Piece, kill: boolean = false): void {
+      var cell = this.getCell(x, y);
 
-      game.add(data);
+      if (!cell) return;          
 
-      this.cells[(x + y * this.cols)].piece = data;
+      if (data) {
+         var center = cell.getCenter();
+         data.x = center.x;
+         data.y = center.y;
+         
+         cell.piece = data;
+         this.eventDispatcher.publish("pieceadd", new PieceEvent(cell));
+      } else {
+         this.eventDispatcher.publish("pieceremove", new PieceEvent(cell));        
+
+         cell.piece = null;
+      }      
    }
 
    public fill(row: number) {
@@ -43,6 +53,16 @@ class LogicalGrid {
       }
    }
 
+   public shift(from: number, to: number) {
+      if (to > this.rows || to < 0) return;
+      
+      for (var i = 0; i < this.cols; i++) {
+         if (this.getCell(i, from).piece) {
+            this.setCell(i, to, this.getCell(i, from).piece);
+            this.setCell(i, from, null);
+         }
+      }
+   }
 }
 
 class VisualGrid extends ex.Actor {
@@ -67,6 +87,12 @@ class VisualGrid extends ex.Actor {
          ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
 
          
+      });
+   }
+
+   public getCellByPos(screenX: number, screenY: number): Cell {
+      return _.find(this.logicalGrid.cells, (cell) => {
+         return cell.piece && cell.piece.contains(screenX, screenY);
       });
    }
 }

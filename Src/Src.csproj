@@ -26,6 +26,7 @@
     <TypeScriptCompile Include="game\Config.ts" />
     <TypeScriptCompile Include="game\game.ts" />
     <TypeScriptCompile Include="game\grid.ts" />
+    <TypeScriptCompile Include="game\match.ts" />
     <TypeScriptCompile Include="game\Piece.ts" />
     <TypeScriptCompile Include="game\resources.ts" />
     <TypeScriptCompile Include="scripts\typings\lodash\lodash.d.ts" />
