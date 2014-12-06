@@ -13,7 +13,12 @@ class TurnManager {
       game.add(this._timer);
    }
 
-   private _shiftBoard(): void {
+   public advanceTurn(): void {
+      this.advanceRows();
+      transitionManager.evaluate();
+   }
+
+   public advanceRows(): void {
       // shift all rows up 1
       for (var i = 0; i < grid.rows; i++) {
          this.logicalGrid.shift(i, i - 1);
@@ -24,14 +29,17 @@ class TurnManager {
 
    private _handleMatchEvent(evt: MatchEvent) {
       if (evt.run.length >= 3) {
-         evt.run.forEach(p => p.kill());
-         this._shiftBoard();
+         stats.scorePieces(evt.run);
+         stats.scoreChain(evt.run);
+         evt.run.forEach(p => grid.clearPiece(p));
+         transitionManager.evaluate();
+         this.advanceRows();
       }
    }
 
    private _tick() {
       if (this.turnMode === TurnMode.Timed) {
-         this._shiftBoard();
+         this.advanceRows();
       }
       //ex.Logger.getInstance().info("Tick", new Date());
    }

@@ -3,6 +3,7 @@ var Config = (function () {
     }
     Config.gameWidth = 720;
     Config.gameHeight = 720;
+    Config.PieceContainsPadding = 5;
     Config.PieceWidth = 36;
     Config.PieceHeight = 36;
     Config.CellWidth = 45;
@@ -32,12 +33,13 @@ var Util = (function () {
 /// <reference path="util.ts"/>
 var Resources = {};
 var Palette = {
-    GameBackgroundColor: ex.Color.fromHex("#a4adb2"),
-    GridBackgroundColor: ex.Color.fromHex("#EBF8FF"),
-    PieceColor1: ex.Color.fromHex("#D8306D"),
-    PieceColor2: ex.Color.fromHex("#F2CB05"),
-    PieceColor3: ex.Color.fromHex("#6DA8BA"),
-    PieceColor4: ex.Color.fromHex("#F25F1B")
+    GameBackgroundColor: ex.Color.fromHex("#efefef"),
+    GridBackgroundColor: ex.Color.fromHex("#efefef"),
+    // Beach
+    PieceColor1: ex.Color.fromHex("#BF6D72"),
+    PieceColor2: ex.Color.fromHex("#DBB96D"),
+    PieceColor3: ex.Color.fromHex("#5096F2"),
+    PieceColor4: ex.Color.fromHex("#9979E0")
 };
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -53,7 +55,7 @@ var PieceType;
     PieceType[PieceType["Star"] = 3] = "Star";
 })(PieceType || (PieceType = {}));
 var PieceTypes = [0 /* Circle */, 2 /* Square */, 1 /* Triangle */, 3 /* Star */];
-var PieceTypeToColor = [ex.Color.Cyan, ex.Color.Orange, ex.Color.Violet, ex.Color.Chartreuse];
+var PieceTypeToColor = [Palette.PieceColor1, Palette.PieceColor2, Palette.PieceColor3, Palette.PieceColor4];
 var PieceEvent = (function (_super) {
     __extends(PieceEvent, _super);
     function PieceEvent(cell) {
@@ -66,6 +68,7 @@ var Piece = (function (_super) {
     __extends(Piece, _super);
     function Piece(id, x, y, color, type) {
         _super.call(this, x, y, Config.PieceWidth, Config.PieceHeight, color);
+        this.cell = null;
         this.selected = false;
         this._id = id;
         this._type = type || 0 /* Circle */;
@@ -124,6 +127,9 @@ var Cell = (function () {
         }
         return result;
     };
+    Cell.prototype.getBelow = function () {
+        return this.logicalGrid.getCell(this.x, this.y + 1);
+    };
     Cell.prototype.getCenter = function () {
         return new ex.Point(this.x * Config.CellWidth + Config.CellWidth / 2, this.y * Config.CellHeight + Config.CellHeight / 2);
     };
@@ -143,6 +149,20 @@ var LogicalGrid = (function (_super) {
             }
         }
     }
+    LogicalGrid.prototype.getRow = function (row) {
+        var result = [];
+        for (var i = 0; i < this.cols; i++) {
+            result.push(this.getCell(i, row));
+        }
+        return result;
+    };
+    LogicalGrid.prototype.getColumn = function (col) {
+        var result = [];
+        for (var i = 0; i < this.cols; i++) {
+            result.push(this.getCell(col, i));
+        }
+        return result;
+    };
     LogicalGrid.prototype.getCell = function (x, y) {
         if (x < 0 || x >= this.cols)
             return null;
@@ -159,6 +179,7 @@ var LogicalGrid = (function (_super) {
             var center = cell.getCenter();
             data.x = center.x;
             data.y = center.y;
+            data.cell = cell;
             cell.piece = data;
             this.eventDispatcher.publish("pieceadd", new PieceEvent(cell));
         }
@@ -167,6 +188,11 @@ var LogicalGrid = (function (_super) {
             cell.piece = null;
         }
         return cell;
+    };
+    LogicalGrid.prototype.clearPiece = function (piece) {
+        piece.cell.piece = null;
+        piece.cell = null;
+        piece.kill();
     };
     LogicalGrid.prototype.fill = function (row) {
         for (var i = 0; i < this.cols; i++) {
@@ -253,7 +279,8 @@ var VisualGrid = (function (_super) {
         this.logicalGrid.cells.forEach(function (c) {
             ctx.fillStyle = Palette.GridBackgroundColor.toString();
             ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
-            ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.3);
+            ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
+            ctx.lineWidth = 1;
             ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
         });
     };
@@ -261,6 +288,18 @@ var VisualGrid = (function (_super) {
         return _.find(this.logicalGrid.cells, function (cell) {
             return cell.piece && cell.piece.contains(screenX, screenY);
         });
+    };
+    VisualGrid.prototype.sweep = function (type) {
+        var cells = this.logicalGrid.cells.filter(function (cell) {
+            return cell.piece && cell.piece.getType() === type;
+        });
+        // todo transitions
+        cells.forEach(function (cell) {
+            stats.scorePieces([cell.piece]);
+            grid.clearPiece(cell.piece);
+        });
+        // todo advance turn
+        turnManager.advanceTurn();
     };
     return VisualGrid;
 })(ex.Actor);
@@ -305,8 +344,9 @@ var MatchManager = (function (_super) {
         if (!piece)
             return;
         var removePiece = -1;
+        var containsBounds = new ex.BoundingBox(piece.getBounds().left + Config.PieceContainsPadding, piece.getBounds().top + Config.PieceContainsPadding, piece.getBounds().right - Config.PieceContainsPadding, piece.getBounds().bottom - Config.PieceContainsPadding);
         // if piece contains screen coords and we don't already have it in the run
-        if (piece.contains(pe.x, pe.y) && this._run.indexOf(piece) < 0) {
+        if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
             // if the two pieces aren't neighbors or aren't the same type, invalid move
             if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) || piece.getType() !== this._run[this._run.length - 1].getType()))
                 return;
@@ -318,7 +358,7 @@ var MatchManager = (function (_super) {
             this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
         }
         // did user go backwards?
-        if (piece.contains(pe.x, pe.y) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
+        if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
             // mark for removal
             removePiece = this._run.indexOf(piece) + 1;
         }
@@ -366,7 +406,11 @@ var TurnManager = (function () {
         this._timer = new ex.Timer(_.bind(this._tick, this), 2000, true);
         game.add(this._timer);
     }
-    TurnManager.prototype._shiftBoard = function () {
+    TurnManager.prototype.advanceTurn = function () {
+        this.advanceRows();
+        transitionManager.evaluate();
+    };
+    TurnManager.prototype.advanceRows = function () {
         for (var i = 0; i < grid.rows; i++) {
             this.logicalGrid.shift(i, i - 1);
         }
@@ -375,13 +419,16 @@ var TurnManager = (function () {
     };
     TurnManager.prototype._handleMatchEvent = function (evt) {
         if (evt.run.length >= 3) {
-            evt.run.forEach(function (p) { return p.kill(); });
-            this._shiftBoard();
+            stats.scorePieces(evt.run);
+            stats.scoreChain(evt.run);
+            evt.run.forEach(function (p) { return grid.clearPiece(p); });
+            transitionManager.evaluate();
+            this.advanceRows();
         }
     };
     TurnManager.prototype._tick = function () {
         if (this.turnMode === 0 /* Timed */) {
-            this._shiftBoard();
+            this.advanceRows();
         }
         //ex.Logger.getInstance().info("Tick", new Date());
     };
@@ -394,14 +441,79 @@ var TransitionManager = (function () {
         this.visualGrid = visualGrid;
     }
     TransitionManager.prototype._findLanding = function (cell) {
-        return null;
+        var landing = cell.getBelow();
+        while (landing) {
+            if (!landing.getBelow() || (!landing.piece && landing.getBelow().piece)) {
+                break;
+            }
+            landing = landing.getBelow();
+        }
+        return landing;
     };
     TransitionManager.prototype._findFloaters = function (row) {
-        return [];
+        return this.logicalGrid.getRow(row).filter(function (c) {
+            return c.piece && c.getBelow() && c.getBelow().piece === null;
+        });
     };
     TransitionManager.prototype.evaluate = function () {
+        var _this = this;
+        var currentRow = this.logicalGrid.rows;
+        while (currentRow > 0) {
+            currentRow--;
+            this._findFloaters(currentRow).forEach(function (c) {
+                var landingCell = _this._findLanding(c);
+                if (landingCell) {
+                    var piece = c.piece;
+                    _this.logicalGrid.setCell(c.x, c.y, null);
+                    _this.logicalGrid.setCell(landingCell.x, landingCell.y, piece);
+                }
+            });
+        }
     };
     return TransitionManager;
+})();
+var Stats = (function () {
+    function Stats() {
+        this._numCirclesDestroyed = 0;
+        this._numTrianglesDestroyed = 0;
+        this._numSquaresDestroyed = 0;
+        this._numStarsDestroyed = 0;
+        this._longestCircleCombo = 0;
+        this._longestTriangleCombo = 0;
+        this._longestSquareCombo = 0;
+        this._longestStarCombo = 0;
+        this._types = [0 /* Circle */, 1 /* Triangle */, 2 /* Square */, 3 /* Star */];
+        this._scores = [this._numCirclesDestroyed, this._numTrianglesDestroyed, this._numSquaresDestroyed, this._numStarsDestroyed];
+        this._chains = [this._longestCircleCombo, this._longestTriangleCombo, this._longestSquareCombo, this._longestStarCombo];
+    }
+    Stats.prototype.scorePieces = function (pieces) {
+        this._scores[this._types.indexOf(pieces[0].getType())] += pieces.length;
+    };
+    Stats.prototype.scoreChain = function (pieces) {
+        var chainScore = this._chains[this._types.indexOf(pieces[0].getType())];
+        if (chainScore < pieces.length) {
+            this._chains[this._types.indexOf(pieces[0].getType())] = pieces.length;
+        }
+    };
+    Stats.prototype.drawScores = function () {
+        this._updateScore("circles ", this._scores, 0, 500, 350);
+        this._updateScore("triangles ", this._scores, 1, 500, 370);
+        this._updateScore("squares ", this._scores, 2, 500, 390);
+        this._updateScore("stars ", this._scores, 3, 500, 410);
+        this._updateScore("circle chain ", this._chains, 0, 500, 440);
+        this._updateScore("triangle chain ", this._chains, 1, 500, 460);
+        this._updateScore("square chain ", this._chains, 2, 500, 480);
+        this._updateScore("star chain ", this._chains, 3, 500, 500);
+    };
+    Stats.prototype._updateScore = function (description, statArray, statIndex, xPos, yPos) {
+        var label = new ex.Label(description + statArray[statIndex].toString(), xPos, yPos);
+        label.color = ex.Color.Black;
+        game.addEventListener('update', function (data) {
+            label.text = description + statArray[statIndex].toString();
+        });
+        game.currentScene.addChild(label);
+    };
+    return Stats;
 })();
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
@@ -413,6 +525,7 @@ var TransitionManager = (function () {
 /// <reference path="match.ts"/>
 /// <reference path="turn.ts"/>
 /// <reference path="transition.ts"/>
+/// <reference path="Stats.ts"/>
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 game.backgroundColor = Palette.GameBackgroundColor;
 var loader = new ex.Loader();
@@ -420,13 +533,16 @@ var loader = new ex.Loader();
 _.forIn(Resources, function (resource) {
     loader.addResource(resource);
 });
+var stats = new Stats();
 // build grid
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
+var transitionManager = new TransitionManager(grid, visualGrid);
 game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
 game.add(visualGrid);
+stats.drawScores();
 for (var i = 0; i < Config.NumStartingRows; i++) {
     grid.fill(grid.rows - (i + 1));
 }
@@ -441,6 +557,14 @@ game.input.keyboard.on('down', function (evt) {
         // fill first row
         grid.fill(grid.rows - 1);
     }
+    if (evt.key === 49)
+        visualGrid.sweep(0 /* Circle */);
+    if (evt.key === 50)
+        visualGrid.sweep(2 /* Square */);
+    if (evt.key === 51)
+        visualGrid.sweep(3 /* Star */);
+    if (evt.key === 52)
+        visualGrid.sweep(1 /* Triangle */);
 });
 // TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {

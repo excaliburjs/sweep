@@ -8,9 +8,11 @@
 /// <reference path="match.ts"/>
 /// <reference path="turn.ts"/>
 /// <reference path="transition.ts"/>
+/// <reference path="Stats.ts"/>
 
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 game.backgroundColor = Palette.GameBackgroundColor;
+
 
 var loader = new ex.Loader();
 
@@ -19,14 +21,19 @@ _.forIn(Resources, (resource) => {
    loader.addResource(resource);
 });
 
+var stats = new Stats();
+
 // build grid
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, TurnMode.Match);
+var transitionManager = new TransitionManager(grid, visualGrid);
 
 game.currentScene.camera.setFocus(visualGrid.getWidth()/2, visualGrid.getHeight()/2);
 game.add(visualGrid);
+
+stats.drawScores();
 
 for (var i = 0; i < Config.NumStartingRows; i++) {
    grid.fill(grid.rows - (i + 1));
@@ -45,6 +52,11 @@ game.input.keyboard.on('down', (evt: ex.Input.KeyEvent) => {
       // fill first row
       grid.fill(grid.rows - 1);
    }
+
+   if (evt.key === 49) visualGrid.sweep(PieceType.Circle);
+   if (evt.key === 50) visualGrid.sweep(PieceType.Square);
+   if (evt.key === 51) visualGrid.sweep(PieceType.Star);
+   if (evt.key === 52) visualGrid.sweep(PieceType.Triangle);
 });
 
 // TODO clean up pieces that are not in play anymore after update loop

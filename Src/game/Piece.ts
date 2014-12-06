@@ -6,7 +6,7 @@
 }
 
 var PieceTypes = [PieceType.Circle, PieceType.Square, PieceType.Triangle, PieceType.Star];
-var PieceTypeToColor = [ex.Color.Cyan, ex.Color.Orange, ex.Color.Violet, ex.Color.Chartreuse];
+var PieceTypeToColor = [Palette.PieceColor1, Palette.PieceColor2, Palette.PieceColor3, Palette.PieceColor4];
 
 class PieceEvent extends ex.GameEvent {
    constructor(public cell: Cell) {
@@ -20,6 +20,7 @@ class Piece extends ex.Actor {
    private _originalColor: ex.Color;
    private _type: PieceType;
 
+   public cell: Cell = null;
    public selected: boolean = false;
 
    constructor(id: number, x?: number, y?: number, color?: ex.Color, type?: PieceType) {

@@ -15,6 +15,10 @@ class Cell {
       return result;
    }
 
+   public getBelow(): Cell {
+      return this.logicalGrid.getCell(this.x, this.y + 1);
+   }
+
    public getCenter(): ex.Point {
       return new ex.Point(this.x * Config.CellWidth + Config.CellWidth / 2, this.y * Config.CellHeight + Config.CellHeight / 2);
    }
@@ -33,6 +37,22 @@ class LogicalGrid extends ex.Class {
       }
    }
 
+   public getRow(row: number): Cell[] {
+      var result = [];
+      for (var i = 0; i < this.cols; i++) {
+         result.push(this.getCell(i, row));
+      }
+      return result;
+   }
+
+   public getColumn(col: number): Cell[] {
+      var result = [];
+      for (var i = 0; i < this.cols; i++) {
+         result.push(this.getCell(col, i));
+      }
+      return result;
+   }
+
    public getCell(x: number, y: number): Cell {
       if (x < 0 || x >= this.cols) return null;
       if (y < 0 || y >= this.rows) return null;
@@ -49,7 +69,7 @@ class LogicalGrid extends ex.Class {
          var center = cell.getCenter();
          data.x = center.x;
          data.y = center.y;
-
+         data.cell = cell;
          cell.piece = data;
          this.eventDispatcher.publish("pieceadd", new PieceEvent(cell));
       } else {
@@ -58,6 +78,12 @@ class LogicalGrid extends ex.Class {
          cell.piece = null;
       }
       return cell;
+   }
+
+   public clearPiece(piece: Piece) {
+      piece.cell.piece = null;
+      piece.cell = null;
+      piece.kill();
    }
 
    public fill(row: number) {
@@ -78,10 +104,7 @@ class LogicalGrid extends ex.Class {
             this.setCell(i, row, PieceFactory.getRandomPiece());
          }
       }
-
-
    }
-
 
    public shift(from: number, to: number) {
       if (to > this.rows || to < 0) return;
@@ -160,8 +183,10 @@ class VisualGrid extends ex.Actor {
 
          ctx.fillStyle = Palette.GridBackgroundColor.toString();
          ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
-         ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.3);
-         ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
+         ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
+         ctx.lineWidth = 1;
+         ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);         
+
       });
    }
 
@@ -169,5 +194,23 @@ class VisualGrid extends ex.Actor {
       return _.find(this.logicalGrid.cells, (cell) => {
          return cell.piece && cell.piece.contains(screenX, screenY);
       });
+   }
+
+   public sweep(type: PieceType) {
+      var cells = this.logicalGrid.cells.filter(cell => {
+         return cell.piece && cell.piece.getType() === type;
+      });
+
+      // todo transitions
+      cells.forEach(cell => {
+         stats.scorePieces([cell.piece]);
+         grid.clearPiece(cell.piece);
+      });
+
+
+      // todo advance turn
+      turnManager.advanceTurn();
+
+
    }
 }
