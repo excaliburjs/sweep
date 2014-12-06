@@ -207,6 +207,9 @@ var LogicalGrid = (function (_super) {
                 }
             }
             if (hasMatchingNeighbor) {
+                if (currentCell.piece) {
+                    this.clearPiece(currentCell.piece);
+                }
                 this.setCell(i, row, PieceFactory.getRandomPiece());
             }
         }
