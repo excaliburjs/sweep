@@ -33,18 +33,20 @@
 
    public drawScores() {
 
-      this._updateScore("circles ", this._scores, 0, 500, 350);
-      this._updateScore("triangles ", this._scores, 1, 500, 370);
-      this._updateScore("squares ", this._scores, 2, 500, 390);
-      this._updateScore("stars ", this._scores, 3, 500, 410);
+      var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
 
-      this._updateScore("circle chain ", this._chains, 0, 500, 440);
-      this._updateScore("triangle chain ", this._chains, 1, 500, 460);
-      this._updateScore("square chain ", this._chains, 2, 500, 480);
-      this._updateScore("star chain ", this._chains, 3, 500, 500);
+      this._addScore("circles ", this._scores, 0, scoreXPos, 350);
+      this._addScore("triangles ", this._scores, 1, scoreXPos, 370);
+      this._addScore("squares ", this._scores, 2, scoreXPos, 390);
+      this._addScore("stars ", this._scores, 3, scoreXPos, 410);
+
+      this._addScore("circle chain ", this._chains, 0, scoreXPos, 440);
+      this._addScore("triangle chain ", this._chains, 1, scoreXPos, 460);
+      this._addScore("square chain ", this._chains, 2, scoreXPos, 480);
+      this._addScore("star chain ", this._chains, 3, scoreXPos, 500);
    }
 
-   private _updateScore(description: String, statArray: Array<any>, statIndex: number, xPos: number, yPos: number) {
+   private _addScore(description: String, statArray: Array<any>, statIndex: number, xPos: number, yPos: number) {
       var label = new ex.Label(description + statArray[statIndex].toString(), xPos, yPos);
       label.color = ex.Color.Black;
       game.addEventListener('update', (data?: ex.UpdateEvent) => {

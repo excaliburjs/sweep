@@ -5,7 +5,8 @@
    static PieceHeight: number = 36;
    static CellWidth: number = 45;
    static CellHeight: number = 45;
-   static GridCellsHigh: number = 15;
-   static GridCellsWide: number = 10;
+   static GridCellsHigh: number = 16;
+   static GridCellsWide: number = 8;
    static NumStartingRows: number = 3;
+   static ScoreXBuffer: number = 20;
 }
