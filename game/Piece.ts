@@ -1,12 +1,22 @@
-﻿class Piece extends ex.Actor {
+﻿enum PieceType {
+   Circle,
+   Triangle,
+   Square,
+   Star
+}
+
+var PieceTypes = [PieceType.Circle, PieceType.Square, PieceType.Triangle, PieceType.Star];
+var PieceTypeToColor = [ex.Color.Cyan, ex.Color.Orange, ex.Color.Violet, ex.Color.Chartreuse];
+
+class Piece extends ex.Actor {
 
    private _id: number;
    private _color: ex.Color;
    private _type: PieceType;
 
-   constructor(id: number, x?: number, y?: number, width?: number, height?: number, color?: ex.Color, type?: PieceType) {
-      super(x, y, Config.pieceWidth, Config.pieceHeight, color);
-      this._id = id
+   constructor(id: number, x?: number, y?: number, color?: ex.Color, type?: PieceType) {
+      super(x, y, Config.PieceWidth, Config.PieceHeight, color);
+      this._id = id;
       this._type = type || PieceType.Circle;
    }
 
@@ -31,9 +41,11 @@
    }
 }
 
-enum PieceType {
-   Circle,
-   Triangle,
-   Square,
-   Star
+class PieceFactory {
+   private static _maxId: number = 0;
+   public static getRandomPiece(): Piece {
+      var index = Math.floor(Math.random() * PieceTypes.length);
+      return new Piece(PieceFactory._maxId++, 0, 0,PieceTypeToColor[index].clone(), index);
+   }
 }
+

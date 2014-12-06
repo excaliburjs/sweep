@@ -1,6 +1,8 @@
 ﻿class Config {
 
-   static pieceWidth: number = 100;
-   static pieceHeight: number = 100;
+   static PieceWidth: number = 10;
+   static PieceHeight: number = 10;
+   static CellWidth: number = 20;
+   static CellHeight: number = 20;
 
 }
