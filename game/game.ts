@@ -1,9 +1,14 @@
-/// <reference path="Excalibur.d.ts"/>
+/// <reference path="../Excalibur.d.ts"/>
+/// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
+/// <reference path="resources.ts"/>
 
 var game = new ex.Engine(720, 480, "game");
+var loader = new ex.Loader();
 
-// TODO build game
-
+// load up all resources in dictionary
+_.forIn(Resources, (resource) => {
+   loader.addResource(resource);
+});
 
 var emitter = new ex.ParticleEmitter(game.width/2, game.height/2, 2, 2);
 emitter.emitterType = ex.EmitterType.Circle;
@@ -27,4 +32,6 @@ emitter.endColor = ex.Color.Cyan;
 
 game.add(emitter);
 
-game.start();
+game.start(loader).then(() => {
+   // todo build game
+});
