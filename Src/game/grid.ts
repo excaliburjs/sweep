@@ -63,6 +63,49 @@ class LogicalGrid extends ex.Class {
          }
       }
    }
+
+   public areNeighbors(cell1: Cell, cell2: Cell): boolean {
+      
+      // find neighbors of cell1
+      var x = cell1.x,
+         y = cell1.y,
+         x2 = cell2.x,
+         y2 = cell2.y,
+         left = new ex.Point(x - 1, y),
+         topLeft = new ex.Point(x - 1, y - 1),
+         right = new ex.Point(x + 1, y),
+         bottomRight = new ex.Point(x + 1, y + 1),
+         top = new ex.Point(x, y - 1),
+         topRight = new ex.Point(x + 1, y - 1),
+         bottom = new ex.Point(x, y + 1),
+         bottomLeft = new ex.Point(x - 1, y + 1);
+
+      ex.Logger.getInstance().debug("LogicalGrid.areNeighbors", {
+         cell1: cell1,
+         cell2: cell2,
+         forX: x,
+         forY: y,
+         otherX: x2,
+         otherY: y2,
+         left: left,
+         topLeft: topLeft,
+         right: right,
+         topRight: topRight,
+         bottom: bottom,
+         bottomLeft: bottomLeft,
+         bottomRight: bottomRight
+      });
+
+      return (x2 === left.x && y2 === left.y) ||
+         (x2 === right.x && y2 === right.y) ||
+         (x2 === top.x && y2 === top.y) ||
+         (x2 === bottom.x && y2 === bottom.y) ||
+         (x2 === topLeft.x && y2 === topLeft.y) ||
+         (x2 === bottomRight.x && y2 === bottomRight.y) ||
+         (x2 === topRight.x && y2 === topRight.y) ||
+         (x2 === bottomLeft.x && y2 === bottomLeft.y);
+
+   }
 }
 
 class VisualGrid extends ex.Actor {
