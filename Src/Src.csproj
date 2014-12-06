@@ -23,17 +23,15 @@
     <Content Include="index.html" />
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="game.ts" />
+    <TypeScriptCompile Include="game\game.ts" />
+    <TypeScriptCompile Include="game\resources.ts" />
+    <TypeScriptCompile Include="scripts\typings\lodash\lodash.d.ts" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="scripts\lodash.js" />
+    <Content Include="scripts\lodash.min.js" />
     <Content Include="sounds\readme.txt" />
-    <Content Include="web.config" />
-    <None Include="web.Debug.config">
-      <DependentUpon>web.config</DependentUpon>
-    </None>
-    <None Include="web.Release.config">
-      <DependentUpon>web.config</DependentUpon>
-    </None>
+    <Content Include="packages.config" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">12.0</VisualStudioVersion>

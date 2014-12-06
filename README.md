@@ -1,4 +1,4 @@
-Ludum-31
+ludum-31
 ========
 
 [![Build Status](https://api.travis-ci.org/excaliburjs/ludum-31.png)](https://travis-ci.org/excaliburjs/ludum-31)
@@ -7,12 +7,12 @@ Repository for Ludum Dare 31 Game Jam
 
 ## Play
 
-Play the game at http://excaliburjs.com/Ludum-31
+Play the game at http://excaliburjs.com/ludum-31
 
 ## Contributing
 
 Just commit to `master` branch, Travis CI will automatically build and deploy to the `gh-pages` branch.
-You will see the results at http://excaliburjs.com/Ludum-31
+You will see the results at http://excaliburjs.com/ludum-31
 
 ## Working Locally
 
