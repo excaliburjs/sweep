@@ -8,11 +8,12 @@ var Resources: { [key: string]: ex.ILoadable } = {
 };
 
 var Palette = {
-   GameBackgroundColor: ex.Color.fromHex("#a4adb2"),
-   GridBackgroundColor: ex.Color.fromHex("#EBF8FF"),
+   GameBackgroundColor: ex.Color.fromHex("#efefef"),
+   GridBackgroundColor: ex.Color.fromHex("#efefef"),
 
-   PieceColor1: ex.Color.fromHex("#748BD9"),
-   PieceColor2: ex.Color.fromHex("#7D8C45"),
-   PieceColor3: ex.Color.fromHex("#BF8136"),
-   PieceColor4: ex.Color.fromHex("#8C251C")
+   // Beach
+   PieceColor1: ex.Color.fromHex("#BF6D72"),
+   PieceColor2: ex.Color.fromHex("#DBB96D"),
+   PieceColor3: ex.Color.fromHex("#5096F2"),
+   PieceColor4: ex.Color.fromHex("#9979E0")
 };
