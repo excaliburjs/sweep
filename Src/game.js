@@ -3,7 +3,6 @@ var Config = (function () {
     }
     Config.gameWidth = 720;
     Config.gameHeight = 720;
-    Config.PieceContainsPadding = 5;
     Config.PieceWidth = 36;
     Config.PieceHeight = 36;
     Config.CellWidth = 45;
@@ -283,10 +282,11 @@ var VisualGrid = (function (_super) {
         });
         // todo transitions
         cells.forEach(function (cell) {
-            grid.clearPiece(cell.piece);
             stats.scorePieces([cell.piece]);
+            grid.clearPiece(cell.piece);
         });
         // todo advance turn
+        turnManager.advanceTurn();
     };
     return VisualGrid;
 })(ex.Actor);
@@ -331,9 +331,8 @@ var MatchManager = (function (_super) {
         if (!piece)
             return;
         var removePiece = -1;
-        var containsBounds = new ex.BoundingBox(piece.getBounds().left + Config.PieceContainsPadding, piece.getBounds().top + Config.PieceContainsPadding, piece.getBounds().right - Config.PieceContainsPadding, piece.getBounds().bottom - Config.PieceContainsPadding);
         // if piece contains screen coords and we don't already have it in the run
-        if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
+        if (piece.contains(pe.x, pe.y) && this._run.indexOf(piece) < 0) {
             // if the two pieces aren't neighbors or aren't the same type, invalid move
             if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) || piece.getType() !== this._run[this._run.length - 1].getType()))
                 return;
@@ -345,7 +344,7 @@ var MatchManager = (function (_super) {
             this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
         }
         // did user go backwards?
-        if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
+        if (piece.contains(pe.x, pe.y) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
             // mark for removal
             removePiece = this._run.indexOf(piece) + 1;
         }
@@ -393,7 +392,11 @@ var TurnManager = (function () {
         this._timer = new ex.Timer(_.bind(this._tick, this), 2000, true);
         game.add(this._timer);
     }
-    TurnManager.prototype._shiftBoard = function () {
+    TurnManager.prototype.advanceTurn = function () {
+        this.advanceRows();
+        transitionManager.evaluate();
+    };
+    TurnManager.prototype.advanceRows = function () {
         for (var i = 0; i < grid.rows; i++) {
             this.logicalGrid.shift(i, i - 1);
         }
@@ -402,15 +405,16 @@ var TurnManager = (function () {
     };
     TurnManager.prototype._handleMatchEvent = function (evt) {
         if (evt.run.length >= 3) {
-            evt.run.forEach(function (p) { return grid.clearPiece(p); });
             stats.scorePieces(evt.run);
             stats.scoreChain(evt.run);
-            this._shiftBoard();
+            evt.run.forEach(function (p) { return grid.clearPiece(p); });
+            transitionManager.evaluate();
+            this.advanceRows();
         }
     };
     TurnManager.prototype._tick = function () {
         if (this.turnMode === 0 /* Timed */) {
-            this._shiftBoard();
+            this.advanceRows();
         }
         //ex.Logger.getInstance().info("Tick", new Date());
     };
@@ -423,15 +427,18 @@ var TransitionManager = (function () {
         this.visualGrid = visualGrid;
     }
     TransitionManager.prototype._findLanding = function (cell) {
-        var landing = null;
-        while (cell.getBelow() && !cell.getBelow().piece) {
-            landing = cell.getBelow();
+        var landing = cell.getBelow();
+        while (landing) {
+            if (!landing.getBelow() || (!landing.piece && landing.getBelow().piece)) {
+                break;
+            }
+            landing = landing.getBelow();
         }
         return landing;
     };
     TransitionManager.prototype._findFloaters = function (row) {
         return this.logicalGrid.getRow(row).filter(function (c) {
-            return c.getBelow() && c.getBelow().piece === null;
+            return c.piece && c.getBelow() && c.getBelow().piece === null;
         });
     };
     TransitionManager.prototype.evaluate = function () {
@@ -441,9 +448,11 @@ var TransitionManager = (function () {
             currentRow--;
             this._findFloaters(currentRow).forEach(function (c) {
                 var landingCell = _this._findLanding(c);
-                var piece = c.piece;
-                _this.logicalGrid.setCell(c.x, c.y, null);
-                _this.logicalGrid.setCell(landingCell.x, landingCell.y, piece);
+                if (landingCell) {
+                    var piece = c.piece;
+                    _this.logicalGrid.setCell(c.x, c.y, null);
+                    _this.logicalGrid.setCell(landingCell.x, landingCell.y, piece);
+                }
             });
         }
     };

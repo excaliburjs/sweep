@@ -6,16 +6,20 @@ class TransitionManager {
    }
 
    private _findLanding(cell: Cell): Cell {
-      var landing = null;
-      while (cell.getBelow() && !cell.getBelow().piece) {
-         landing = cell.getBelow();
+      
+      var landing = cell.getBelow();
+      while (landing) {
+         if (!landing.getBelow() || (!landing.piece && landing.getBelow().piece)) {
+            break;
+         }
+         landing = landing.getBelow();
       }
       return landing;
    }
 
    private _findFloaters(row: number): Cell[] {
       return this.logicalGrid.getRow(row).filter(c => {
-         return c.getBelow() && c.getBelow().piece === null;
+         return c.piece && c.getBelow() && c.getBelow().piece === null;
       });
    }
 
@@ -25,9 +29,11 @@ class TransitionManager {
          currentRow--;
          this._findFloaters(currentRow).forEach(c => {
             var landingCell = this._findLanding(c);
-            var piece = c.piece;
-            this.logicalGrid.setCell(c.x, c.y, null);
-            this.logicalGrid.setCell(landingCell.x, landingCell.y, piece);
+            if (landingCell) {
+               var piece = c.piece;
+               this.logicalGrid.setCell(c.x, c.y, null);
+               this.logicalGrid.setCell(landingCell.x, landingCell.y, piece);
+            }
          });
       }
 
