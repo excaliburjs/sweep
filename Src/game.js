@@ -166,10 +166,22 @@ var LogicalGrid = (function (_super) {
             this.eventDispatcher.publish("pieceremove", new PieceEvent(cell));
             cell.piece = null;
         }
+        return cell;
     };
     LogicalGrid.prototype.fill = function (row) {
         for (var i = 0; i < this.cols; i++) {
-            this.setCell(i, row, PieceFactory.getRandomPiece());
+            var currentCell = this.setCell(i, row, PieceFactory.getRandomPiece());
+            var neighbors = currentCell.getNeighbors();
+            var hasMatchingNeighbor = false;
+            for (var j = 0; j < neighbors.length; j++) {
+                if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
+                    hasMatchingNeighbor = true;
+                    break;
+                }
+            }
+            if (hasMatchingNeighbor) {
+                this.setCell(i, row, PieceFactory.getRandomPiece());
+            }
         }
     };
     LogicalGrid.prototype.shift = function (from, to) {

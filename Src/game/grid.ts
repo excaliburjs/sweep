@@ -1,6 +1,6 @@
 ﻿
 class Cell {
-   
+
    constructor(public x: number, public y: number, public piece: Piece, public logicalGrid: LogicalGrid) { }
    public getNeighbors(): Cell[] {
       var result = [];
@@ -16,7 +16,7 @@ class Cell {
    }
 
    public getCenter(): ex.Point {
-      return new ex.Point(this.x* Config.CellWidth + Config.CellWidth / 2, this.y*Config.CellHeight + Config.CellHeight/2);
+      return new ex.Point(this.x * Config.CellWidth + Config.CellWidth / 2, this.y * Config.CellHeight + Config.CellHeight / 2);
    }
 }
 
@@ -40,34 +40,52 @@ class LogicalGrid extends ex.Class {
       return this.cells[(x + y * this.cols)];
    }
 
-   public setCell(x: number, y: number, data: Piece, kill: boolean = false): void {
+   public setCell(x: number, y: number, data: Piece, kill: boolean = false): Cell {
       var cell = this.getCell(x, y);
 
-      if (!cell) return;          
+      if (!cell) return;
 
       if (data) {
          var center = cell.getCenter();
          data.x = center.x;
          data.y = center.y;
-         
+
          cell.piece = data;
          this.eventDispatcher.publish("pieceadd", new PieceEvent(cell));
       } else {
-         this.eventDispatcher.publish("pieceremove", new PieceEvent(cell));        
+         this.eventDispatcher.publish("pieceremove", new PieceEvent(cell));
 
          cell.piece = null;
-      }      
+      }
+      return cell;
    }
 
    public fill(row: number) {
       for (var i = 0; i < this.cols; i++) {
-         this.setCell(i, row, PieceFactory.getRandomPiece());
+
+         var currentCell = this.setCell(i, row, PieceFactory.getRandomPiece());
+         var neighbors = currentCell.getNeighbors();
+         var hasMatchingNeighbor = false;
+
+            for (var j = 0; j < neighbors.length; j++) {
+               if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
+                  hasMatchingNeighbor = true;
+                  break;
+               }
+            }
+         
+         if (hasMatchingNeighbor) {
+            this.setCell(i, row, PieceFactory.getRandomPiece());
+         }
       }
+
+
    }
+
 
    public shift(from: number, to: number) {
       if (to > this.rows || to < 0) return;
-      
+
       for (var i = 0; i < this.cols; i++) {
          if (this.getCell(i, from).piece) {
             this.setCell(i, to, this.getCell(i, from).piece);
@@ -122,6 +140,7 @@ class LogicalGrid extends ex.Class {
    }
 }
 
+
 class VisualGrid extends ex.Actor {
    constructor(public logicalGrid: LogicalGrid) {
       super(0, 0, Config.CellWidth * logicalGrid.cols, Config.CellHeight * logicalGrid.rows);
@@ -131,18 +150,18 @@ class VisualGrid extends ex.Actor {
 
    public update(engine: ex.Engine, delta: number) {
       super.update(engine, delta);
-      
+
    }
 
    public draw(ctx: CanvasRenderingContext2D, delta: number) {
       super.draw(ctx, delta);
-      
+
       this.logicalGrid.cells.forEach(c => {
 
-         ctx.fillStyle = Palette.GridBackgroundColor.toString();         
+         ctx.fillStyle = Palette.GridBackgroundColor.toString();
          ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
          ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.3);
-         ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);         
+         ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
       });
    }
 

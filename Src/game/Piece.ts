@@ -59,6 +59,7 @@ class PieceFactory {
    public static getRandomPiece(): Piece {
       var index = Math.floor(Math.random() * PieceTypes.length);
       var piece = new Piece(PieceFactory._maxId++, 0, 0, PieceTypeToColor[index].clone(), index);
+
       game.add(piece);
 
       return piece;
