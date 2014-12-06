@@ -20,6 +20,7 @@ var Config = (function () {
     }
     Config.gameWidth = 720;
     Config.gameHeight = 720;
+    Config.PieceContainsPadding = 5;
     Config.PieceWidth = 36;
     Config.PieceHeight = 36;
     Config.CellWidth = 45;
@@ -331,8 +332,9 @@ var MatchManager = (function (_super) {
         if (!piece)
             return;
         var removePiece = -1;
+        var containsBounds = new ex.BoundingBox(piece.getBounds().left + Config.PieceContainsPadding, piece.getBounds().top + Config.PieceContainsPadding, piece.getBounds().right - Config.PieceContainsPadding, piece.getBounds().bottom - Config.PieceContainsPadding);
         // if piece contains screen coords and we don't already have it in the run
-        if (piece.contains(pe.x, pe.y) && this._run.indexOf(piece) < 0) {
+        if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
             // if the two pieces aren't neighbors or aren't the same type, invalid move
             if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) || piece.getType() !== this._run[this._run.length - 1].getType()))
                 return;
@@ -344,7 +346,7 @@ var MatchManager = (function (_super) {
             this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
         }
         // did user go backwards?
-        if (piece.contains(pe.x, pe.y) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
+        if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
             // mark for removal
             removePiece = this._run.indexOf(piece) + 1;
         }
