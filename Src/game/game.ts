@@ -25,9 +25,9 @@ var turnManager = new TurnManager(grid, matcher, TurnMode.Match);
 game.currentScene.camera.setFocus(visualGrid.getWidth()/2, visualGrid.getHeight()/2);
 game.add(visualGrid);
 
-grid.fill(grid.rows - 1);
-grid.fill(grid.rows - 2);
-grid.fill(grid.rows - 3);
+for (var i = 0; i < Config.NumStartingRows; i++) {
+   grid.fill(grid.rows - (i + 1));
+}
 
 game.input.keyboard.on('down', (evt: ex.Input.KeyEvent) => {
    if (evt.key === ex.Input.Keys.D) {

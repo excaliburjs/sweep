@@ -7,6 +7,7 @@ var Config = (function () {
     Config.CellHeight = 30;
     Config.GridCellsHigh = 15;
     Config.GridCellsWide = 10;
+    Config.NumStartingRows = 3;
     return Config;
 })();
 var Resources = {};
@@ -330,9 +331,9 @@ var matcher = new MatchManager(grid);
 var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
 game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
 game.add(visualGrid);
-grid.fill(grid.rows - 1);
-grid.fill(grid.rows - 2);
-grid.fill(grid.rows - 3);
+for (var i = 0; i < Config.NumStartingRows; i++) {
+    grid.fill(grid.rows - (i + 1));
+}
 game.input.keyboard.on('down', function (evt) {
     if (evt.key === 68 /* D */) {
         game.isDebug = !game.isDebug;
@@ -349,4 +350,3 @@ game.input.keyboard.on('down', function (evt) {
 game.start(loader).then(function () {
     // todo build game
 });
-//# sourceMappingURL=game.js.map
