@@ -17,7 +17,7 @@ _.forIn(Resources, (resource) => {
 });
 
 // build grid
-var grid = new LogicalGrid(15, 10);
+var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, TurnMode.Match);

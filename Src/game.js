@@ -5,6 +5,8 @@ var Config = (function () {
     Config.PieceHeight = 20;
     Config.CellWidth = 30;
     Config.CellHeight = 30;
+    Config.GridCellsHigh = 15;
+    Config.GridCellsWide = 10;
     return Config;
 })();
 var Resources = {};
@@ -290,8 +292,10 @@ var TurnManager = (function () {
         this.logicalGrid.fill(grid.rows - 1);
     };
     TurnManager.prototype._handleMatchEvent = function (evt) {
-        evt.run.forEach(function (p) { return p.kill(); });
-        this._shiftBoard();
+        if (evt.run.length >= 3) {
+            evt.run.forEach(function (p) { return p.kill(); });
+            this._shiftBoard();
+        }
     };
     TurnManager.prototype._tick = function () {
         if (this.turnMode === 0 /* Timed */) {
@@ -316,7 +320,7 @@ _.forIn(Resources, function (resource) {
     loader.addResource(resource);
 });
 // build grid
-var grid = new LogicalGrid(15, 10);
+var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
@@ -341,4 +345,3 @@ game.input.keyboard.on('down', function (evt) {
 game.start(loader).then(function () {
     // todo build game
 });
-//# sourceMappingURL=game.js.map
