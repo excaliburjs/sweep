@@ -188,5 +188,8 @@ class VisualGrid extends ex.Actor {
       cells.forEach(cell => { grid.clearPiece(cell.piece); });
 
       // todo advance turn
+      turnManager.advanceTurn();
+
+
    }
 }
