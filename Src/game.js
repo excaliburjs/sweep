@@ -165,6 +165,10 @@ var VisualGrid = (function (_super) {
         this.logicalGrid = logicalGrid;
         this.anchor.setTo(0, 0);
     }
+    VisualGrid.prototype.onInitialize = function (engine) {
+        _super.prototype.onInitialize.call(this, engine);
+        matcher.on("run", _.bind(this._handleRun, this));
+    };
     VisualGrid.prototype.update = function (engine, delta) {
         _super.prototype.update.call(this, engine, delta);
     };
@@ -182,6 +186,8 @@ var VisualGrid = (function (_super) {
             return cell.piece && cell.piece.contains(screenX, screenY);
         });
     };
+    VisualGrid.prototype._handleRun = function (me) {
+    };
     return VisualGrid;
 })(ex.Actor);
 var MatchEvent = (function (_super) {
@@ -194,29 +200,13 @@ var MatchEvent = (function (_super) {
 })(ex.GameEvent);
 var MatchManager = (function (_super) {
     __extends(MatchManager, _super);
-    function MatchManager(_grid) {
-        var _this = this;
+    function MatchManager() {
         _super.call(this);
-        this._grid = _grid;
-        this._cells = [];
-        this._pieces = [];
         this._run = [];
         this._runInProgress = false;
-        grid.on("pieceadd", function (pe) {
-            if (!pe.cell.piece)
-                return;
-            if (_.find(_this._pieces, pe.cell.piece))
-                return;
-            _this._cells.push(pe.cell);
-            _this._pieces.push(pe.cell.piece);
-            pe.cell.piece.on("pointerdown", _.bind(_this._handlePieceDown, _this));
-            pe.cell.piece.on("pointerup", _.bind(_this._handlePieceUp, _this));
-            pe.cell.piece.on("pointermove", _.bind(_this._handlePieceMove, _this));
-        });
-        grid.on("pieceremove", function (pe) {
-            // todo
-        });
-        game.input.pointers.primary.on("up", _.bind(this._handlePieceUp, this));
+        game.input.pointers.primary.on("down", _.bind(this._handlePieceDown, this));
+        game.input.pointers.primary.on("up", _.bind(this._handlePointerUp, this));
+        game.input.pointers.primary.on("move", _.bind(this._handlePointerMove, this));
     }
     MatchManager.prototype._handlePieceDown = function (pe) {
         var cell = visualGrid.getCellByPos(pe.x, pe.y);
@@ -228,35 +218,43 @@ var MatchManager = (function (_super) {
         // darken/highlight
         // draw line?
     };
-    MatchManager.prototype._handlePieceMove = function (pe) {
+    MatchManager.prototype._handlePointerMove = function (pe) {
         // add piece to run if valid
         // draw line?
-        var _this = this;
         if (!this._runInProgress)
             return;
-        var removePiece;
-        this._pieces.forEach(function (piece) {
-            // if piece contains screen coords (assumed) and we don't already have it in the run
-            if (piece.contains(pe.x, pe.y) && _this._run.indexOf(piece) < 0) {
-                // if the two pieces aren't neighbors or aren't the same type, invalid move
-                if (_this._run.length > 0 && (!_this.areNeighbors(piece, _this._run[_this._run.length - 1]) || piece.getType() !== _this._run[_this._run.length - 1].getType()))
-                    return;
-                // add to run
-                _this._run.push(piece);
-                ex.Logger.getInstance().info("Run modified", _this._run);
-            }
-            // did user go backwards?
-            if (piece.contains(pe.x, pe.y) && _this._run.length > 1 && _this._run.indexOf(piece) === _this._run.length - 2) {
-                // mark for removal
-                removePiece = _this._run.indexOf(piece) + 1;
-            }
-        });
+        var cell = visualGrid.getCellByPos(pe.x, pe.y);
+        if (!cell)
+            return;
+        var piece = cell.piece;
+        if (!piece)
+            return;
+        var removePiece = -1;
+        // if piece contains screen coords and we don't already have it in the run
+        if (piece.contains(pe.x, pe.y) && this._run.indexOf(piece) < 0) {
+            // if the two pieces aren't neighbors or aren't the same type, invalid move
+            if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) || piece.getType() !== this._run[this._run.length - 1].getType()))
+                return;
+            // add to run
+            this._run.push(piece);
+            ex.Logger.getInstance().info("Run modified", this._run);
+            // notify
+            this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
+        }
+        // did user go backwards?
+        if (piece.contains(pe.x, pe.y) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
+            // mark for removal
+            removePiece = this._run.indexOf(piece) + 1;
+        }
         if (removePiece > -1) {
+            // remove from run
             this._run.splice(removePiece, 1);
             ex.Logger.getInstance().info("Run modified", this._run);
+            // notify
+            this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
         }
     };
-    MatchManager.prototype._handlePieceUp = function () {
+    MatchManager.prototype._handlePointerUp = function () {
         // have a valid run?
         if (this._run.length > 0) {
             ex.Logger.getInstance().info("Run ended", this._run);
@@ -267,11 +265,9 @@ var MatchManager = (function (_super) {
         this._runInProgress = false;
     };
     MatchManager.prototype.areNeighbors = function (piece1, piece2) {
-        var idx1 = this._pieces.indexOf(piece1);
-        var idx2 = this._pieces.indexOf(piece2);
-        var cell1 = this._cells[idx1];
-        var cell2 = this._cells[idx2];
-        return this._grid.areNeighbors(cell1, cell2);
+        var cell1 = _.find(grid.cells, { piece: piece1 });
+        var cell2 = _.find(grid.cells, { piece: piece2 });
+        return grid.areNeighbors(cell1, cell2);
     };
     return MatchManager;
 })(ex.Class);
@@ -327,7 +323,7 @@ _.forIn(Resources, function (resource) {
 // build grid
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
-var matcher = new MatchManager(grid);
+var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
 game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
 game.add(visualGrid);

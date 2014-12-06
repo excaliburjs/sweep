@@ -7,7 +7,7 @@
 /// <reference path="match.ts"/>
 /// <reference path="turn.ts"/>
 
-var game = new ex.Engine(720, 480, "game");
+var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 
 var loader = new ex.Loader();
 
@@ -19,7 +19,7 @@ _.forIn(Resources, (resource) => {
 // build grid
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
-var matcher = new MatchManager(grid);
+var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, TurnMode.Match);
 
 game.currentScene.camera.setFocus(visualGrid.getWidth()/2, visualGrid.getHeight()/2);
