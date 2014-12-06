@@ -186,8 +186,8 @@ class VisualGrid extends ex.Actor {
 
       // todo transitions
       cells.forEach(cell => {
-         grid.clearPiece(cell.piece);
          stats.scorePieces([cell.piece]);
+         grid.clearPiece(cell.piece);
       });
 
 
