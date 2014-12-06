@@ -476,8 +476,8 @@ var Stats = (function () {
         this._scores[this._types.indexOf(pieces[0].getType())] += pieces.length;
     };
     Stats.prototype.scoreChain = function (pieces) {
-        var comboScore = this._chains[this._types.indexOf(pieces[0].getType())];
-        if (comboScore < pieces.length) {
+        var chainScore = this._chains[this._types.indexOf(pieces[0].getType())];
+        if (chainScore < pieces.length) {
             this._chains[this._types.indexOf(pieces[0].getType())] = pieces.length;
         }
     };
@@ -492,11 +492,10 @@ var Stats = (function () {
         this._updateScore("star chain ", this._chains, 3, 500, 500);
     };
     Stats.prototype._updateScore = function (description, statArray, statIndex, xPos, yPos) {
-        var _this = this;
         var label = new ex.Label(description + statArray[statIndex].toString(), xPos, yPos);
         label.color = ex.Color.Black;
         game.addEventListener('update', function (data) {
-            label.text = description + _this._scores[statIndex].toString();
+            label.text = description + statArray[statIndex].toString();
         });
         game.currentScene.addChild(label);
     };
