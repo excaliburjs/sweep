@@ -1,10 +1,10 @@
 var Config = (function () {
     function Config() {
     }
-    Config.PieceWidth = 10;
-    Config.PieceHeight = 10;
-    Config.CellWidth = 20;
-    Config.CellHeight = 20;
+    Config.PieceWidth = 20;
+    Config.PieceHeight = 20;
+    Config.CellWidth = 30;
+    Config.CellHeight = 30;
     return Config;
 })();
 var Resources = {};
