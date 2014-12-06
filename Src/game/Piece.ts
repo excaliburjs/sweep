@@ -20,6 +20,7 @@ class Piece extends ex.Actor {
    private _originalColor: ex.Color;
    private _type: PieceType;
 
+   public cell: Cell = null;
    public selected: boolean = false;
 
    constructor(id: number, x?: number, y?: number, color?: ex.Color, type?: PieceType) {
