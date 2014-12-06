@@ -25,7 +25,8 @@ class TurnManager {
    private _handleMatchEvent(evt: MatchEvent) {
       if (evt.run.length >= 3) {
          evt.run.forEach(p => grid.clearPiece(p));
-         
+         stats.scorePieces(evt.run);
+         stats.scoreChain(evt.run);
          this._shiftBoard();
       }
    }
