@@ -24,9 +24,9 @@
 
    public scoreChain(pieces: Piece[]) {
 
-      var comboScore = this._chains[this._types.indexOf(pieces[0].getType())];
+      var chainScore = this._chains[this._types.indexOf(pieces[0].getType())];
 
-      if (comboScore < pieces.length) {
+      if (chainScore < pieces.length) {
          this._chains[this._types.indexOf(pieces[0].getType())] = pieces.length;
       }
    }
@@ -48,7 +48,7 @@
       var label = new ex.Label(description + statArray[statIndex].toString(), xPos, yPos);
       label.color = ex.Color.Black;
       game.addEventListener('update', (data?: ex.UpdateEvent) => {
-         label.text = description + this._scores[statIndex].toString();
+         label.text = description + statArray[statIndex].toString();
       });
       game.currentScene.addChild(label);
    }
