@@ -24,6 +24,7 @@ var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, TurnMode.Match);
+var transitionManager = new TransitionManager(grid, visualGrid);
 
 game.currentScene.camera.setFocus(visualGrid.getWidth()/2, visualGrid.getHeight()/2);
 game.add(visualGrid);
