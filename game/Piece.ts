@@ -8,6 +8,12 @@
 var PieceTypes = [PieceType.Circle, PieceType.Square, PieceType.Triangle, PieceType.Star];
 var PieceTypeToColor = [ex.Color.Cyan, ex.Color.Orange, ex.Color.Violet, ex.Color.Chartreuse];
 
+class PieceEvent extends ex.GameEvent {
+   constructor(public cell: Cell) {
+      super();
+   }
+}
+
 class Piece extends ex.Actor {
 
    private _id: number;
@@ -18,6 +24,9 @@ class Piece extends ex.Actor {
       super(x, y, Config.PieceWidth, Config.PieceHeight, color);
       this._id = id;
       this._type = type || PieceType.Circle;
+
+      this.enableCapturePointer = true;
+      this.capturePointer.captureMoveEvents = true;
    }
 
    public getId(): number {
@@ -45,7 +54,11 @@ class PieceFactory {
    private static _maxId: number = 0;
    public static getRandomPiece(): Piece {
       var index = Math.floor(Math.random() * PieceTypes.length);
-      return new Piece(PieceFactory._maxId++, 0, 0,PieceTypeToColor[index].clone(), index);
+      var piece = new Piece(PieceFactory._maxId++, 0, 0, PieceTypeToColor[index].clone(), index);
+
+      game.add(piece);
+
+      return piece;
    }
 }
 

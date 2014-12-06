@@ -4,7 +4,7 @@
 /// <reference path="resources.ts"/>
 /// <reference path="Piece.ts"/>
 /// <reference path="grid.ts"/>
-
+/// <reference path="match.ts"/>
 
 var game = new ex.Engine(720, 480, "game");
 
@@ -18,6 +18,8 @@ _.forIn(Resources, (resource) => {
 // build grid
 var grid = new LogicalGrid(15, 10);
 var visualGrid = new VisualGrid(grid);
+var matcher = new MatchManager(grid);
+
 game.camera.setFocus(visualGrid.getWidth()/2, visualGrid.getHeight()/2);
 game.add(visualGrid);
 
@@ -28,6 +30,15 @@ grid.fill(grid.rows - 3);
 game.input.keyboard.on('down', (evt: ex.Input.KeyEvent) => {
    if (evt.key === ex.Input.Keys.D) {
       game.isDebug = !game.isDebug;
+   }
+
+   if (evt.key === ex.Input.Keys.S) {
+      // shift all rows up 1
+      for (var i = 0; i < grid.rows; i++) {
+         grid.shift(i, i - 1);         
+      }
+      // fill first row
+      grid.fill(grid.rows - 1);
    }
 });
 
