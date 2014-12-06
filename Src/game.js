@@ -5,6 +5,8 @@ var Config = (function () {
     Config.PieceHeight = 20;
     Config.CellWidth = 30;
     Config.CellHeight = 30;
+    Config.GridCellsHigh = 15;
+    Config.GridCellsWide = 10;
     return Config;
 })();
 var Resources = {};
@@ -320,7 +322,7 @@ _.forIn(Resources, function (resource) {
     loader.addResource(resource);
 });
 // build grid
-var grid = new LogicalGrid(15, 10);
+var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager(grid);
 var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
