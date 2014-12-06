@@ -34,10 +34,10 @@ var Resources = {};
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#a4adb2"),
     GridBackgroundColor: ex.Color.fromHex("#EBF8FF"),
-    PieceColor1: ex.Color.fromHex("#D8306D"),
-    PieceColor2: ex.Color.fromHex("#F2CB05"),
-    PieceColor3: ex.Color.fromHex("#6DA8BA"),
-    PieceColor4: ex.Color.fromHex("#F25F1B")
+    PieceColor1: ex.Color.fromHex("#748BD9"),
+    PieceColor2: ex.Color.fromHex("#7D8C45"),
+    PieceColor3: ex.Color.fromHex("#BF8136"),
+    PieceColor4: ex.Color.fromHex("#8C251C")
 };
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -53,7 +53,7 @@ var PieceType;
     PieceType[PieceType["Star"] = 3] = "Star";
 })(PieceType || (PieceType = {}));
 var PieceTypes = [0 /* Circle */, 2 /* Square */, 1 /* Triangle */, 3 /* Star */];
-var PieceTypeToColor = [ex.Color.Cyan, ex.Color.Orange, ex.Color.Violet, ex.Color.Chartreuse];
+var PieceTypeToColor = [Palette.PieceColor1, Palette.PieceColor2, Palette.PieceColor3, Palette.PieceColor4];
 var PieceEvent = (function (_super) {
     __extends(PieceEvent, _super);
     function PieceEvent(cell) {
@@ -241,7 +241,8 @@ var VisualGrid = (function (_super) {
         this.logicalGrid.cells.forEach(function (c) {
             ctx.fillStyle = Palette.GridBackgroundColor.toString();
             ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
-            ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.3);
+            ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
+            ctx.lineWidth = 1;
             ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
         });
     };

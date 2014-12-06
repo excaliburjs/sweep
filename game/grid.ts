@@ -141,7 +141,8 @@ class VisualGrid extends ex.Actor {
 
          ctx.fillStyle = Palette.GridBackgroundColor.toString();         
          ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
-         ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.3);
+         ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
+         ctx.lineWidth = 1;
          ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);         
       });
    }

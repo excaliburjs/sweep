@@ -11,8 +11,8 @@ var Palette = {
    GameBackgroundColor: ex.Color.fromHex("#a4adb2"),
    GridBackgroundColor: ex.Color.fromHex("#EBF8FF"),
 
-   PieceColor1: ex.Color.fromHex("#D8306D"),
-   PieceColor2: ex.Color.fromHex("#F2CB05"),
-   PieceColor3: ex.Color.fromHex("#6DA8BA"),
-   PieceColor4: ex.Color.fromHex("#F25F1B")
+   PieceColor1: ex.Color.fromHex("#748BD9"),
+   PieceColor2: ex.Color.fromHex("#7D8C45"),
+   PieceColor3: ex.Color.fromHex("#BF8136"),
+   PieceColor4: ex.Color.fromHex("#8C251C")
 };
