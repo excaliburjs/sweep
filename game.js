@@ -2,9 +2,9 @@ var Util = (function () {
     function Util() {
     }
     Util.darken = function (color, value) {
-        var r = color.r - (color.r * value);
-        var g = color.g - (color.g * value);
-        var b = color.b - (color.b * value);
+        var r = Math.floor(color.r - (color.r * value));
+        var g = Math.floor(color.g - (color.g * value));
+        var b = Math.floor(color.b - (color.b * value));
         return new ex.Color(r, g, b, color.a);
     };
     return Util;
@@ -12,7 +12,7 @@ var Util = (function () {
 var Config = (function () {
     function Config() {
     }
-    Config.gameWidth = 1280;
+    Config.gameWidth = 720;
     Config.gameHeight = 720;
     Config.PieceWidth = 36;
     Config.PieceHeight = 36;
@@ -26,7 +26,7 @@ var Config = (function () {
 /// <reference path="util.ts"/>
 var Resources = {};
 var Palette = {
-    GameBackgroundColor: Util.darken(ex.Color.fromHex("#EBF8FF"), 0.3),
+    GameBackgroundColor: ex.Color.fromHex("#a4adb2"),
     GridBackgroundColor: ex.Color.fromHex("#EBF8FF"),
     PieceColor1: ex.Color.fromHex("#D8306D"),
     PieceColor2: ex.Color.fromHex("#F2CB05"),

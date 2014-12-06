@@ -1,12 +1,12 @@
 ﻿body {
-    font-family: 'Segoe UI', sans-serif;
+  font-family: 'Segoe UI', sans-serif;
+  background: #a4adb2;
 }
-
 span {
-    font-style: italic;
+  font-style: italic;
 }
-
 canvas {
-    margin: auto;
-    display: block;
+  margin: auto;
+  display: block;
 }
+/*# sourceMappingURL=app.css.map */
