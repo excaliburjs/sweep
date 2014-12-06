@@ -23,8 +23,10 @@ class TurnManager {
    }
 
    private _handleMatchEvent(evt: MatchEvent) {
-      evt.run.forEach(p => p.kill());
-      this._shiftBoard();
+      if (evt.run.length >= 3) {
+         evt.run.forEach(p => p.kill());
+         this._shiftBoard();
+      }
    }
 
    private _tick() {

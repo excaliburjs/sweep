@@ -78,7 +78,7 @@
   </ProjectExtensions>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <TypeScriptRemoveComments>false</TypeScriptRemoveComments>
-    <TypeScriptSourceMap>true</TypeScriptSourceMap>
+    <TypeScriptSourceMap>False</TypeScriptSourceMap>
     <TypeScriptOutFile>game.js</TypeScriptOutFile>
     <TypeScriptModuleKind>none</TypeScriptModuleKind>
   </PropertyGroup>

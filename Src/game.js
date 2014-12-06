@@ -296,8 +296,10 @@ var TurnManager = (function () {
         this.logicalGrid.fill(grid.rows - 1);
     };
     TurnManager.prototype._handleMatchEvent = function (evt) {
-        evt.run.forEach(function (p) { return p.kill(); });
-        this._shiftBoard();
+        if (evt.run.length >= 3) {
+            evt.run.forEach(function (p) { return p.kill(); });
+            this._shiftBoard();
+        }
     };
     TurnManager.prototype._tick = function () {
         if (this.turnMode === 0 /* Timed */) {
