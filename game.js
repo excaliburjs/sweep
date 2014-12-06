@@ -253,7 +253,7 @@ var MatchManager = (function (_super) {
             ex.Logger.getInstance().info("Run modified", this._run);
         }
     };
-    MatchManager.prototype._handlePieceUp = function (pe) {
+    MatchManager.prototype._handlePieceUp = function () {
         // have a valid run?
         if (this._run.length > 0) {
             ex.Logger.getInstance().info("Run ended", this._run);
