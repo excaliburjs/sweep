@@ -215,7 +215,7 @@ var MatchManager = (function (_super) {
         grid.on("pieceremove", function (pe) {
             // todo
         });
-        game.input.pointers.on("up", this._handlePieceUp);
+        game.input.pointers.primary.on("up", _.bind(this._handlePieceUp, this));
     }
     MatchManager.prototype._handlePieceDown = function (pe) {
         var cell = visualGrid.getCellByPos(pe.x, pe.y);
@@ -255,7 +255,7 @@ var MatchManager = (function (_super) {
             ex.Logger.getInstance().info("Run modified", this._run);
         }
     };
-    MatchManager.prototype._handlePieceUp = function (pe) {
+    MatchManager.prototype._handlePieceUp = function () {
         // have a valid run?
         if (this._run.length > 0) {
             ex.Logger.getInstance().info("Run ended", this._run);
