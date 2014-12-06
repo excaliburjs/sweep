@@ -7,7 +7,7 @@
 /// <reference path="match.ts"/>
 /// <reference path="turn.ts"/>
 
-var game = new ex.Engine(720, 480, "game");
+var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 
 var loader = new ex.Loader();
 
