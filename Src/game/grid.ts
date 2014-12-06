@@ -152,4 +152,13 @@ class VisualGrid extends ex.Actor {
          return cell.piece && cell.piece.contains(screenX, screenY);
       });
    }
+
+   public sweep(type: PieceType) {
+      var cells = this.logicalGrid.cells.filter(cell => {
+         return cell.piece && cell.piece.getType() === type;
+      });
+
+      // todo transitions
+      cells.forEach(cell => { grid.setCell(cell.x, cell.y, null) });
+   }
 }
