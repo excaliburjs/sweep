@@ -459,47 +459,35 @@ var Stats = (function () {
         this._longestStarCombo = 0;
         this._types = [0 /* Circle */, 1 /* Triangle */, 2 /* Square */, 3 /* Star */];
         this._scores = [this._numCirclesDestroyed, this._numTrianglesDestroyed, this._numSquaresDestroyed, this._numStarsDestroyed];
-        this._combos = [this._longestCircleCombo, this._longestTriangleCombo, this._longestSquareCombo, this._longestStarCombo];
+        this._chains = [this._longestCircleCombo, this._longestTriangleCombo, this._longestSquareCombo, this._longestStarCombo];
     }
     Stats.prototype.scorePieces = function (pieces) {
         this._scores[this._types.indexOf(pieces[0].getType())] += pieces.length;
     };
     Stats.prototype.scoreChain = function (pieces) {
-        var comboScore = this._combos[this._types.indexOf(pieces[0].getType())];
+        var comboScore = this._chains[this._types.indexOf(pieces[0].getType())];
         if (comboScore < pieces.length) {
-            this._combos[this._types.indexOf(pieces[0].getType())] = pieces.length;
+            this._chains[this._types.indexOf(pieces[0].getType())] = pieces.length;
         }
     };
     Stats.prototype.drawScores = function () {
+        this._updateScore("circles ", this._scores, 0, 500, 350);
+        this._updateScore("triangles ", this._scores, 1, 500, 370);
+        this._updateScore("squares ", this._scores, 2, 500, 390);
+        this._updateScore("stars ", this._scores, 3, 500, 410);
+        this._updateScore("circle chain ", this._chains, 0, 500, 440);
+        this._updateScore("triangle chain ", this._chains, 1, 500, 460);
+        this._updateScore("square chain ", this._chains, 2, 500, 480);
+        this._updateScore("star chain ", this._chains, 3, 500, 500);
+    };
+    Stats.prototype._updateScore = function (description, statArray, statIndex, xPos, yPos) {
         var _this = this;
-        var labelCirclesDestroyed = new ex.Label("circles " + this._numCirclesDestroyed, 500, 350);
-        labelCirclesDestroyed.color = ex.Color.Black;
-        //labelCirclesDestroyed.textAlign = ex.TextAlign.Center;
+        var label = new ex.Label(description + statArray[statIndex].toString(), xPos, yPos);
+        label.color = ex.Color.Black;
         game.addEventListener('update', function (data) {
-            labelCirclesDestroyed.text = "circles " + _this._scores[0];
+            label.text = description + _this._scores[statIndex].toString();
         });
-        game.currentScene.addChild(labelCirclesDestroyed);
-        var labelTrianglesDestroyed = new ex.Label("triangles " + this._numTrianglesDestroyed, 500, 370);
-        labelTrianglesDestroyed.color = ex.Color.Black;
-        //labelTrianglesDestroyed.textAlign = ex.TextAlign.Center;
-        game.addEventListener('update', function (data) {
-            labelTrianglesDestroyed.text = "triangles " + _this._scores[1];
-        });
-        game.currentScene.addChild(labelTrianglesDestroyed);
-        var labelSquaresDestroyed = new ex.Label("squares " + this._numSquaresDestroyed, 500, 390);
-        labelSquaresDestroyed.color = ex.Color.Black;
-        //labelSquaresDestroyed.textAlign = ex.TextAlign.Center;
-        game.addEventListener('update', function (data) {
-            labelSquaresDestroyed.text = "squares " + _this._scores[2];
-        });
-        game.currentScene.addChild(labelSquaresDestroyed);
-        var labelStarsDestroyed = new ex.Label("stars " + this._numStarsDestroyed, 500, 410);
-        labelStarsDestroyed.color = ex.Color.Black;
-        //labelStarsDestroyed.textAlign = ex.TextAlign.Center;
-        game.addEventListener('update', function (data) {
-            labelStarsDestroyed.text = "stars " + _this._scores[3];
-        });
-        game.currentScene.addChild(labelStarsDestroyed);
+        game.currentScene.addChild(label);
     };
     return Stats;
 })();
