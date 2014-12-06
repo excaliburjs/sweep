@@ -8,8 +8,7 @@
 
 class MatchManager extends ex.Class {
 
-   private _run: Piece[] = [];
-   private _runInProgress = false;
+   private _run: Piece[] = [];   
 
    constructor() {
       super();
@@ -19,13 +18,15 @@ class MatchManager extends ex.Class {
       game.input.pointers.primary.on("move", _.bind(this._handlePointerMove, this));      
    }
 
+   public runInProgress = false;
+
    private _handlePieceDown(pe: PointerEvent) {
 
       var cell = visualGrid.getCellByPos(pe.x, pe.y);
 
       if (!cell) return;
 
-      this._runInProgress = true;
+      this.runInProgress = true;
       this._run.push(cell.piece);
 
       ex.Logger.getInstance().info("Run started", this._run);
@@ -39,7 +40,7 @@ class MatchManager extends ex.Class {
       // add piece to run if valid
       // draw line?
 
-      if (!this._runInProgress) return;
+      if (!this.runInProgress) return;
 
       var cell = visualGrid.getCellByPos(pe.x, pe.y);
 
@@ -59,6 +60,7 @@ class MatchManager extends ex.Class {
             piece.getType() !== this._run[this._run.length - 1].getType())) return;
 
          // add to run
+         piece.selected = true;
          this._run.push(piece);
 
          ex.Logger.getInstance().info("Run modified", this._run);
@@ -75,15 +77,12 @@ class MatchManager extends ex.Class {
          removePiece = this._run.indexOf(piece) + 1;
       }
       
-
       if (removePiece > -1) {
          // remove from run
+         this._run[removePiece].selected = false;
          this._run.splice(removePiece, 1);
 
          ex.Logger.getInstance().info("Run modified", this._run);
-
-         // notify
-         this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
       }
    }
 
@@ -96,10 +95,11 @@ class MatchManager extends ex.Class {
          // notify
          this.eventDispatcher.publish("match", new MatchEvent(_.clone(this._run)));
 
+         this._run.forEach(p => p.selected = false);
          this._run.length = 0;
       }
 
-      this._runInProgress = false;
+      this.runInProgress = false;
    }
 
    public areNeighbors(piece1: Piece, piece2: Piece): boolean {      
@@ -107,5 +107,11 @@ class MatchManager extends ex.Class {
       var cell2 = _.find(grid.cells, { piece: piece2 });
       
       return grid.areNeighbors(cell1, cell2);
+   }
+
+   public getRunType(): PieceType {
+      if (this._run.length === 0) return null;
+
+      return this._run[0].getType();
    }
 }

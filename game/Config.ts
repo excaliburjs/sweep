@@ -1,10 +1,10 @@
 ﻿class Config {
-   static gameWidth: number = 1440;
-   static gameHeight: number = 900;
-   static PieceWidth: number = 40;
-   static PieceHeight: number = 40;
-   static CellWidth: number = 50;
-   static CellHeight: number = 50;
+   static gameWidth: number = 1280;
+   static gameHeight: number = 720;
+   static PieceWidth: number = 36;
+   static PieceHeight: number = 36;
+   static CellWidth: number = 45;
+   static CellHeight: number = 45;
    static GridCellsHigh: number = 15;
    static GridCellsWide: number = 10;
    static NumStartingRows: number = 3;

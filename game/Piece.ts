@@ -17,28 +17,20 @@ class PieceEvent extends ex.GameEvent {
 class Piece extends ex.Actor {
 
    private _id: number;
-   private _color: ex.Color;
+   private _originalColor: ex.Color;
    private _type: PieceType;
+
+   public selected: boolean = false;
 
    constructor(id: number, x?: number, y?: number, color?: ex.Color, type?: PieceType) {
       super(x, y, Config.PieceWidth, Config.PieceHeight, color);
       this._id = id;
       this._type = type || PieceType.Circle;
-
-      this.enableCapturePointer = true;
-      this.capturePointer.captureMoveEvents = true;
+      this._originalColor = color;
    }
 
    public getId(): number {
       return this._id;
-   }
-
-   public getColor(): ex.Color {
-      return this._color;
-   }
-
-   public setColor(color: ex.Color): void {
-      this._color = color;
    }
 
    public getType(): PieceType {
@@ -47,6 +39,16 @@ class Piece extends ex.Actor {
 
    public setType(type: PieceType): void {
       this._type = type;
+   }
+
+   public update(engine: ex.Engine, delta: number) {
+      super.update(engine, delta);
+
+      if (matcher.runInProgress && (!this.selected && this.getType() !== matcher.getRunType())) {
+         this.color = new ex.Color(this._originalColor.r, this._originalColor.g, this._originalColor.b, 0.2);
+      } else {
+         this.color = this._originalColor;
+      }
    }
 }
 
