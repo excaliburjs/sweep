@@ -498,6 +498,7 @@ var Stats = (function () {
     };
     Stats.prototype.drawScores = function () {
         var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
+        this._totalScore("total ", scoreXPos, 330);
         this._addScore("circles ", this._scores, 0, scoreXPos, 350);
         this._addScore("triangles ", this._scores, 1, scoreXPos, 370);
         this._addScore("squares ", this._scores, 2, scoreXPos, 390);
@@ -512,6 +513,17 @@ var Stats = (function () {
         label.color = ex.Color.Black;
         game.addEventListener('update', function (data) {
             label.text = description + statArray[statIndex].toString();
+        });
+        game.currentScene.addChild(label);
+    };
+    Stats.prototype._totalScore = function (description, xPos, yPos) {
+        var _this = this;
+        var totalScore = 0;
+        var label = new ex.Label(description + totalScore.toString(), xPos, yPos);
+        label.color = ex.Color.Black;
+        game.addEventListener('update', function (data) {
+            var totalScore = _this._scores[0] + _this._scores[1] + _this._scores[2] + _this._scores[3];
+            label.text = description + totalScore.toString();
         });
         game.currentScene.addChild(label);
     };
