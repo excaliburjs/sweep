@@ -16,7 +16,7 @@ class Cell {
    }
 
    public getAbove(): Cell {
-      return this.logicalGrid.getCell(this.x, this.y -1);
+      return this.logicalGrid.getCell(this.x, this.y - 1);
    }
    public getBelow(): Cell {
       return this.logicalGrid.getCell(this.x, this.y + 1);
@@ -72,8 +72,8 @@ class LogicalGrid extends ex.Class {
          var center = cell.getCenter();
          if (movePiece) {
             //data.moveTo(center.x, center.y, 200).asPromise().then(() => {
-               data.x = center.x;
-               data.y = center.y;
+            data.x = center.x;
+            data.y = center.y;
             //});
          }
          data.cell = cell;
@@ -101,20 +101,20 @@ class LogicalGrid extends ex.Class {
       }
    }
 
-  /* private _getPieceGroupHelper(currentPiece: Piece, currentGroup: Piece[]) {
-      var unexploredNeighbors = currentPiece.cell.getNeighbors().filter(c => {
-         return c.piece && currentGroup.indexOf(c.piece) === -1 && c.piece.getType() === currentPiece.getType();
-      }).map(c => c.piece);
-      currentGroup = currentGroup.concat(unexploredNeighbors);
-      if (unexploredNeighbors.length === 0) {
-         return currentGroup;
-      } else {
-         for (var i = 0; i < unexploredNeighbors.length; i++) {
-            this._getPieceGroupHelper(unexploredNeighbors[i], currentGroup);
-         }
-         return currentGroup;
-      }
-   }*/
+   /* private _getPieceGroupHelper(currentPiece: Piece, currentGroup: Piece[]) {
+       var unexploredNeighbors = currentPiece.cell.getNeighbors().filter(c => {
+          return c.piece && currentGroup.indexOf(c.piece) === -1 && c.piece.getType() === currentPiece.getType();
+       }).map(c => c.piece);
+       currentGroup = currentGroup.concat(unexploredNeighbors);
+       if (unexploredNeighbors.length === 0) {
+          return currentGroup;
+       } else {
+          for (var i = 0; i < unexploredNeighbors.length; i++) {
+             this._getPieceGroupHelper(unexploredNeighbors[i], currentGroup);
+          }
+          return currentGroup;
+       }
+    }*/
 
    public getAdjacentPieceGroup(piece: Piece): Piece[] {
       var currentGroup: Piece[] = [piece];
@@ -135,6 +135,26 @@ class LogicalGrid extends ex.Class {
 
       _getPieceGroupHelper(piece);
       return currentGroup;
+   }
+
+
+   public getNumAvailablePieces(): number {
+      var selectablePieces: Piece[] = [];
+
+      for (var i = 0; i < this.cells.length; i++) {
+         if (this.cells[i].piece) {
+            if (selectablePieces.indexOf(this.cells[i].piece) !== -1) {
+               continue;
+            } else {
+               var additions = this.getAdjacentPieceGroup(this.cells[i].piece);
+               if (additions.length >= 3) {
+                  selectablePieces = selectablePieces.concat(additions);
+               }
+            }
+         }
+
+      }
+      return selectablePieces.length;
    }
 
    public fill(row: number, smooth: boolean = false) {
