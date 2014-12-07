@@ -20,7 +20,10 @@ var Resources = {
    ChallengeNote6Sound: new ex.Sound('sounds/challengenote6.mp3'),
 
    // Textures
-   // TextureLevel: new ex.Texture("/images/tex-1.jpg")
+   TextureTile1: new ex.Texture("images/Tile1.png"),
+   TextureTile2: new ex.Texture("images/Tile2.png"),
+   TextureTile3: new ex.Texture("images/Tile3.png"),
+   TextureTile4: new ex.Texture("images/Tile4.png")
 
 };
 
@@ -29,8 +32,8 @@ var Palette = {
    GridBackgroundColor: ex.Color.fromHex("#efefef"),
 
    // Beach
-   PieceColor1: ex.Color.fromHex("#BF6D72"),
-   PieceColor2: ex.Color.fromHex("#DBB96D"),
+   PieceColor1: ex.Color.fromHex("#DBB96D"),
+   PieceColor2: ex.Color.fromHex("#BF6D72"),
    PieceColor3: ex.Color.fromHex("#5096F2"),
    PieceColor4: ex.Color.fromHex("#9979E0")
 };

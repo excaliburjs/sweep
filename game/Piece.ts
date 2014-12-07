@@ -7,6 +7,7 @@
 
 var PieceTypes = [PieceType.Circle, PieceType.Square, PieceType.Triangle, PieceType.Star];
 var PieceTypeToColor = [Palette.PieceColor1, Palette.PieceColor2, Palette.PieceColor3, Palette.PieceColor4];
+var PieceTypeToTexture = [Resources.TextureTile2, Resources.TextureTile1, Resources.TextureTile3, Resources.TextureTile4];
 
 class PieceEvent extends ex.GameEvent {
    constructor(public cell: Cell) {
@@ -28,7 +29,6 @@ class Piece extends ex.Actor {
       this._id = id;
       this._type = type || PieceType.Circle;
       this._originalColor = color;
-      
    }
    
    public getId(): number {
@@ -41,17 +41,43 @@ class Piece extends ex.Actor {
    
    public setType(type: PieceType): void {
       this._type = type;
+      this._updateDrawings();
+   }
+
+   private _updateDrawings() {
+      var tileSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
+      tileSprite.setScaleX(Config.PieceWidth / 60);
+      tileSprite.setScaleY(Config.PieceHeight / 60);
+
+      this.addDrawing("default", tileSprite);
+
+      var highlightSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
+      highlightSprite.setScaleX(Config.PieceWidth / 60);
+      highlightSprite.setScaleY(Config.PieceHeight / 60);
+      highlightSprite.addEffect(new SaturateEffect(0.5));
+
+      this.addDrawing("highlight", highlightSprite);
+
+      var fadedSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
+      fadedSprite.setScaleX(Config.PieceWidth / 60);
+      fadedSprite.setScaleY(Config.PieceHeight / 60);
+      fadedSprite.addEffect(new ex.Effects.Opacity(0.3));
+      this.addDrawing("faded", fadedSprite);
+   }
+
+   public onInitialize(engine: ex.Engine) {
+      this._updateDrawings();
    }
 
    public update(engine: ex.Engine, delta: number) {
       super.update(engine, delta);
-      
+
       if (matcher.runInProgress && (!this.selected && this.getType() !== matcher.getRunType())) {
-         this.color = new ex.Color(this._originalColor.r, this._originalColor.g, this._originalColor.b, 0.3);
+         this.setDrawing("faded");
       } else if (this.selected) {
-         this.color = Util.lighten(this._originalColor, 0.3);
+         this.setDrawing("highlight");
       } else {
-         this.color = this._originalColor;
+         this.setDrawing("default");
       }
    }
 }
