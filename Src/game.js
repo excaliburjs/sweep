@@ -390,58 +390,56 @@ var LogicalGrid = (function (_super) {
     LogicalGrid.prototype.fill = function (row, smooth) {
         var _this = this;
         if (smooth === void 0) { smooth = false; }
-        if (smooth) {
-            for (var i = 0; i < this.cols; i++) {
-                (function () {
-                    var piece = PieceFactory.getRandomPiece();
-                    var cell = _this.getCell(i, row);
+        for (var i = 0; i < this.cols; i++) {
+            (function () {
+                var piece = PieceFactory.getRandomPiece();
+                var cell = _this.getCell(i, row);
+                piece.x = cell.getCenter().x;
+                piece.y = mask.y + Config.CellHeight;
+                var intendedCell = _this.setCell(i, row, piece, !smooth);
+                var hasSameType = intendedCell.getNeighbors().some(function (c) {
+                    if (c && c.piece) {
+                        return c.piece.getType() === piece.getType();
+                    }
+                    return false;
+                });
+                if (hasSameType) {
+                    _this.clearPiece(piece);
+                    piece = PieceFactory.getRandomPiece();
                     piece.x = cell.getCenter().x;
                     piece.y = mask.y + Config.CellHeight;
-                    var intendedCell = _this.setCell(i, row, piece, false);
-                    var hasSameType = intendedCell.getNeighbors().some(function (c) {
-                        if (c && c.piece) {
-                            return c.piece.getType() === piece.getType();
-                        }
-                        return false;
-                    });
-                    if (hasSameType) {
-                        _this.clearPiece(piece);
-                        piece = PieceFactory.getRandomPiece();
-                        piece.x = cell.getCenter().x;
-                        piece.y = mask.y + Config.CellHeight;
-                        _this.setCell(i, row, piece, false);
-                    }
+                    _this.setCell(i, row, piece, !smooth);
+                }
+                if (smooth) {
                     piece.moveTo(cell.getCenter().x, cell.getCenter().y, 300).asPromise().then(function () {
                         piece.x = cell.getCenter().x;
                         piece.y = cell.getCenter().y;
                     });
-                })();
-            }
-            mask.kill();
-            game.add(mask);
+                }
+            })();
         }
-        else {
-            for (var i = 0; i < this.cols; i++) {
-                (function () {
-                    var currentPiece = PieceFactory.getRandomPiece();
-                    var currentCell = _this.setCell(i, row, currentPiece, !smooth);
-                    var neighbors = currentCell.getNeighbors();
-                    var hasMatchingNeighbor = false;
-                    for (var j = 0; j < neighbors.length; j++) {
-                        if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
-                            hasMatchingNeighbor = true;
-                            break;
-                        }
-                    }
-                    if (hasMatchingNeighbor) {
-                        if (currentCell.piece) {
-                            _this.clearPiece(currentCell.piece);
-                        }
-                        _this.setCell(i, row, PieceFactory.getRandomPiece(), !smooth);
-                    }
-                })();
-            }
-        }
+        mask.kill();
+        game.add(mask);
+        //} else {
+        //   for (var i = 0; i < this.cols; i++) {
+        //      (() => {
+        //         var currentPiece = PieceFactory.getRandomPiece();
+        //         var currentCell = this.setCell(i, row, currentPiece, !smooth);
+        //         var neighbors = currentCell.getNeighbors();
+        //         var hasMatchingNeighbor = false;
+        //         for (var j = 0; j < neighbors.length; j++) {
+        //            if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
+        //               hasMatchingNeighbor = true;
+        //               break;
+        //            }
+        //         }
+        //         if (hasMatchingNeighbor) {
+        //            if (currentCell.piece) {
+        //               this.clearPiece(currentCell.piece);
+        //            }
+        //            this.setCell(i, row, PieceFactory.getRandomPiece(), !smooth);
+        //         }
+        //      })(); }}
     };
     LogicalGrid.prototype.shift = function (from, to) {
         var _this = this;
