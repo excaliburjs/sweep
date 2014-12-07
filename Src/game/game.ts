@@ -12,9 +12,11 @@
 /// <reference path="sweeper.ts"/>
 /// <reference path="UIWidget.ts"/>
 
-var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
-game.backgroundColor = Palette.GameBackgroundColor;
+var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game", ex.DisplayMode.FullScreen);
+game.backgroundColor = ex.Color.Transparent;
 
+
+var gameMode = GameMode.Standard;
 
 var loader = new ex.Loader();
 
@@ -120,6 +122,12 @@ var gameOverWidget = new UIWidget();
 //gameOverWidget.addButton(postYourScore);
 
 function gameOver() {
+   var analytics = (<any>window).ga;
+   if (analytics) {
+      analytics('send', 'event', 'ludum-30-stats', gameMode.toString(), 'total score', { 'eventValue': stats.getTotalScore(), 'nonInteraction': 1 });
+      analytics('send', 'event', 'ludum-30-stats', gameMode.toString(), 'longest chain', { 'eventValue': stats.getLongestChain(), 'nonInteraction': 1 });
+   }
+
    if (turnManager) turnManager.dispose(); // stop game over from happening infinitely in time attack
    var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3)
    var gameOverWidgetActor = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() - 800, 300, 300, color);

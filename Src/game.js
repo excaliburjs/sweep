@@ -1,3 +1,8 @@
+var GameMode;
+(function (GameMode) {
+    GameMode[GameMode["Standard"] = 0] = "Standard";
+    GameMode[GameMode["Timed"] = 1] = "Timed";
+})(GameMode || (GameMode = {}));
 var Config = (function () {
     function Config() {
     }
@@ -69,6 +74,7 @@ var Config = (function () {
     Config.ScoreXBuffer = 20;
     Config.MeterWidth = 90;
     Config.MeterHeight = 30;
+    Config.EnableGridLines = false;
     return Config;
 })();
 var Util = (function () {
@@ -157,7 +163,7 @@ var Resources = {
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
-    GridBackgroundColor: ex.Color.fromHex("#efefef"),
+    GridBackgroundColor: new ex.Color(0, 20, 25, 0.9),
     // Beach
     PieceColor1: ex.Color.fromHex("#DBB96D"),
     PieceColor2: ex.Color.fromHex("#BF6D72"),
@@ -192,11 +198,13 @@ var Piece = (function (_super) {
     __extends(Piece, _super);
     function Piece(id, x, y, color, type) {
         _super.call(this, x, y, Config.PieceWidth, Config.PieceHeight, color);
+        this._initialScale = Config.PieceWidth / 50;
         this.cell = null;
         this.selected = false;
         this._id = id;
         this._type = type || 0 /* Circle */;
         this._originalColor = color;
+        this.scale.setTo(1.2, 1.2);
     }
     Piece.prototype.getId = function () {
         return this._id;
@@ -210,17 +218,17 @@ var Piece = (function (_super) {
     };
     Piece.prototype._updateDrawings = function () {
         var tileSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
-        tileSprite.setScaleX(Config.PieceWidth / 60);
-        tileSprite.setScaleY(Config.PieceHeight / 60);
+        tileSprite.setScaleX(this._initialScale);
+        tileSprite.setScaleY(this._initialScale);
         this.addDrawing("default", tileSprite);
         var highlightSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
-        highlightSprite.setScaleX(Config.PieceWidth / 60);
-        highlightSprite.setScaleY(Config.PieceHeight / 60);
+        highlightSprite.setScaleX(this._initialScale);
+        highlightSprite.setScaleY(this._initialScale);
         highlightSprite.addEffect(new SaturateEffect(0.5));
         this.addDrawing("highlight", highlightSprite);
         var fadedSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
-        fadedSprite.setScaleX(Config.PieceWidth / 60);
-        fadedSprite.setScaleY(Config.PieceHeight / 60);
+        fadedSprite.setScaleX(this._initialScale);
+        fadedSprite.setScaleY(this._initialScale);
         fadedSprite.addEffect(new ex.Effects.Opacity(0.3));
         this.addDrawing("faded", fadedSprite);
     };
@@ -387,58 +395,36 @@ var LogicalGrid = (function (_super) {
     LogicalGrid.prototype.fill = function (row, smooth) {
         var _this = this;
         if (smooth === void 0) { smooth = false; }
-        if (smooth) {
-            for (var i = 0; i < this.cols; i++) {
-                (function () {
-                    var piece = PieceFactory.getRandomPiece();
-                    var cell = _this.getCell(i, row);
+        for (var i = 0; i < this.cols; i++) {
+            (function () {
+                var piece = PieceFactory.getRandomPiece();
+                var cell = _this.getCell(i, row);
+                piece.x = cell.getCenter().x;
+                piece.y = mask.y + Config.CellHeight;
+                var intendedCell = _this.setCell(i, row, piece, !smooth);
+                var hasSameType = intendedCell.getNeighbors().some(function (c) {
+                    if (c && c.piece) {
+                        return c.piece.getType() === piece.getType();
+                    }
+                    return false;
+                });
+                if (hasSameType) {
+                    _this.clearPiece(piece);
+                    piece = PieceFactory.getRandomPiece();
                     piece.x = cell.getCenter().x;
                     piece.y = mask.y + Config.CellHeight;
-                    var intendedCell = _this.setCell(i, row, piece, false);
-                    var hasSameType = intendedCell.getNeighbors().some(function (c) {
-                        if (c && c.piece) {
-                            return c.piece.getType() === piece.getType();
-                        }
-                        return false;
-                    });
-                    if (hasSameType) {
-                        _this.clearPiece(piece);
-                        piece = PieceFactory.getRandomPiece();
-                        piece.x = cell.getCenter().x;
-                        piece.y = mask.y + Config.CellHeight;
-                        _this.setCell(i, row, piece, false);
-                    }
+                    _this.setCell(i, row, piece, !smooth);
+                }
+                if (smooth) {
                     piece.moveTo(cell.getCenter().x, cell.getCenter().y, 300).asPromise().then(function () {
                         piece.x = cell.getCenter().x;
                         piece.y = cell.getCenter().y;
                     });
-                })();
-            }
-            mask.kill();
-            game.add(mask);
+                }
+            })();
         }
-        else {
-            for (var i = 0; i < this.cols; i++) {
-                (function () {
-                    var currentPiece = PieceFactory.getRandomPiece();
-                    var currentCell = _this.setCell(i, row, currentPiece, !smooth);
-                    var neighbors = currentCell.getNeighbors();
-                    var hasMatchingNeighbor = false;
-                    for (var j = 0; j < neighbors.length; j++) {
-                        if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
-                            hasMatchingNeighbor = true;
-                            break;
-                        }
-                    }
-                    if (hasMatchingNeighbor) {
-                        if (currentCell.piece) {
-                            _this.clearPiece(currentCell.piece);
-                        }
-                        _this.setCell(i, row, PieceFactory.getRandomPiece(), !smooth);
-                    }
-                })();
-            }
-        }
+        mask.kill();
+        game.add(mask);
     };
     LogicalGrid.prototype.shift = function (from, to) {
         var _this = this;
@@ -535,9 +521,11 @@ var VisualGrid = (function (_super) {
         this.logicalGrid.cells.forEach(function (c) {
             ctx.fillStyle = Palette.GridBackgroundColor.toString();
             ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
-            ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
-            ctx.lineWidth = 1;
-            ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
+            if (Config.EnableGridLines) {
+                ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
+                ctx.lineWidth = 1;
+                ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
+            }
         });
     };
     VisualGrid.prototype.getCellByPos = function (screenX, screenY) {
@@ -848,6 +836,13 @@ var Stats = (function () {
         this._lastChain = 0;
         this._sweepMeterThreshold = Config.SweepAltThreshold;
     }
+    Stats.prototype.getTotalScore = function () {
+        var totalScore = this._scores[0] + this._scores[1] + this._scores[2] + this._scores[3];
+        return totalScore;
+    };
+    Stats.prototype.getLongestChain = function () {
+        return Math.max.apply(Math, this._chains);
+    };
     Stats.prototype.getMeter = function (pieceType) {
         return this._meters[this._types.indexOf(pieceType)];
     };
@@ -865,7 +860,7 @@ var Stats = (function () {
     Stats.prototype.canSweep = function (type) {
         if (type === void 0) { type = null; }
         if (type !== null) {
-            return this.getMeter(type) > Config.SweepThreshold;
+            return this.getMeter(type) >= Config.SweepThreshold;
         }
         else {
             return this._sweepMeter === this._sweepMeterThreshold;
@@ -1215,8 +1210,10 @@ var UIWidget = (function (_super) {
 /// <reference path="sweeper.ts"/>
 /// <reference path="UIWidget.ts"/>
 var _this = this;
-var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
-game.backgroundColor = Palette.GameBackgroundColor;
+var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game", 0 /* FullScreen */);
+game.backgroundColor = ex.Color.Transparent;
+var analytics = window.ga;
+var gameMode = 0 /* Standard */;
 var loader = new ex.Loader();
 // load up all resources in dictionary
 _.forIn(Resources, function (resource) {
@@ -1300,6 +1297,10 @@ var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
 function gameOver() {
+    if (analytics) {
+        analytics('send', 'event', 'ludum-30-stats', gameMode, 'total score', { 'eventValue': stats.getTotalScore(), 'nonInteraction': 1 });
+        analytics('send', 'event', 'ludum-30-stats', gameMode, 'longest chain', { 'eventValue': stats.getLongestChain(), 'nonInteraction': 1 });
+    }
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
     var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);

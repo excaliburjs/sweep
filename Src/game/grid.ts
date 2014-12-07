@@ -138,66 +138,39 @@ class LogicalGrid extends ex.Class {
    }
 
    public fill(row: number, smooth: boolean = false) {
-      if (smooth) {
-         for (var i = 0; i < this.cols; i++) {
-            (() => {
-               var piece = PieceFactory.getRandomPiece();
-               
-               var cell = this.getCell(i, row);
+
+      for (var i = 0; i < this.cols; i++) {
+         (() => {
+            var piece = PieceFactory.getRandomPiece();
+
+            var cell = this.getCell(i, row);
+            piece.x = cell.getCenter().x;
+            piece.y = mask.y + Config.CellHeight;
+            var intendedCell = this.setCell(i, row, piece, !smooth);
+            var hasSameType = intendedCell.getNeighbors().some((c) => {
+               if (c && c.piece) {
+                  return c.piece.getType() === piece.getType();
+               }
+               return false;
+            });
+            if (hasSameType) {
+               this.clearPiece(piece);
+               piece = PieceFactory.getRandomPiece();
                piece.x = cell.getCenter().x;
                piece.y = mask.y + Config.CellHeight;
-               var intendedCell = this.setCell(i, row, piece, false);
-               var hasSameType = intendedCell.getNeighbors().some((c) => {
-                  if (c && c.piece) {
-                     return c.piece.getType() === piece.getType();
-                  }
-                  return false;
-               });
-               if (hasSameType) {
-                  this.clearPiece(piece);
-                  piece = PieceFactory.getRandomPiece();
-                  piece.x = cell.getCenter().x;
-                  piece.y = mask.y + Config.CellHeight;
-                  this.setCell(i, row, piece, false);
-               }
+               this.setCell(i, row, piece, !smooth);
+            }
 
+            if (smooth) {
                piece.moveTo(cell.getCenter().x, cell.getCenter().y, 300).asPromise().then(() => {
                   piece.x = cell.getCenter().x;
                   piece.y = cell.getCenter().y;
                });
-               
-            })();
-         }
-         mask.kill();
-         game.add(mask);
-      } else {
-         for (var i = 0; i < this.cols; i++) {
-            (() => {
-               var currentPiece = PieceFactory.getRandomPiece();
-               var currentCell = this.setCell(i, row, currentPiece, !smooth);
-               var neighbors = currentCell.getNeighbors();
-               var hasMatchingNeighbor = false;
-
-               for (var j = 0; j < neighbors.length; j++) {
-                  if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
-                     hasMatchingNeighbor = true;
-                     break;
-                  }
-               }
-
-               if (hasMatchingNeighbor) {
-                  if (currentCell.piece) {
-                     this.clearPiece(currentCell.piece);
-                  }
-                  this.setCell(i, row, PieceFactory.getRandomPiece(), !smooth);
-               }
-
-            })();
-         }
+            }
+         })();
       }
-     
-
-      
+      mask.kill();
+      game.add(mask);
    }
 
    public shift(from: number, to: number): ex.Promise<any> {
@@ -301,9 +274,12 @@ class VisualGrid extends ex.Actor {
 
          ctx.fillStyle = Palette.GridBackgroundColor.toString();
          ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
-         ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
-         ctx.lineWidth = 1;
-         ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);         
+
+         if (Config.EnableGridLines) {
+            ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
+            ctx.lineWidth = 1;
+            ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
+         }
 
       });
    }

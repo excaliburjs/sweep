@@ -28,6 +28,7 @@
     <Content Include="app.min.css">
       <DependentUpon>app.css</DependentUpon>
     </Content>
+    <Content Include="images\bg2.jpg" />
     <Content Include="images\readme.txt" />
     <Content Include="images\Tile1.png" />
     <Content Include="images\Tile2.png" />
