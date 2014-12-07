@@ -29,6 +29,10 @@
       <DependentUpon>app.css</DependentUpon>
     </Content>
     <Content Include="images\readme.txt" />
+    <Content Include="images\Tile1.png" />
+    <Content Include="images\Tile2.png" />
+    <Content Include="images\Tile3.png" />
+    <Content Include="images\Tile4.png" />
     <Content Include="index.html" />
   </ItemGroup>
   <ItemGroup>
@@ -44,10 +48,28 @@
     <TypeScriptCompile Include="game\turn.ts" />
     <TypeScriptCompile Include="game\util.ts" />
     <TypeScriptCompile Include="scripts\typings\lodash\lodash.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\Spectra.d.ts" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="scripts\lodash.js" />
     <Content Include="scripts\lodash.min.js" />
+    <Content Include="scripts\spectra.min.js" />
+    <Content Include="sounds\challengeloopfixed.mp3" />
+    <Content Include="sounds\challengenote1.mp3" />
+    <Content Include="sounds\challengenote2.mp3" />
+    <Content Include="sounds\challengenote3.mp3" />
+    <Content Include="sounds\challengenote4.mp3" />
+    <Content Include="sounds\challengenote5.mp3" />
+    <Content Include="sounds\challengenote6.mp3" />
+    <Content Include="sounds\loop.mp3" />
+    <Content Include="sounds\note1.mp3" />
+    <Content Include="sounds\note2.mp3" />
+    <Content Include="sounds\note3.mp3" />
+    <Content Include="sounds\note4.mp3" />
+    <Content Include="sounds\note5.mp3" />
+    <Content Include="sounds\note6.mp3" />
+    <Content Include="sounds\note7.mp3" />
+    <Content Include="sounds\note8.mp3" />
     <Content Include="sounds\readme.txt" />
     <Content Include="packages.config" />
   </ItemGroup>

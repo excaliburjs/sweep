@@ -78,12 +78,55 @@ var Util = (function () {
         return new ex.Color(r, g, b, color.a);
     };
     Util.lighten = function (color, amount) {
-        var r = Math.min(255, Math.floor(color.r + (255 * amount)));
-        var g = Math.min(255, Math.floor(color.g + (255 * amount)));
-        var b = Math.min(255, Math.floor(color.b + (255 * amount)));
-        return new ex.Color(r, g, b, color.a);
+        if (color.a <= 0)
+            return color;
+        var c = Spectra({ r: color.r, g: color.g, b: color.b, a: color.a });
+        var newColor = c.lighten(amount * 100);
+        return new ex.Color(newColor.red(), newColor.green(), newColor.blue(), newColor.alpha());
+    };
+    Util.saturate = function (color, amount) {
+        if (color.a <= 0)
+            return color;
+        var c = Spectra({ r: color.r, g: color.g, b: color.b, a: color.a });
+        var newColor = c.saturate(amount * 100);
+        return new ex.Color(newColor.red(), newColor.green(), newColor.blue(), newColor.alpha());
+    };
+    Util.getColorOfPixel = function (imageData, x, y) {
+        var firstPixel = (x + y * imageData.width) * 4;
+        var pixels = imageData.data;
+        return new ex.Color(pixels[firstPixel + 0], pixels[firstPixel + 1], pixels[firstPixel + 2], pixels[firstPixel + 3]);
+    };
+    Util.setPixelToColor = function (imageData, x, y, color) {
+        var firstPixel = (x + y * imageData.width) * 4;
+        var pixel = imageData.data;
+        pixel[firstPixel + 0] = color.r;
+        pixel[firstPixel + 1] = color.g;
+        pixel[firstPixel + 2] = color.b;
+        pixel[firstPixel + 3] = ex.Util.clamp(Math.floor(color.a * 255), 0, 255);
     };
     return Util;
+})();
+var LightenEffect = (function () {
+    function LightenEffect(amount) {
+        this.amount = amount;
+    }
+    LightenEffect.prototype.updatePixel = function (x, y, imageData) {
+        var pixelColor = Util.getColorOfPixel(imageData, x, y);
+        var lightenedColor = Util.lighten(pixelColor, this.amount);
+        Util.setPixelToColor(imageData, x, y, lightenedColor);
+    };
+    return LightenEffect;
+})();
+var SaturateEffect = (function () {
+    function SaturateEffect(amount) {
+        this.amount = amount;
+    }
+    SaturateEffect.prototype.updatePixel = function (x, y, imageData) {
+        var pixelColor = Util.getColorOfPixel(imageData, x, y);
+        var lightenedColor = Util.saturate(pixelColor, this.amount);
+        Util.setPixelToColor(imageData, x, y, lightenedColor);
+    };
+    return SaturateEffect;
 })();
 /// <reference path="util.ts"/>
 var Resources = {
@@ -103,13 +146,18 @@ var Resources = {
     ChallengeNote4Sound: new ex.Sound('sounds/challengenote4.mp3'),
     ChallengeNote5Sound: new ex.Sound('sounds/challengenote5.mp3'),
     ChallengeNote6Sound: new ex.Sound('sounds/challengenote6.mp3'),
+    // Textures
+    TextureTile1: new ex.Texture("images/Tile1.png"),
+    TextureTile2: new ex.Texture("images/Tile2.png"),
+    TextureTile3: new ex.Texture("images/Tile3.png"),
+    TextureTile4: new ex.Texture("images/Tile4.png")
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
     GridBackgroundColor: ex.Color.fromHex("#efefef"),
     // Beach
-    PieceColor1: ex.Color.fromHex("#BF6D72"),
-    PieceColor2: ex.Color.fromHex("#DBB96D"),
+    PieceColor1: ex.Color.fromHex("#DBB96D"),
+    PieceColor2: ex.Color.fromHex("#BF6D72"),
     PieceColor3: ex.Color.fromHex("#5096F2"),
     PieceColor4: ex.Color.fromHex("#9979E0")
 };
@@ -128,6 +176,7 @@ var PieceType;
 })(PieceType || (PieceType = {}));
 var PieceTypes = [0 /* Circle */, 2 /* Square */, 1 /* Triangle */, 3 /* Star */];
 var PieceTypeToColor = [Palette.PieceColor1, Palette.PieceColor2, Palette.PieceColor3, Palette.PieceColor4];
+var PieceTypeToTexture = [Resources.TextureTile2, Resources.TextureTile1, Resources.TextureTile3, Resources.TextureTile4];
 var PieceEvent = (function (_super) {
     __extends(PieceEvent, _super);
     function PieceEvent(cell) {
@@ -154,17 +203,37 @@ var Piece = (function (_super) {
     };
     Piece.prototype.setType = function (type) {
         this._type = type;
+        this._updateDrawings();
+    };
+    Piece.prototype._updateDrawings = function () {
+        var tileSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
+        tileSprite.setScaleX(Config.PieceWidth / 60);
+        tileSprite.setScaleY(Config.PieceHeight / 60);
+        this.addDrawing("default", tileSprite);
+        var highlightSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
+        highlightSprite.setScaleX(Config.PieceWidth / 60);
+        highlightSprite.setScaleY(Config.PieceHeight / 60);
+        highlightSprite.addEffect(new SaturateEffect(0.5));
+        this.addDrawing("highlight", highlightSprite);
+        var fadedSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
+        fadedSprite.setScaleX(Config.PieceWidth / 60);
+        fadedSprite.setScaleY(Config.PieceHeight / 60);
+        fadedSprite.addEffect(new ex.Effects.Opacity(0.3));
+        this.addDrawing("faded", fadedSprite);
+    };
+    Piece.prototype.onInitialize = function (engine) {
+        this._updateDrawings();
     };
     Piece.prototype.update = function (engine, delta) {
         _super.prototype.update.call(this, engine, delta);
         if (matcher.runInProgress && (!this.selected && this.getType() !== matcher.getRunType())) {
-            this.color = new ex.Color(this._originalColor.r, this._originalColor.g, this._originalColor.b, 0.3);
+            this.setDrawing("faded");
         }
         else if (this.selected) {
-            this.color = Util.lighten(this._originalColor, 0.3);
+            this.setDrawing("highlight");
         }
         else {
-            this.color = this._originalColor;
+            this.setDrawing("default");
         }
     };
     return Piece;
@@ -273,9 +342,11 @@ var LogicalGrid = (function (_super) {
         return cell;
     };
     LogicalGrid.prototype.clearPiece = function (piece) {
-        piece.cell.piece = null;
-        piece.cell = null;
-        piece.kill();
+        if (piece && piece.cell) {
+            piece.cell.piece = null;
+            piece.cell = null;
+            piece.kill();
+        }
     };
     LogicalGrid.prototype.fill = function (row, smooth) {
         var _this = this;
@@ -464,9 +535,9 @@ var MatchManager = (function (_super) {
         this._run = [];
         this.gameOver = false;
         this.dispose = function () {
-            game.input.pointers.primary.off("down", _.bind(this._handlePointerDown, this));
-            game.input.pointers.primary.off("up", _.bind(this._handlePointerUp, this));
-            game.input.pointers.primary.off("move", _.bind(this._handlePointerMove, this));
+            game.input.pointers.primary.off("down");
+            game.input.pointers.primary.off("up");
+            game.input.pointers.primary.off("move");
         };
         this.runInProgress = false;
         game.input.pointers.primary.on("down", _.bind(this._handlePointerDown, this));
