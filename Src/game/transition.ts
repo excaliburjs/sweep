@@ -23,8 +23,9 @@ class TransitionManager {
       });
    }
 
-   public evaluate() {
+   public evaluate(): ex.Promise<any> {
       var currentRow = this.logicalGrid.rows;
+      var promises: ex.Promise<any>[] = [];
       while (currentRow > 0) {
          currentRow--;
          this._findFloaters(currentRow).forEach(c => {
@@ -32,10 +33,14 @@ class TransitionManager {
             if (landingCell) {
                var piece = c.piece;
                this.logicalGrid.setCell(c.x, c.y, null);
-               this.logicalGrid.setCell(landingCell.x, landingCell.y, piece);
+               this.logicalGrid.setCell(landingCell.x, landingCell.y, piece, false);
+               var promise = piece.moveTo(landingCell.getCenter().x, landingCell.getCenter().y, 300).asPromise();
+               promises.push(promise);
             }
          });
       }
+
+      return ex.Promise.join.apply(null, promises);
 
    }
 
