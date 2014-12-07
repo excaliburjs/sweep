@@ -1,6 +1,6 @@
 ﻿body {
   font-family: 'Segoe UI', sans-serif;
-  background: #efefef;
+  background: url(/images/bg2.png);
 }
 span {
   font-style: italic;
