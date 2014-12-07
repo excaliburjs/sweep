@@ -29,6 +29,9 @@ var Config = (function () {
     Config.GridCellsWide = 8;
     Config.NumStartingRows = 3;
     Config.ScoreXBuffer = 20;
+    Config.MeterWidth = 90;
+    Config.MeterHeight = 30;
+    Config.SweepThreshold = 20;
     return Config;
 })();
 /// <reference path="util.ts"/>
@@ -300,15 +303,18 @@ var VisualGrid = (function (_super) {
         });
     };
     VisualGrid.prototype.sweep = function (type) {
+        // can sweep?
+        if (stats.getMeter(type) < Config.SweepThreshold)
+            return;
         var cells = this.logicalGrid.cells.filter(function (cell) {
             return cell.piece && cell.piece.getType() === type;
         });
-        // todo transitions
         cells.forEach(function (cell) {
             stats.scorePieces([cell.piece]);
             grid.clearPiece(cell.piece);
         });
-        // todo advance turn
+        // reset meter
+        stats.resetMeter(type);
         turnManager.advanceTurn();
     };
     return VisualGrid;
@@ -488,16 +494,30 @@ var Stats = (function () {
         this._numTrianglesDestroyed = 0;
         this._numSquaresDestroyed = 0;
         this._numStarsDestroyed = 0;
+        this._numCirclesDestroyedMeter = 0;
+        this._numTrianglesDestroyedMeter = 0;
+        this._numSquaresDestroyedMeter = 0;
+        this._numStarsDestroyedMeter = 0;
         this._longestCircleCombo = 0;
         this._longestTriangleCombo = 0;
         this._longestSquareCombo = 0;
         this._longestStarCombo = 0;
         this._types = [0 /* Circle */, 1 /* Triangle */, 2 /* Square */, 3 /* Star */];
         this._scores = [this._numCirclesDestroyed, this._numTrianglesDestroyed, this._numSquaresDestroyed, this._numStarsDestroyed];
+        this._meters = [this._numCirclesDestroyedMeter, this._numTrianglesDestroyedMeter, this._numSquaresDestroyedMeter, this._numStarsDestroyedMeter];
         this._chains = [this._longestCircleCombo, this._longestTriangleCombo, this._longestSquareCombo, this._longestStarCombo];
     }
+    Stats.prototype.getMeter = function (pieceType) {
+        return this._meters[this._types.indexOf(pieceType)];
+    };
+    Stats.prototype.resetMeter = function (pieceType) {
+        this._meters[this._types.indexOf(pieceType)] = 0;
+    };
     Stats.prototype.scorePieces = function (pieces) {
-        this._scores[this._types.indexOf(pieces[0].getType())] += pieces.length;
+        var type = this._types.indexOf(pieces[0].getType());
+        this._scores[type] += pieces.length;
+        var newScore = this._meters[type] + pieces.length;
+        this._meters[type] = Math.min(newScore, Config.SweepThreshold);
     };
     Stats.prototype.scoreChain = function (pieces) {
         var chainScore = this._chains[this._types.indexOf(pieces[0].getType())];
@@ -508,22 +528,27 @@ var Stats = (function () {
     Stats.prototype.drawScores = function () {
         var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
         this._totalScore("total ", scoreXPos, 330);
-        this._addScore("circles ", this._scores, 0, scoreXPos, 350);
-        this._addScore("triangles ", this._scores, 1, scoreXPos, 370);
-        this._addScore("squares ", this._scores, 2, scoreXPos, 390);
-        this._addScore("stars ", this._scores, 3, scoreXPos, 410);
-        this._addScore("circle chain ", this._chains, 0, scoreXPos, 440);
-        this._addScore("triangle chain ", this._chains, 1, scoreXPos, 460);
-        this._addScore("square chain ", this._chains, 2, scoreXPos, 480);
-        this._addScore("star chain ", this._chains, 3, scoreXPos, 500);
+        var yPos = 350;
+        this._addMeter(0, scoreXPos, yPos);
+        this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
+        this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
+        this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
+        this._addScore("chain ", this._chains, 0, scoreXPos, yPos += Config.MeterHeight + 20);
+        this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
+        this._addScore("chain ", this._chains, 2, scoreXPos, yPos += 20);
+        this._addScore("chain ", this._chains, 3, scoreXPos, yPos += 20);
     };
     Stats.prototype._addScore = function (description, statArray, statIndex, xPos, yPos) {
-        var label = new ex.Label(description + statArray[statIndex].toString(), xPos, yPos);
+        var square = new ex.Actor(xPos, yPos, 15, 15, PieceTypeToColor[statIndex]);
+        square.anchor.setTo(0, 0);
+        var label = new ex.Label(null, xPos + 20, yPos + 8);
+        label.anchor.setTo(0, 0);
         label.color = ex.Color.Black;
         game.addEventListener('update', function (data) {
             label.text = description + statArray[statIndex].toString();
         });
-        game.currentScene.addChild(label);
+        game.add(label);
+        game.add(square);
     };
     Stats.prototype._totalScore = function (description, xPos, yPos) {
         var _this = this;
@@ -536,8 +561,41 @@ var Stats = (function () {
         });
         game.currentScene.addChild(label);
     };
+    Stats.prototype._addMeter = function (piece, x, y) {
+        var _this = this;
+        var square = new Meter(x, y, PieceTypeToColor[piece]);
+        var label = new ex.Label(null, square.getCenter().x, square.getCenter().y + 3);
+        label.textAlign = 2 /* Center */;
+        label.color = ex.Color.Black;
+        game.addEventListener('update', function (data) {
+            square.score = _this._meters[piece];
+            if (_this._meters[piece] === Config.SweepThreshold) {
+                label.text = "Press " + (piece + 1) + " to SWEEP";
+            }
+            else {
+                label.text = _this._meters[piece].toString();
+            }
+        });
+        game.add(square);
+        game.add(label);
+    };
     return Stats;
 })();
+var Meter = (function (_super) {
+    __extends(Meter, _super);
+    function Meter(x, y, color) {
+        _super.call(this, x, y, Config.MeterWidth, Config.MeterHeight, color);
+    }
+    Meter.prototype.draw = function (ctx, delta) {
+        ctx.strokeStyle = this.color.toString();
+        ctx.lineWidth = 2;
+        ctx.strokeRect(this.x, this.y, this.getWidth(), this.getHeight());
+        var percentage = (this.score / Config.SweepThreshold);
+        ctx.fillStyle = this.color.toString();
+        ctx.fillRect(this.x, this.y, (this.getWidth() * percentage), this.getHeight());
+    };
+    return Meter;
+})(ex.Actor);
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
 /// <reference path="util.ts"/>
@@ -583,11 +641,11 @@ game.input.keyboard.on('down', function (evt) {
     if (evt.key === 49)
         visualGrid.sweep(0 /* Circle */);
     if (evt.key === 50)
-        visualGrid.sweep(2 /* Square */);
-    if (evt.key === 51)
-        visualGrid.sweep(3 /* Star */);
-    if (evt.key === 52)
         visualGrid.sweep(1 /* Triangle */);
+    if (evt.key === 51)
+        visualGrid.sweep(2 /* Square */);
+    if (evt.key === 52)
+        visualGrid.sweep(3 /* Star */);
 });
 // TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {
