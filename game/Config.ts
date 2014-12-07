@@ -12,9 +12,14 @@
    static ScoreXBuffer: number = 20;
    static MeterWidth: number = 90;
    static MeterHeight: number = 30;
+
+   // sweep mechanic
    static SweepThreshold: number = 20;
-   
+   static EnableSweepMeters: boolean = true;
+   static ClearSweepMetersAfterSingleUse = true;
+
    // alt sweep mechanic 1
+   static EnableSweeper = false;
    static SweepStartRow = 3;
    static SweepMaxRow = 7;
    static SweepAltThreshold = 20;
