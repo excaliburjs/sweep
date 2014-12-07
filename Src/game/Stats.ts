@@ -55,7 +55,7 @@
 
    public canSweep(type: PieceType = null) {
       if (type !== null) {
-         return this.getMeter(type) > Config.SweepThreshold;
+         return this.getMeter(type) >= Config.SweepThreshold;
       } else {
          return this._sweepMeter === this._sweepMeterThreshold;
       }
