@@ -392,6 +392,23 @@ var LogicalGrid = (function (_super) {
         _getPieceGroupHelper(piece);
         return currentGroup;
     };
+    LogicalGrid.prototype.getNumAvailablePieces = function () {
+        var selectablePieces = [];
+        for (var i = 0; i < this.cells.length; i++) {
+            if (this.cells[i].piece) {
+                if (selectablePieces.indexOf(this.cells[i].piece) !== -1) {
+                    continue;
+                }
+                else {
+                    var additions = this.getAdjacentPieceGroup(this.cells[i].piece);
+                    if (additions.length >= 3) {
+                        selectablePieces = selectablePieces.concat(additions);
+                    }
+                }
+            }
+        }
+        return selectablePieces.length;
+    };
     LogicalGrid.prototype.fill = function (row, smooth) {
         var _this = this;
         if (smooth === void 0) { smooth = false; }
