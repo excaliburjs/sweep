@@ -1,6 +1,50 @@
 ﻿body {
   font-family: 'Segoe UI', sans-serif;
-  background: url(/images/bg2.png);
+}
+div#background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url(/images/bg2.png);
+  z-index: -1;
+}
+.animate div#background {
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  -ms-transform: translate3d(0, 0, 0);
+  -o-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-animation: animatedBg linear 30s infinite;
+  -moz-animation: animatedBg linear 30s infinite;
+  -ms-animation: animatedBg linear 30s infinite;
+  -o-animation: animatedBg linear 30s infinite;
+  animation: animatedBg linear 30s infinite;
+}
+@-moz-keyframes animatedBg {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 320px 0;
+  }
+}
+@-webkit-keyframes animatedBg {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 320px 0;
+  }
+}
+@keyframes animatedBg {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 320px 0;
+  }
 }
 span {
   font-style: italic;
