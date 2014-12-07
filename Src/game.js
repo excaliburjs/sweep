@@ -1313,10 +1313,12 @@ var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
 function gameOver() {
+    var totalScore = stats.getTotalScore();
+    var longestChain = stats.getLongestChains();
     var analytics = window.ga;
     if (analytics) {
-        analytics('send', 'event', 'ludum-30-stats', gameMode.toString(), 'total score', { 'eventValue': stats.getTotalScore(), 'nonInteraction': 1 });
-        analytics('send', 'event', 'ludum-30-stats', gameMode.toString(), 'longest chain', { 'eventValue': stats.getLongestChain(), 'nonInteraction': 1 });
+        analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'total score', { 'eventValue': totalScore, 'nonInteraction': 1 });
+        analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'longest chain', { 'eventValue': longestChain, 'nonInteraction': 1 });
     }
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
