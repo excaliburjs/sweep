@@ -698,6 +698,8 @@ var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
 var transitionManager = new TransitionManager(grid, visualGrid);
 game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
 game.add(visualGrid);
+var mask = new ex.Actor(0, 0, Config.gameWidth, Config.GridCellsHigh * 2, Palette.GameBackgroundColor.clone());
+game.add(mask);
 stats.drawScores();
 for (var i = 0; i < Config.NumStartingRows; i++) {
     grid.fill(grid.rows - (i + 1));
