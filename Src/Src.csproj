@@ -46,6 +46,7 @@
     <TypeScriptCompile Include="game\sweeper.ts" />
     <TypeScriptCompile Include="game\transition.ts" />
     <TypeScriptCompile Include="game\turn.ts" />
+    <TypeScriptCompile Include="game\UIWidget.ts" />
     <TypeScriptCompile Include="game\util.ts" />
     <TypeScriptCompile Include="scripts\typings\lodash\lodash.d.ts" />
     <TypeScriptCompile Include="scripts\typings\Spectra.d.ts" />

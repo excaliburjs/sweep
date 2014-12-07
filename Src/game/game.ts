@@ -10,6 +10,7 @@
 /// <reference path="transition.ts"/>
 /// <reference path="Stats.ts"/>
 /// <reference path="sweeper.ts"/>
+/// <reference path="UIWidget.ts"/>
 
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 game.backgroundColor = Palette.GameBackgroundColor;
@@ -24,9 +25,8 @@ _.forIn(Resources, (resource) => {
 
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-var visualGrid = new VisualGrid(grid);
 
-var turnManager, matcher, transitionManager, sweeper, stats, mask;
+var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask;
 
 // game modes
 var loadConfig = (config) => {
@@ -45,6 +45,8 @@ InitSetup();
 
 //reset the game with the given grid dimensions
 function InitSetup() {
+   visualGrid = new VisualGrid(grid);
+
    var i: number;
 
    if (game.currentScene.children) {
@@ -56,6 +58,7 @@ function InitSetup() {
    game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
    //initialize game objects
    if (matcher) matcher.dispose(); //unbind events
+   if (turnManager) turnManager.dispose(); //cancel the timer
    matcher = new MatchManager();
    turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? TurnMode.Timed : TurnMode.Match);
    transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
@@ -108,16 +111,31 @@ game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
       }
 
       grid = new LogicalGrid(numRows, numCols);
-      visualGrid = new VisualGrid(grid);
       InitSetup();
    }   
 });
 
+var gameOverWidget = new UIWidget();
+//var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
+//gameOverWidget.addButton(postYourScore);
+
 function gameOver() {
+   if (turnManager) turnManager.dispose(); // stop game over from happening infinitely in time attack
    var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3)
-   var gameOverWidget = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() + 500, 300, 300, color);
-   game.addChild(gameOverWidget);
-   gameOverWidget.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1400);
+   var gameOverWidgetActor = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() - 800, 300, 300, color);
+   game.addChild(gameOverWidgetActor);
+   gameOverWidgetActor.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1000);
+
+   game.addChild(gameOverWidget.widget);
+   //gameOverWidget.widget.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1000);
+   //gameOverWidget.moveWidget(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 50);
+
+   //TODO buttons fade in once widget is in place? perhaps button actors are invisible, and the sprite for the widget has the buttons on it
+   var postScoreButton = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2 - 50, 250, 50, ex.Color.Blue);
+   gameOverWidget.addButton(postScoreButton);
+
+   var playAgainButton = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2 + 50, 250, 50, ex.Color.Green);
+   gameOverWidget.addButton(playAgainButton);
 }
 
 // TODO clean up pieces that are not in play anymore after update loop

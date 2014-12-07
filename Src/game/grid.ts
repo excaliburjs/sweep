@@ -101,6 +101,42 @@ class LogicalGrid extends ex.Class {
       }
    }
 
+  /* private _getPieceGroupHelper(currentPiece: Piece, currentGroup: Piece[]) {
+      var unexploredNeighbors = currentPiece.cell.getNeighbors().filter(c => {
+         return c.piece && currentGroup.indexOf(c.piece) === -1 && c.piece.getType() === currentPiece.getType();
+      }).map(c => c.piece);
+      currentGroup = currentGroup.concat(unexploredNeighbors);
+      if (unexploredNeighbors.length === 0) {
+         return currentGroup;
+      } else {
+         for (var i = 0; i < unexploredNeighbors.length; i++) {
+            this._getPieceGroupHelper(unexploredNeighbors[i], currentGroup);
+         }
+         return currentGroup;
+      }
+   }*/
+
+   public getAdjacentPieceGroup(piece: Piece): Piece[] {
+      var currentGroup: Piece[] = [piece];
+
+      function _getPieceGroupHelper(currentPiece: Piece): void {
+         var unexploredNeighbors = currentPiece.cell.getNeighbors().filter(c => {
+            return c.piece && currentGroup.indexOf(c.piece) === -1 && c.piece.getType() === currentPiece.getType();
+         }).map(c => c.piece);
+         currentGroup = currentGroup.concat(unexploredNeighbors);
+         if (unexploredNeighbors.length === 0) {
+            return;
+         } else {
+            for (var i = 0; i < unexploredNeighbors.length; i++) {
+               _getPieceGroupHelper(unexploredNeighbors[i]);
+            }
+         }
+      }
+
+      _getPieceGroupHelper(piece);
+      return currentGroup;
+   }
+
    public fill(row: number, smooth: boolean = false) {
       if (smooth) {
          for (var i = 0; i < this.cols; i++) {

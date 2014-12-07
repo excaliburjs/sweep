@@ -9,6 +9,7 @@ var Config = (function () {
         Config.AdvanceRowsOnMatch = true;
         Config.SweepThreshold = 15;
         Config.EnableSweepMeters = true;
+        Config.EnableSingleTapClear = false;
         Config.ClearSweepMetersAfterSingleUse = true;
         Config.EnableSweeper = false;
         Config.SweepMovesUp = false;
@@ -26,7 +27,8 @@ var Config = (function () {
     Config.loadSurvival = function () {
         Config.EnableTimer = true;
         Config.AdvanceRowsOnMatch = false;
-        Config.TimerValue = 5000;
+        Config.TimerValue = 1000;
+        Config.EnableSingleTapClear = true;
         Config.EnableSweepMeters = false;
         Config.EnableSweeper = true;
         Config.SweepMovesUp = false;
@@ -41,7 +43,8 @@ var Config = (function () {
     Config.loadSurvivalReverse = function () {
         Config.EnableTimer = true;
         Config.AdvanceRowsOnMatch = false;
-        Config.TimerValue = 3000;
+        Config.TimerValue = 1000;
+        Config.EnableSingleTapClear = true;
         Config.EnableSweepMeters = false;
         Config.EnableSweeper = true;
         Config.SweepMovesUp = true;
@@ -348,6 +351,39 @@ var LogicalGrid = (function (_super) {
             piece.kill();
         }
     };
+    /* private _getPieceGroupHelper(currentPiece: Piece, currentGroup: Piece[]) {
+        var unexploredNeighbors = currentPiece.cell.getNeighbors().filter(c => {
+           return c.piece && currentGroup.indexOf(c.piece) === -1 && c.piece.getType() === currentPiece.getType();
+        }).map(c => c.piece);
+        currentGroup = currentGroup.concat(unexploredNeighbors);
+        if (unexploredNeighbors.length === 0) {
+           return currentGroup;
+        } else {
+           for (var i = 0; i < unexploredNeighbors.length; i++) {
+              this._getPieceGroupHelper(unexploredNeighbors[i], currentGroup);
+           }
+           return currentGroup;
+        }
+     }*/
+    LogicalGrid.prototype.getAdjacentPieceGroup = function (piece) {
+        var currentGroup = [piece];
+        function _getPieceGroupHelper(currentPiece) {
+            var unexploredNeighbors = currentPiece.cell.getNeighbors().filter(function (c) {
+                return c.piece && currentGroup.indexOf(c.piece) === -1 && c.piece.getType() === currentPiece.getType();
+            }).map(function (c) { return c.piece; });
+            currentGroup = currentGroup.concat(unexploredNeighbors);
+            if (unexploredNeighbors.length === 0) {
+                return;
+            }
+            else {
+                for (var i = 0; i < unexploredNeighbors.length; i++) {
+                    _getPieceGroupHelper(unexploredNeighbors[i]);
+                }
+            }
+        }
+        _getPieceGroupHelper(piece);
+        return currentGroup;
+    };
     LogicalGrid.prototype.fill = function (row, smooth) {
         var _this = this;
         if (smooth === void 0) { smooth = false; }
@@ -572,11 +608,20 @@ var MatchManager = (function (_super) {
             if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
                 return;
             }
-            this.runInProgress = true;
-            cell.piece.selected = true;
-            this._run.push(cell.piece);
-            this._playNote();
-            ex.Logger.getInstance().info("Run started", this._run);
+            if (!Config.EnableSingleTapClear) {
+                this.runInProgress = true;
+                cell.piece.selected = true;
+                this._run.push(cell.piece);
+                this._playNote();
+                ex.Logger.getInstance().info("Run started", this._run);
+            }
+            else {
+                this._run = grid.getAdjacentPieceGroup(cell.piece);
+                // notify
+                this.eventDispatcher.publish("match", new MatchEvent(_.clone(this._run)));
+                this._run.forEach(function (p) { return p.selected = false; });
+                this._run.length = 0;
+            }
         }
     };
     MatchManager.prototype._handlePointerMove = function (pe) {
@@ -591,31 +636,35 @@ var MatchManager = (function (_super) {
             var piece = cell.piece;
             if (!piece)
                 return;
-            var removePiece = -1;
-            var containsBounds = new ex.BoundingBox(piece.getBounds().left + Config.PieceContainsPadding, piece.getBounds().top + Config.PieceContainsPadding, piece.getBounds().right - Config.PieceContainsPadding, piece.getBounds().bottom - Config.PieceContainsPadding);
-            // if piece contains screen coords and we don't already have it in the run
-            if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
-                // if the two pieces aren't neighbors or aren't the same type, invalid move
-                if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) || piece.getType() !== this._run[this._run.length - 1].getType()))
-                    return;
-                // add to run
-                piece.selected = true;
-                this._run.push(piece);
-                this._playNote();
-                ex.Logger.getInstance().info("Run modified", this._run);
-                // notify
-                this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
+            if (!Config.EnableSingleTapClear) {
+                var removePiece = -1;
+                var containsBounds = new ex.BoundingBox(piece.getBounds().left + Config.PieceContainsPadding, piece.getBounds().top + Config.PieceContainsPadding, piece.getBounds().right - Config.PieceContainsPadding, piece.getBounds().bottom - Config.PieceContainsPadding);
+                // if piece contains screen coords and we don't already have it in the run
+                if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
+                    // if the two pieces aren't neighbors or aren't the same type, invalid move
+                    if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) || piece.getType() !== this._run[this._run.length - 1].getType()))
+                        return;
+                    // add to run
+                    piece.selected = true;
+                    this._run.push(piece);
+                    this._playNote();
+                    ex.Logger.getInstance().info("Run modified", this._run);
+                    // notify
+                    this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
+                }
+                // did user go backwards?
+                if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
+                    // mark for removal
+                    removePiece = this._run.indexOf(piece) + 1;
+                }
+                if (removePiece > -1) {
+                    // remove from run
+                    this._run[removePiece].selected = false;
+                    this._run.splice(removePiece, 1);
+                    ex.Logger.getInstance().info("Run modified", this._run);
+                }
             }
-            // did user go backwards?
-            if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
-                // mark for removal
-                removePiece = this._run.indexOf(piece) + 1;
-            }
-            if (removePiece > -1) {
-                // remove from run
-                this._run[removePiece].selected = false;
-                this._run.splice(removePiece, 1);
-                ex.Logger.getInstance().info("Run modified", this._run);
+            else {
             }
         }
     };
@@ -633,6 +682,19 @@ var MatchManager = (function (_super) {
                 this._run.length = 0;
             }
             this.runInProgress = false;
+        }
+        else {
+            var point = new ex.Point(pe.x, pe.y);
+            if (gameOverWidget.getBounds(0).contains(point)) {
+                //TODO post your score
+                console.log("POSTED YOUR SCORE");
+            }
+            else if (gameOverWidget.getBounds(1).contains(point)) {
+                //TODO play again
+                console.log("PLAY AGAIN");
+                grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
+                InitSetup();
+            }
         }
     };
     MatchManager.prototype._handleCancelRun = function () {
@@ -668,6 +730,9 @@ var TurnManager = (function () {
         this._timer = new ex.Timer(_.bind(this._tick, this), Config.TimerValue, true);
         game.add(this._timer);
     }
+    TurnManager.prototype.dispose = function () {
+        this._timer.cancel();
+    };
     TurnManager.prototype.advanceTurn = function (isMatch) {
         var _this = this;
         if (isMatch === void 0) { isMatch = false; }
@@ -1111,6 +1176,31 @@ var Sweeper = (function (_super) {
     };
     return Sweeper;
 })(ex.Actor);
+var UIWidget = (function (_super) {
+    __extends(UIWidget, _super);
+    function UIWidget() {
+        _super.call(this);
+        this._buttons = new Array();
+        var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
+        this.widget = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() + 500, 300, 300, color);
+    }
+    UIWidget.prototype.addButton = function (button) {
+        this._buttons.push(button);
+        game.addChild(button);
+        //button.on(buttonType, 
+    };
+    UIWidget.prototype.getBounds = function (index) {
+        var boundingBox = new ex.BoundingBox(this._buttons[index].getBounds().left, this._buttons[index].getBounds().top, this._buttons[index].getBounds().right, this._buttons[index].getBounds().bottom);
+        return boundingBox;
+    };
+    UIWidget.prototype.moveWidget = function (x, y, speed) {
+        this.widget.moveTo(x, y, speed);
+        //for (var i = 0; i < this._buttons.length; i++) {
+        //   this._buttons[i].moveTo(x, y, speed);
+        //}
+    };
+    return UIWidget;
+})(ex.Class);
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
 /// <reference path="util.ts"/>
@@ -1123,6 +1213,7 @@ var Sweeper = (function (_super) {
 /// <reference path="transition.ts"/>
 /// <reference path="Stats.ts"/>
 /// <reference path="sweeper.ts"/>
+/// <reference path="UIWidget.ts"/>
 var _this = this;
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 game.backgroundColor = Palette.GameBackgroundColor;
@@ -1133,8 +1224,7 @@ _.forIn(Resources, function (resource) {
 });
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-var visualGrid = new VisualGrid(grid);
-var turnManager, matcher, transitionManager, sweeper, stats, mask;
+var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask;
 // game modes
 var loadConfig = function (config) {
     Config.resetDefault();
@@ -1148,6 +1238,7 @@ loadConfig(Config.loadCasual);
 InitSetup();
 //reset the game with the given grid dimensions
 function InitSetup() {
+    visualGrid = new VisualGrid(grid);
     var i;
     if (game.currentScene.children) {
         for (i = 0; i < game.currentScene.children.length; i++) {
@@ -1158,6 +1249,8 @@ function InitSetup() {
     //initialize game objects
     if (matcher)
         matcher.dispose(); //unbind events
+    if (turnManager)
+        turnManager.dispose(); //cancel the timer
     matcher = new MatchManager();
     turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? 0 /* Timed */ : 1 /* Match */);
     transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
@@ -1200,15 +1293,27 @@ game.input.keyboard.on('up', function (evt) {
             numCols++;
         }
         grid = new LogicalGrid(numRows, numCols);
-        visualGrid = new VisualGrid(grid);
         InitSetup();
     }
 });
+var gameOverWidget = new UIWidget();
+//var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
+//gameOverWidget.addButton(postYourScore);
 function gameOver() {
+    if (turnManager)
+        turnManager.dispose(); // stop game over from happening infinitely in time attack
     var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
-    var gameOverWidget = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() + 500, 300, 300, color);
-    game.addChild(gameOverWidget);
-    gameOverWidget.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1400);
+    var gameOverWidgetActor = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() - 800, 300, 300, color);
+    game.addChild(gameOverWidgetActor);
+    gameOverWidgetActor.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1000);
+    game.addChild(gameOverWidget.widget);
+    //gameOverWidget.widget.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1000);
+    //gameOverWidget.moveWidget(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 50);
+    //TODO buttons fade in once widget is in place? perhaps button actors are invisible, and the sprite for the widget has the buttons on it
+    var postScoreButton = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2 - 50, 250, 50, ex.Color.Blue);
+    gameOverWidget.addButton(postScoreButton);
+    var playAgainButton = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2 + 50, 250, 50, ex.Color.Green);
+    gameOverWidget.addButton(playAgainButton);
 }
 // TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {
