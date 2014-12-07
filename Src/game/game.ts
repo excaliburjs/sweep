@@ -32,7 +32,7 @@ var turnManager = new TurnManager(grid, matcher, TurnMode.Match);
 var transitionManager = new TransitionManager(grid, visualGrid);
 var sweeper = new Sweeper(Config.SweepStartRow);
 
-var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth + 30, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
+var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth + 15, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
 mask.anchor.setTo(0, 0);
 
 InitSetup(visualGrid, stats);
