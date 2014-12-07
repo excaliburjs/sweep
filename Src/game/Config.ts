@@ -14,7 +14,7 @@
    static MeterHeight: number = 30;
 
    // Timer
-   static EnableTimer: boolean = true;
+   static EnableTimer: boolean = false;
    static TimerValue: number = 7000;
 
    // sweep mechanic
