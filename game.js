@@ -233,6 +233,11 @@ var LogicalGrid = (function (_super) {
                 var piece = this.getCell(i, from).piece;
                 if (piece) {
                     this.clearPiece(piece);
+                    //TODO add game over logic here
+                    //TODO disable input (on board), add score card with play again button
+                    matcher.gameOver = true;
+                    var gameOverLabel = new ex.Label("GAME OVER", visualGrid.x + visualGrid.getWidth() + 30, visualGrid.y + visualGrid.getHeight() / 2);
+                    game.currentScene.addChild(gameOverLabel);
                 }
             }
             else if (this.getCell(i, from).piece) {
@@ -327,19 +332,21 @@ var VisualGrid = (function (_super) {
         });
     };
     VisualGrid.prototype.sweep = function (type) {
-        // can sweep?
-        if (stats.getMeter(type) < Config.SweepThreshold)
-            return;
-        var cells = this.logicalGrid.cells.filter(function (cell) {
-            return cell.piece && cell.piece.getType() === type;
-        });
-        cells.forEach(function (cell) {
-            stats.scorePieces([cell.piece]);
-            grid.clearPiece(cell.piece);
-        });
-        // reset meter
-        stats.resetMeter(type);
-        turnManager.advanceTurn();
+        if (!matcher.gameOver) {
+            // can sweep?
+            if (stats.getMeter(type) < Config.SweepThreshold)
+                return;
+            var cells = this.logicalGrid.cells.filter(function (cell) {
+                return cell.piece && cell.piece.getType() === type;
+            });
+            cells.forEach(function (cell) {
+                stats.scorePieces([cell.piece]);
+                grid.clearPiece(cell.piece);
+            });
+            // reset meter
+            stats.resetMeter(type);
+            turnManager.advanceTurn();
+        }
     };
     return VisualGrid;
 })(ex.Actor);
@@ -357,6 +364,7 @@ var MatchManager = (function (_super) {
         var _this = this;
         _super.call(this);
         this._run = [];
+        this.gameOver = false;
         this.runInProgress = false;
         game.input.pointers.primary.on("down", _.bind(this._handlePointerDown, this));
         game.input.pointers.primary.on("up", _.bind(this._handlePointerUp, this));
@@ -378,75 +386,81 @@ var MatchManager = (function (_super) {
         });
     }
     MatchManager.prototype._handlePointerDown = function (pe) {
-        var cell = visualGrid.getCellByPos(pe.x, pe.y);
-        if (!cell || this.runInProgress) {
-            return;
+        if (!this.gameOver) {
+            var cell = visualGrid.getCellByPos(pe.x, pe.y);
+            if (!cell || this.runInProgress) {
+                return;
+            }
+            if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
+                return;
+            }
+            this.runInProgress = true;
+            cell.piece.selected = true;
+            this._run.push(cell.piece);
+            ex.Logger.getInstance().info("Run started", this._run);
         }
-        if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
-            return;
-        }
-        this.runInProgress = true;
-        cell.piece.selected = true;
-        this._run.push(cell.piece);
-        ex.Logger.getInstance().info("Run started", this._run);
-        // darken/highlight
-        // draw line?
     };
     MatchManager.prototype._handlePointerMove = function (pe) {
-        // add piece to run if valid
-        // draw line?
-        if (!this.runInProgress)
-            return;
-        var cell = visualGrid.getCellByPos(pe.x, pe.y);
-        if (!cell)
-            return;
-        var piece = cell.piece;
-        if (!piece)
-            return;
-        var removePiece = -1;
-        var containsBounds = new ex.BoundingBox(piece.getBounds().left + Config.PieceContainsPadding, piece.getBounds().top + Config.PieceContainsPadding, piece.getBounds().right - Config.PieceContainsPadding, piece.getBounds().bottom - Config.PieceContainsPadding);
-        // if piece contains screen coords and we don't already have it in the run
-        if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
-            // if the two pieces aren't neighbors or aren't the same type, invalid move
-            if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) || piece.getType() !== this._run[this._run.length - 1].getType()))
+        if (!this.gameOver) {
+            // add piece to run if valid
+            // draw line?
+            if (!this.runInProgress)
                 return;
-            // add to run
-            piece.selected = true;
-            this._run.push(piece);
-            ex.Logger.getInstance().info("Run modified", this._run);
-            // notify
-            this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
-        }
-        // did user go backwards?
-        if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
-            // mark for removal
-            removePiece = this._run.indexOf(piece) + 1;
-        }
-        if (removePiece > -1) {
-            // remove from run
-            this._run[removePiece].selected = false;
-            this._run.splice(removePiece, 1);
-            ex.Logger.getInstance().info("Run modified", this._run);
+            var cell = visualGrid.getCellByPos(pe.x, pe.y);
+            if (!cell)
+                return;
+            var piece = cell.piece;
+            if (!piece)
+                return;
+            var removePiece = -1;
+            var containsBounds = new ex.BoundingBox(piece.getBounds().left + Config.PieceContainsPadding, piece.getBounds().top + Config.PieceContainsPadding, piece.getBounds().right - Config.PieceContainsPadding, piece.getBounds().bottom - Config.PieceContainsPadding);
+            // if piece contains screen coords and we don't already have it in the run
+            if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
+                // if the two pieces aren't neighbors or aren't the same type, invalid move
+                if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) || piece.getType() !== this._run[this._run.length - 1].getType()))
+                    return;
+                // add to run
+                piece.selected = true;
+                this._run.push(piece);
+                ex.Logger.getInstance().info("Run modified", this._run);
+                // notify
+                this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
+            }
+            // did user go backwards?
+            if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
+                // mark for removal
+                removePiece = this._run.indexOf(piece) + 1;
+            }
+            if (removePiece > -1) {
+                // remove from run
+                this._run[removePiece].selected = false;
+                this._run.splice(removePiece, 1);
+                ex.Logger.getInstance().info("Run modified", this._run);
+            }
         }
     };
     MatchManager.prototype._handlePointerUp = function (pe) {
-        if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
-            return;
+        if (!this.gameOver) {
+            if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
+                return;
+            }
+            // have a valid run?
+            if (this._run.length > 0) {
+                ex.Logger.getInstance().info("Run ended", this._run);
+                // notify
+                this.eventDispatcher.publish("match", new MatchEvent(_.clone(this._run)));
+                this._run.forEach(function (p) { return p.selected = false; });
+                this._run.length = 0;
+            }
+            this.runInProgress = false;
         }
-        // have a valid run?
-        if (this._run.length > 0) {
-            ex.Logger.getInstance().info("Run ended", this._run);
-            // notify
-            this.eventDispatcher.publish("match", new MatchEvent(_.clone(this._run)));
-            this._run.forEach(function (p) { return p.selected = false; });
-            this._run.length = 0;
-        }
-        this.runInProgress = false;
     };
     MatchManager.prototype._handleCancelRun = function () {
-        this._run.forEach(function (p) { return p.selected = false; });
-        this._run.length = 0;
-        this.runInProgress = false;
+        if (!this.gameOver) {
+            this._run.forEach(function (p) { return p.selected = false; });
+            this._run.length = 0;
+            this.runInProgress = false;
+        }
     };
     MatchManager.prototype.areNeighbors = function (piece1, piece2) {
         var cell1 = _.find(grid.cells, { piece: piece1 });

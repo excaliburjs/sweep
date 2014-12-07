@@ -127,6 +127,11 @@ class LogicalGrid extends ex.Class {
             var piece = this.getCell(i, from).piece
             if (piece) {
                this.clearPiece(piece);
+               //TODO add game over logic here
+               //TODO disable input (on board), add score card with play again button
+               matcher.gameOver = true;
+               var gameOverLabel = new ex.Label("GAME OVER", visualGrid.x + visualGrid.getWidth() + 30, visualGrid.y + visualGrid.getHeight() / 2);
+               game.currentScene.addChild(gameOverLabel);
             }
          } else if (this.getCell(i, from).piece) {
             (() => {
@@ -231,22 +236,23 @@ class VisualGrid extends ex.Actor {
    }
 
    public sweep(type: PieceType) {
+      if (!matcher.gameOver) {
+         // can sweep?
+         if (stats.getMeter(type) < Config.SweepThreshold) return;
 
-      // can sweep?
-      if (stats.getMeter(type) < Config.SweepThreshold) return;
+         var cells = this.logicalGrid.cells.filter(cell => {
+            return cell.piece && cell.piece.getType() === type;
+         });
 
-      var cells = this.logicalGrid.cells.filter(cell => {
-         return cell.piece && cell.piece.getType() === type;
-      });
+         cells.forEach(cell => {
+            stats.scorePieces([cell.piece]);
+            grid.clearPiece(cell.piece);
+         });
 
-      cells.forEach(cell => {
-         stats.scorePieces([cell.piece]);
-         grid.clearPiece(cell.piece);
-      });
+         // reset meter
+         stats.resetMeter(type);
 
-      // reset meter
-      stats.resetMeter(type);
-
-      turnManager.advanceTurn();
+         turnManager.advanceTurn();
+      }
    }
 }
