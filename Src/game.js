@@ -14,8 +14,12 @@ var Config = (function () {
     Config.ScoreXBuffer = 20;
     Config.MeterWidth = 90;
     Config.MeterHeight = 30;
+    // sweep mechanic
     Config.SweepThreshold = 20;
+    Config.EnableSweepMeters = true;
+    Config.ClearSweepMetersAfterSingleUse = true;
     // alt sweep mechanic 1
+    Config.EnableSweeper = false;
     Config.SweepStartRow = 3;
     Config.SweepMaxRow = 7;
     Config.SweepAltThreshold = 20;
@@ -387,7 +391,12 @@ var VisualGrid = (function (_super) {
                 grid.clearPiece(cell.piece);
             });
             // reset meter
-            stats.resetMeter(type);
+            if (Config.ClearSweepMetersAfterSingleUse) {
+                stats.resetAllMeters();
+            }
+            else {
+                stats.resetMeter(type);
+            }
             turnManager.advanceTurn();
         }
     };
@@ -646,6 +655,11 @@ var Stats = (function () {
     Stats.prototype.resetMeter = function (pieceType) {
         this._meters[this._types.indexOf(pieceType)] = 0;
     };
+    Stats.prototype.resetAllMeters = function () {
+        for (var i = 0; i < this._meters.length; i++) {
+            this._meters[i] = 0;
+        }
+    };
     Stats.prototype.canSweep = function () {
         return this._sweepMeter === this._sweepMeterThreshold;
     };
@@ -672,11 +686,15 @@ var Stats = (function () {
         var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
         this._totalScore("total ", scoreXPos, 330);
         var yPos = 350;
-        //this._addMeter(0, scoreXPos, yPos);
-        //this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
-        //this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
-        //this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
-        this._addSweepMeter(scoreXPos, sweeper.y);
+        if (Config.EnableSweepMeters) {
+            this._addMeter(0, scoreXPos, yPos);
+            this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
+            this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
+            this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
+        }
+        if (Config.EnableSweeper) {
+            this._addSweepMeter(scoreXPos, sweeper.y);
+        }
         this._addScore("chain ", this._chains, 0, scoreXPos, yPos += Config.MeterHeight + 20);
         this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
         this._addScore("chain ", this._chains, 2, scoreXPos, yPos += 20);
@@ -881,7 +899,9 @@ function InitSetup(visualGrid, stats) {
     mask.kill();
     game.add(mask);
 }
-game.add(sweeper);
+if (Config.EnableSweeper) {
+    game.add(sweeper);
+}
 game.input.keyboard.on('up', function (evt) {
     if (evt.key === 68 /* D */) {
         game.isDebug = !game.isDebug;
@@ -921,7 +941,7 @@ game.input.keyboard.on('up', function (evt) {
         InitSetup(visualGrid, stats);
     }
     // alt sweep
-    if (evt.key === 83 /* S */)
+    if (Config.EnableSweeper && evt.key === 83 /* S */)
         sweeper.sweep();
 });
 // TODO clean up pieces that are not in play anymore after update loop

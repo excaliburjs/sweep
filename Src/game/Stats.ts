@@ -34,6 +34,12 @@
       this._meters[this._types.indexOf(pieceType)] = 0;
    }
 
+   public resetAllMeters() {
+      for (var i = 0; i < this._meters.length; i++) {
+         this._meters[i] = 0;
+      } 
+   }
+
    public canSweep() {
       return this._sweepMeter === this._sweepMeterThreshold;
    }
@@ -70,11 +76,15 @@
       this._totalScore("total ", scoreXPos, 330);
 
       var yPos = 350;
-      //this._addMeter(0, scoreXPos, yPos);
-      //this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
-      //this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
-      //this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
-      this._addSweepMeter(scoreXPos, sweeper.y);
+      if (Config.EnableSweepMeters) {
+         this._addMeter(0, scoreXPos, yPos);
+         this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
+         this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
+         this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
+      }
+      if (Config.EnableSweeper) {
+         this._addSweepMeter(scoreXPos, sweeper.y);
+      }
 
       this._addScore("chain ", this._chains, 0, scoreXPos, yPos += Config.MeterHeight + 20);
       this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
