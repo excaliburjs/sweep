@@ -56,7 +56,7 @@ class MatchManager extends ex.Class {
    public runInProgress = false;
 
    private _playNote(): void {
-      var index = ex.Util.randomIntInRange(0, this._notes.length);
+      var index = ex.Util.randomIntInRange(0, this._notes.length - 1);
       this._notes[index].play();
    }
 

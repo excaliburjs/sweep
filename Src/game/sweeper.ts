@@ -19,7 +19,7 @@ class Sweeper extends ex.Actor {
       this._emitter.maxVel = 137;
       this._emitter.minAngle = Math.PI;
       this._emitter.maxAngle = Math.PI;
-      this._emitter.isEmitting = true;
+      this._emitter.isEmitting = false;
       this._emitter.emitRate = 500;
       this._emitter.opacity = 0.9;
       this._emitter.fadeFlag = true;
@@ -37,10 +37,29 @@ class Sweeper extends ex.Actor {
    public onInitialize(engine: ex.Engine) {
       super.onInitialize(engine);
 
-      game.add(this._label);
-      game.add(this._emitter);
+      if (Config.EnableSweeper) {
+         this._emitter.isEmitting = true;
+         game.add(this._label);
+         game.add(this._emitter);
+      }
 
       this.y = visualGrid.y + (this._row * Config.CellHeight);
+
+      game.input.keyboard.off("up", Sweeper._handleKeyDown);
+      game.input.keyboard.on("up", Sweeper._handleKeyDown);
+   }
+
+   private static _handleKeyDown(evt: ex.Input.KeyEvent) {
+      if (evt.key === 49) sweeper.sweep(PieceType.Circle);
+      if (evt.key === 50) sweeper.sweep(PieceType.Triangle);
+      if (evt.key === 51) sweeper.sweep(PieceType.Square);
+      if (evt.key === 52) sweeper.sweep(PieceType.Star);
+
+      // mega sweep
+      if (!Config.EnableSweeper && evt.key === ex.Input.Keys.S) sweeper.sweepAll();
+
+      // alt sweep
+      if (Config.EnableSweeper && evt.key === ex.Input.Keys.S) sweeper.sweep();
    }
 
    public update(engine: ex.Engine, delta: number) {
@@ -52,36 +71,99 @@ class Sweeper extends ex.Actor {
       this._emitter.y = this.y;
    }
 
-   public sweep(): void {
+   public sweepAll(): void {
+      if (matcher.gameOver) return;
 
-      if (!stats.canSweep()) return;
+      if (!stats.allMetersFull()) return;
 
-      var cells: Cell[] = [];
+      var cells = grid.cells.filter(cell => {
+         return !!cell.piece;
+      });
 
-      // get all tiles above me
-      for (var i = 0; i < this._row; i++) {
-         grid.getRow(i).filter(c => c.piece !== null).forEach(c => cells.push(c));
-      }
-
-      if (cells.length <= 0) return;
-
+      // todo mega animation!
       cells.forEach(cell => {
+
+         // todo adjust mega sweep scoring?
          stats.scorePieces([cell.piece]);
+
+         // clear
          grid.clearPiece(cell.piece);
       });
 
       // reset meter
-      stats.resetSweeperMeter();
+      stats.resetAllMeters();
 
-      // advance sweeper
-      if (!Config.SweepMovesUp && this._row < Config.SweepMaxRow) {
-         this._row++;
-         this.moveBy(this.x, this.y + Config.CellHeight, 200);
-      } else if (Config.SweepMovesUp && this._row > Config.SweepMinRow) {
-         this._row--;
-         this.moveBy(this.x, this.y - Config.CellHeight, 200);
+      // add combo multiplier
+      stats.increaseScoreMultiplier();
+
+      // fill grid
+      for (var i = 0; i < Config.NumStartingRows; i++) {
+         grid.fill(grid.rows - (i + 1));
       }
+   }
 
-      turnManager.advanceTurn();
+   public sweep(type: PieceType = null): void {
+
+      if (matcher.gameOver) return; 
+
+      if (type !== null) {
+         // can sweep?
+         if (!stats.canSweep(type)) return;
+
+         // don't allow individual sweeps if mega sweep is available
+         // that shouldn't happen
+         if (stats.allMetersFull()) return;
+
+         var cells = grid.cells.filter(cell => {
+            return cell.piece && cell.piece.getType() === type;
+         });
+
+         cells.forEach(cell => {
+            stats.scorePieces([cell.piece]);
+            grid.clearPiece(cell.piece);
+         });
+
+         // reset meter
+         if (Config.ClearSweepMetersAfterSingleUse) {
+            stats.resetAllMeters();
+         } else {
+            stats.resetMeter(type);
+         }
+
+         turnManager.advanceTurn();
+
+      } else {
+
+         if (!stats.canSweep()) return;
+
+         var cells: Cell[] = [];
+
+         // get all tiles above me
+         for (var i = 0; i < this._row; i++) {
+            grid.getRow(i).filter(c => c.piece !== null).forEach(c => cells.push(c));
+         }
+
+         if (cells.length <= 0) return;
+
+         cells.forEach(cell => {
+            stats.scorePieces([cell.piece]);
+            grid.clearPiece(cell.piece);
+         });
+
+         // reset meter
+         stats.resetSweeperMeter();
+
+         // advance sweeper
+         if (!Config.SweepMovesUp && this._row < Config.SweepMaxRow) {
+            this._row++;
+            this.moveBy(this.x, this.y + Config.CellHeight, 200);
+         } else if (Config.SweepMovesUp && this._row > Config.SweepMinRow) {
+            this._row--;
+            this.moveBy(this.x, this.y - Config.CellHeight, 200);
+         }
+
+         turnManager.advanceTurn();
+      }
+      
    }
 }

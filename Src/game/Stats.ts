@@ -37,11 +37,19 @@
    public resetAllMeters() {
       for (var i = 0; i < this._meters.length; i++) {
          this._meters[i] = 0;
-      } 
+      }
    }
 
-   public canSweep() {
-      return this._sweepMeter === this._sweepMeterThreshold;
+   public allMetersFull(): boolean {
+      return _.every(this._meters, (m) => m === Config.SweepThreshold);
+   }
+
+   public canSweep(type: PieceType = null) {
+      if (type !== null) {
+         return this.getMeter(type) > Config.SweepThreshold;
+      } else {
+         return this._sweepMeter === this._sweepMeterThreshold;
+      }
    }
 
    public resetSweeperMeter() {
@@ -54,6 +62,10 @@
       } else {
          this._sweepMeterThreshold = Math.min(Config.SweepAltMaxThreshold, this._sweepMeterThreshold + Config.SweepAltThresholdDelta);
       }
+   }
+
+   public increaseScoreMultiplier() {
+      // todo
    }
 
    public scorePieces(pieces: Piece[]) {
@@ -88,6 +100,7 @@
          this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
          this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
          this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
+         this._addMegaSweep(scoreXPos, 350);
       }
       if (Config.EnableSweeper) {
          this._addSweepMeter(scoreXPos, sweeper.y);
@@ -129,21 +142,56 @@
       game.currentScene.addChild(label);
    }
 
+   private _addMegaSweep(x: number, y: number) {
+      var meter = new ex.Actor(x, y, Config.MeterWidth, Config.MeterHeight * 4, ex.Color.Orange);
+      var label = new ex.Label("MEGA SWEEP", meter.getCenter().x, meter.getCenter().y);
+      var inputLabel = new ex.Label("PRESS S", meter.getCenter().x, meter.getCenter().y + 14);
+      label.textAlign = inputLabel.textAlign = ex.TextAlign.Center;
+      label.color = inputLabel.color = ex.Color.White;
+      label.font = inputLabel.font = "14px";
+      meter.anchor.setTo(0, 0);
+
+      game.addEventListener('update', (data?: ex.UpdateEvent) => {
+
+         // mega sweep
+         if (this.allMetersFull()) {
+            meter.visible = label.visible = inputLabel.visible = true;
+
+            // show mega sweep
+
+         } else {
+            meter.visible = label.visible = inputLabel.visible = false;
+         }
+
+      });
+      game.add(meter);
+      game.add(label);
+      game.add(inputLabel);
+   }
+
    private _addMeter(piece: PieceType, x: number, y: number) {
-      var square = new Meter(x, y, PieceTypeToColor[piece], Config.SweepThreshold);
-      var label = new ex.Label(null, square.getCenter().x, square.getCenter().y + 3);
+      var meter = new Meter(x, y, PieceTypeToColor[piece], Config.SweepThreshold);
+      var label = new ex.Label(null, meter.getCenter().x, meter.getCenter().y + 3);
       label.textAlign = ex.TextAlign.Center;
       label.color = ex.Color.Black;
       game.addEventListener('update', (data?: ex.UpdateEvent) => {
-         square.score = this._meters[piece];
+         meter.score = this._meters[piece];
 
-         if (this._meters[piece] === Config.SweepThreshold) {
-            label.text = "Press " + (piece + 1) + " to SWEEP";
+         // mega sweep
+         if (this.allMetersFull()) {
+            meter.visible = label.visible = false;
          } else {
-            label.text = this._meters[piece].toString();
+            meter.visible = label.visible = true;
+
+            if (this._meters[piece] === Config.SweepThreshold) {
+               label.text = "Press " + (piece + 1) + " to SWEEP";
+            } else {
+               label.text = this._meters[piece].toString();
+            }
          }
+
       });
-      game.add(square);
+      game.add(meter);
       game.add(label);
    }
 
