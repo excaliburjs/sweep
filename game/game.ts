@@ -28,6 +28,7 @@ _.forIn(Resources, (resource) => {
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
 
+
 var turnManager, matcher, transitionManager, sweeper, stats, mask;
 
 InitSetup();
@@ -48,7 +49,7 @@ function InitSetup() {
    //initialize game objects
    if (matcher) matcher.dispose(); //unbind events
    matcher = new MatchManager();
-   turnManager = new TurnManager(visualGrid.logicalGrid, matcher, TurnMode.Match);
+   turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? TurnMode.Timed : TurnMode.Match);
    transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
    sweeper = new Sweeper(Config.SweepStartRow, visualGrid.logicalGrid.cols);
    stats = new Stats();

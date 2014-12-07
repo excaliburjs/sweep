@@ -31,6 +31,9 @@ var Config = (function () {
     Config.ScoreXBuffer = 20;
     Config.MeterWidth = 90;
     Config.MeterHeight = 30;
+    // Timer
+    Config.EnableTimer = false;
+    Config.TimerValue = 7000;
     // sweep mechanic
     Config.SweepThreshold = 20;
     Config.EnableSweepMeters = true;
@@ -542,7 +545,7 @@ var TurnManager = (function () {
         this.matcher = matcher;
         this.turnMode = turnMode;
         matcher.on('match', _.bind(this._handleMatchEvent, this));
-        this._timer = new ex.Timer(_.bind(this._tick, this), 2000, true);
+        this._timer = new ex.Timer(_.bind(this._tick, this), Config.TimerValue, true);
         game.add(this._timer);
     }
     TurnManager.prototype.advanceTurn = function () {
@@ -897,7 +900,7 @@ function InitSetup() {
     if (matcher)
         matcher.dispose(); //unbind events
     matcher = new MatchManager();
-    turnManager = new TurnManager(visualGrid.logicalGrid, matcher, 1 /* Match */);
+    turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? 0 /* Timed */ : 1 /* Match */);
     transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
     sweeper = new Sweeper(Config.SweepStartRow, visualGrid.logicalGrid.cols);
     stats = new Stats();
