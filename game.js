@@ -710,16 +710,25 @@ var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
 var transitionManager = new TransitionManager(grid, visualGrid);
-game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
-game.add(visualGrid);
 var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
 mask.anchor.setTo(0, 0);
 game.add(mask);
-stats.drawScores();
-for (var i = 0; i < Config.NumStartingRows; i++) {
-    grid.fill(grid.rows - (i + 1));
+InitSetup(visualGrid, stats);
+//reset the game
+function InitSetup(visualGrid, stats) {
+    if (game.currentScene.children) {
+        for (var i = 0; i < game.currentScene.children.length; i++) {
+            game.removeChild(game.currentScene.children[i]);
+        }
+    }
+    game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
+    game.add(visualGrid);
+    for (var i = 0; i < Config.NumStartingRows; i++) {
+        grid.fill(grid.rows - (i + 1));
+    }
+    stats.drawScores();
 }
-game.input.keyboard.on('down', function (evt) {
+game.input.keyboard.on('up', function (evt) {
     if (evt.key === 68 /* D */) {
         game.isDebug = !game.isDebug;
     }
@@ -738,6 +747,25 @@ game.input.keyboard.on('down', function (evt) {
         visualGrid.sweep(2 /* Square */);
     if (evt.key === 52)
         visualGrid.sweep(3 /* Star */);
+    if (evt.key === 38 /* Up */ || evt.key == 40 /* Down */ || evt.key === 37 /* Left */ || evt.key === 39 /* Right */) {
+        var numCols = grid.cols || 0;
+        var numRows = grid.rows || 0;
+        if (evt.key === 38 /* Up */) {
+            numRows++;
+        }
+        else if (evt.key === 40 /* Down */) {
+            numRows--;
+        }
+        else if (evt.key === 37 /* Left */) {
+            numCols--;
+        }
+        else if (evt.key === 39 /* Right */) {
+            numCols++;
+        }
+        grid = new LogicalGrid(numRows, numCols);
+        visualGrid = new VisualGrid(grid);
+        InitSetup(visualGrid, stats);
+    }
 });
 // TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {
