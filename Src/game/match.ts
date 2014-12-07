@@ -10,6 +10,8 @@ class MatchManager extends ex.Class {
 
    private _run: Piece[] = [];   
 
+   public gameOver: boolean = false;
+
    constructor() {
       super();
 
@@ -39,107 +41,113 @@ class MatchManager extends ex.Class {
    public runInProgress = false;
 
    private _handlePointerDown(pe: PointerEvent) {
+      if (!this.gameOver) {
+         var cell = visualGrid.getCellByPos(pe.x, pe.y);
 
-      var cell = visualGrid.getCellByPos(pe.x, pe.y);
+         if (!cell || this.runInProgress) {
+            return;
+         }
 
-      if (!cell || this.runInProgress) {
-         return;
+         if (pe.pointerType === ex.Input.PointerType.Mouse && pe.button !== ex.Input.PointerButton.Left) {
+            return;
+         }
+
+         this.runInProgress = true;
+         cell.piece.selected = true;
+         this._run.push(cell.piece);
+
+         ex.Logger.getInstance().info("Run started", this._run);
+
+         // darken/highlight
+         // draw line?
       }
-
-      if (pe.pointerType === ex.Input.PointerType.Mouse && pe.button !== ex.Input.PointerButton.Left) {
-         return;
-      }
-
-      this.runInProgress = true;
-      cell.piece.selected = true;
-      this._run.push(cell.piece);
-
-      ex.Logger.getInstance().info("Run started", this._run);
-
-      // darken/highlight
-      // draw line?
    }
 
    private _handlePointerMove(pe: PointerEvent) {
+      if (!this.gameOver) {
+         // add piece to run if valid
+         // draw line?
 
-      // add piece to run if valid
-      // draw line?
+         if (!this.runInProgress) return;
 
-      if (!this.runInProgress) return;
+         var cell = visualGrid.getCellByPos(pe.x, pe.y);
 
-      var cell = visualGrid.getCellByPos(pe.x, pe.y);
+         if (!cell) return;
 
-      if (!cell) return;
+         var piece = cell.piece;
 
-      var piece = cell.piece;
+         if (!piece) return;
 
-      if (!piece) return;
+         var removePiece = -1;
+         var containsBounds = new ex.BoundingBox(
+            piece.getBounds().left + Config.PieceContainsPadding,
+            piece.getBounds().top + Config.PieceContainsPadding,
+            piece.getBounds().right - Config.PieceContainsPadding,
+            piece.getBounds().bottom - Config.PieceContainsPadding);
 
-      var removePiece = -1;
-      var containsBounds = new ex.BoundingBox(
-         piece.getBounds().left + Config.PieceContainsPadding,
-         piece.getBounds().top + Config.PieceContainsPadding,
-         piece.getBounds().right - Config.PieceContainsPadding,
-         piece.getBounds().bottom - Config.PieceContainsPadding);
+         // if piece contains screen coords and we don't already have it in the run
+         if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
 
-      // if piece contains screen coords and we don't already have it in the run
-      if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
+            // if the two pieces aren't neighbors or aren't the same type, invalid move
+            if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) ||
+               piece.getType() !== this._run[this._run.length - 1].getType())) return;
 
-         // if the two pieces aren't neighbors or aren't the same type, invalid move
-         if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) ||
-            piece.getType() !== this._run[this._run.length - 1].getType())) return;
+            // add to run
+            piece.selected = true;
+            this._run.push(piece);
 
-         // add to run
-         piece.selected = true;
-         this._run.push(piece);
+            ex.Logger.getInstance().info("Run modified", this._run);
 
-         ex.Logger.getInstance().info("Run modified", this._run);
+            // notify
+            this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
+         }
 
-         // notify
-         this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
-      }
+         // did user go backwards?
+         if (containsBounds.contains(new ex.Point(pe.x, pe.y)) &&
+            this._run.length > 1 &&
+            this._run.indexOf(piece) === this._run.length - 2) {
+            // mark for removal
+            removePiece = this._run.indexOf(piece) + 1;
+         }
 
-      // did user go backwards?
-      if (containsBounds.contains(new ex.Point(pe.x, pe.y)) &&
-         this._run.length > 1 &&
-         this._run.indexOf(piece) === this._run.length - 2) {
-         // mark for removal
-         removePiece = this._run.indexOf(piece) + 1;
-      }
-      
-      if (removePiece > -1) {
-         // remove from run
-         this._run[removePiece].selected = false;
-         this._run.splice(removePiece, 1);
+         if (removePiece > -1) {
+            // remove from run
+            this._run[removePiece].selected = false;
+            this._run.splice(removePiece, 1);
 
-         ex.Logger.getInstance().info("Run modified", this._run);
+            ex.Logger.getInstance().info("Run modified", this._run);
+         }
       }
    }
 
    private _handlePointerUp(pe: ex.Input.PointerEvent) {
+      if (!this.gameOver) {
 
-      if (pe.pointerType === ex.Input.PointerType.Mouse && pe.button !== ex.Input.PointerButton.Left) {
-         return;
+         if (pe.pointerType === ex.Input.PointerType.Mouse && pe.button !== ex.Input.PointerButton.Left) {
+            return;
+         }
+
+         // have a valid run?
+         if (this._run.length > 0) {
+            ex.Logger.getInstance().info("Run ended", this._run);
+
+            // notify
+            this.eventDispatcher.publish("match", new MatchEvent(_.clone(this._run)));
+
+            this._run.forEach(p => p.selected = false);
+            this._run.length = 0;
+         }
+
+         this.runInProgress = false;
       }
-
-      // have a valid run?
-      if (this._run.length > 0) {
-         ex.Logger.getInstance().info("Run ended", this._run);
-
-         // notify
-         this.eventDispatcher.publish("match", new MatchEvent(_.clone(this._run)));
-
-         this._run.forEach(p => p.selected = false);
-         this._run.length = 0;
-      }
-
-      this.runInProgress = false;
    }
 
    private _handleCancelRun() {
-      this._run.forEach(p => p.selected = false);
-      this._run.length = 0;
-      this.runInProgress = false;
+      if (!this.gameOver) {
+         this._run.forEach(p => p.selected = false);
+         this._run.length = 0;
+         this.runInProgress = false;
+      }
    }
 
    public areNeighbors(piece1: Piece, piece2: Piece): boolean {      
