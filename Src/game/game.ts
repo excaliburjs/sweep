@@ -54,7 +54,9 @@ function InitSetup(visualGrid : VisualGrid, stats : Stats) {
    stats.drawScores();
 }
 
-game.add(sweeper);
+if (Config.EnableSweeper) {
+   game.add(sweeper);
+}
 
 game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
    if (evt.key === ex.Input.Keys.D) {
@@ -97,7 +99,7 @@ game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
    }
 
    // alt sweep
-   if (evt.key === ex.Input.Keys.S) sweeper.sweep();
+   if (Config.EnableSweeper && evt.key === ex.Input.Keys.S) sweeper.sweep();
 });
 
 

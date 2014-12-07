@@ -250,7 +250,11 @@ class VisualGrid extends ex.Actor {
          });
 
          // reset meter
-         stats.resetMeter(type);
+         if (Config.ClearSweepMetersAfterSingleUse) {
+            stats.resetAllMeters();
+         } else {
+            stats.resetMeter(type);
+         }
 
          turnManager.advanceTurn();
       }
