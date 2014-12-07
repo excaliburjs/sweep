@@ -9,7 +9,7 @@ class TurnManager {
 
    constructor(public logicalGrid: LogicalGrid, public matcher: MatchManager, public turnMode: TurnMode) {
       matcher.on('match', _.bind(this._handleMatchEvent, this));
-      this._timer = new ex.Timer(_.bind(this._tick, this), 2000, true);
+      this._timer = new ex.Timer(_.bind(this._tick, this), Config.TimerValue, true);
       game.add(this._timer);
    }
 

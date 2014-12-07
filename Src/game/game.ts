@@ -28,7 +28,7 @@ var stats = new Stats();
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager();
-var turnManager = new TurnManager(grid, matcher, TurnMode.Match);
+var turnManager = new TurnManager(grid, matcher, Config.EnableTimer ? TurnMode.Timed : TurnMode.Match);
 var transitionManager = new TransitionManager(grid, visualGrid);
 var sweeper = new Sweeper(Config.SweepStartRow);
 

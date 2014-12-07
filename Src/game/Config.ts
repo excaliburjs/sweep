@@ -13,6 +13,10 @@
    static MeterWidth: number = 90;
    static MeterHeight: number = 30;
 
+   // Timer
+   static EnableTimer: boolean = true;
+   static TimerValue: number = 7000;
+
    // sweep mechanic
    static SweepThreshold: number = 20;
    static EnableSweepMeters: boolean = true;
