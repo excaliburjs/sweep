@@ -67,7 +67,7 @@
    static loadSurvival() {
       Config.EnableTimer = true;
       Config.AdvanceRowsOnMatch = false;
-      Config.TimerValue = 3000;
+      Config.TimerValue = 5000;
       Config.EnableSweepMeters = false;      
       Config.EnableSweeper = true;
       Config.SweepMovesUp = false;
@@ -88,6 +88,7 @@
       Config.EnableTimer = true;
       Config.AdvanceRowsOnMatch = false;
       Config.TimerValue = 3000;
+      Config.EnableSweepMeters = false;
       Config.EnableSweeper = true;
       Config.SweepMovesUp = true;
       Config.SweepMinRow = 3;
