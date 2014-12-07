@@ -1299,7 +1299,7 @@ var gameOverWidget = new UIWidget();
 function gameOver() {
     if (analytics) {
         analytics('send', 'event', 'ludum-30-stats', gameMode, 'total score', { 'eventValue': stats.getTotalScore(), 'nonInteraction': 1 });
-        analytics('send', 'event', 'ludum-30-stats', gameMode, 'longest chain', { 'eventValue': stats.getLongestChain(), 'nonInteractino': 1 });
+        analytics('send', 'event', 'ludum-30-stats', gameMode, 'longest chain', { 'eventValue': stats.getLongestChain(), 'nonInteraction': 1 });
     }
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
