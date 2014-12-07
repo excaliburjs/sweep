@@ -14,17 +14,25 @@ class TurnManager {
    }
 
    public advanceTurn(): void {
-      this.advanceRows();
-      transitionManager.evaluate();
+      transitionManager.evaluate().then(() => {
+         this.advanceRows(); 
+         console.log("Done!");
+      });
    }
 
    public advanceRows(): void {
+      var promises: ex.Promise<any>[] = [];
       // shift all rows up 1
       for (var i = 0; i < grid.rows; i++) {
-         this.logicalGrid.shift(i, i - 1);
+         promises.push(this.logicalGrid.shift(i, i - 1));
       }
       // fill first row
-      this.logicalGrid.fill(grid.rows - 1);
+      promises = _.filter(promises, (p) => { return p; });
+      ex.Promise.join.apply(null, promises).then(() => {
+         this.logicalGrid.fill(grid.rows - 1);
+      }).error((e) => {
+         console.log(e);
+      });
    }
 
    private _handleMatchEvent(evt: MatchEvent) {
@@ -32,8 +40,7 @@ class TurnManager {
          stats.scorePieces(evt.run);
          stats.scoreChain(evt.run);
          evt.run.forEach(p => grid.clearPiece(p));
-         transitionManager.evaluate();
-         this.advanceRows();
+         this.advanceTurn();
       }
    }
 

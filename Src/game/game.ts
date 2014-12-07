@@ -35,6 +35,10 @@ var sweeper = new Sweeper(Config.SweepStartRow);
 game.currentScene.camera.setFocus(visualGrid.getWidth()/2, visualGrid.getHeight()/2);
 game.add(visualGrid);
 
+var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
+mask.anchor.setTo(0, 0);
+game.add(mask);
+
 stats.drawScores();
 
 game.add(sweeper);
@@ -65,6 +69,7 @@ game.input.keyboard.on('down', (evt: ex.Input.KeyEvent) => {
    // alt sweep
    if (evt.key === ex.Input.Keys.S) sweeper.sweep();
 });
+
 
 // TODO clean up pieces that are not in play anymore after update loop
 
