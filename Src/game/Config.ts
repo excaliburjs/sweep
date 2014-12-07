@@ -13,4 +13,8 @@
    static MeterWidth: number = 90;
    static MeterHeight: number = 30;
    static SweepThreshold: number = 20;
+   
+   // alt sweep mechanic 1
+   static SweepStartRow = 3;
+   static SweepAltThreshold = 20;
 }

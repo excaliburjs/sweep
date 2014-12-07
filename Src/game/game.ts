@@ -9,6 +9,7 @@
 /// <reference path="turn.ts"/>
 /// <reference path="transition.ts"/>
 /// <reference path="Stats.ts"/>
+/// <reference path="sweeper.ts"/>
 
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 game.backgroundColor = Palette.GameBackgroundColor;
@@ -29,11 +30,14 @@ var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, TurnMode.Match);
 var transitionManager = new TransitionManager(grid, visualGrid);
+var sweeper = new Sweeper(Config.SweepStartRow);
 
 game.currentScene.camera.setFocus(visualGrid.getWidth()/2, visualGrid.getHeight()/2);
 game.add(visualGrid);
 
 stats.drawScores();
+
+game.add(sweeper);
 
 for (var i = 0; i < Config.NumStartingRows; i++) {
    grid.fill(grid.rows - (i + 1));
@@ -44,7 +48,7 @@ game.input.keyboard.on('down', (evt: ex.Input.KeyEvent) => {
       game.isDebug = !game.isDebug;
    }
 
-   if (evt.key === ex.Input.Keys.S) {
+   if (evt.key === ex.Input.Keys.U) {
       // shift all rows up 1
       for (var i = 0; i < grid.rows; i++) {
          grid.shift(i, i - 1);         
@@ -57,6 +61,9 @@ game.input.keyboard.on('down', (evt: ex.Input.KeyEvent) => {
    if (evt.key === 50) visualGrid.sweep(PieceType.Triangle);
    if (evt.key === 51) visualGrid.sweep(PieceType.Square);
    if (evt.key === 52) visualGrid.sweep(PieceType.Star);
+
+   // alt sweep
+   if (evt.key === ex.Input.Keys.S) sweeper.sweep();
 });
 
 // TODO clean up pieces that are not in play anymore after update loop
