@@ -63,7 +63,7 @@ class LogicalGrid extends ex.Class {
       return this.cells[(x + y * this.cols)];
    }
 
-   public setCell(x: number, y: number, data: Piece, movePiece: boolean = true): void {
+   public setCell(x: number, y: number, data: Piece, movePiece: boolean = true): Cell {
       var cell = this.getCell(x, y);
 
       if (!cell) return;
