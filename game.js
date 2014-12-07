@@ -565,6 +565,19 @@ var MatchManager = (function (_super) {
             }
             this.runInProgress = false;
         }
+        else {
+            var point = new ex.Point(pe.x, pe.y);
+            if (gameOverWidget.getBounds(0).contains(point)) {
+                //TODO post your score
+                console.log("POSTED YOUR SCORE");
+            }
+            else if (gameOverWidget.getBounds(1).contains(point)) {
+                //TODO play again
+                console.log("PLAY AGAIN");
+                grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
+                InitSetup();
+            }
+        }
     };
     MatchManager.prototype._handleCancelRun = function () {
         if (!this.gameOver) {
@@ -1042,6 +1055,31 @@ var Sweeper = (function (_super) {
     };
     return Sweeper;
 })(ex.Actor);
+var UIWidget = (function (_super) {
+    __extends(UIWidget, _super);
+    function UIWidget() {
+        _super.call(this);
+        this._buttons = new Array();
+        var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
+        this.widget = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() + 500, 300, 300, color);
+    }
+    UIWidget.prototype.addButton = function (button) {
+        this._buttons.push(button);
+        game.addChild(button);
+        //button.on(buttonType, 
+    };
+    UIWidget.prototype.getBounds = function (index) {
+        var boundingBox = new ex.BoundingBox(this._buttons[index].getBounds().left, this._buttons[index].getBounds().top, this._buttons[index].getBounds().right, this._buttons[index].getBounds().bottom);
+        return boundingBox;
+    };
+    UIWidget.prototype.moveWidget = function (x, y, speed) {
+        this.widget.moveTo(x, y, speed);
+        //for (var i = 0; i < this._buttons.length; i++) {
+        //   this._buttons[i].moveTo(x, y, speed);
+        //}
+    };
+    return UIWidget;
+})(ex.Class);
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
 /// <reference path="util.ts"/>
@@ -1054,6 +1092,7 @@ var Sweeper = (function (_super) {
 /// <reference path="transition.ts"/>
 /// <reference path="Stats.ts"/>
 /// <reference path="sweeper.ts"/>
+/// <reference path="UIWidget.ts"/>
 var _this = this;
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 game.backgroundColor = Palette.GameBackgroundColor;
@@ -1064,8 +1103,7 @@ _.forIn(Resources, function (resource) {
 });
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-var visualGrid = new VisualGrid(grid);
-var turnManager, matcher, transitionManager, sweeper, stats, mask;
+var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask;
 // game modes
 var loadConfig = function (config) {
     Config.resetDefault();
@@ -1079,6 +1117,7 @@ loadConfig(Config.loadCasual);
 InitSetup();
 //reset the game with the given grid dimensions
 function InitSetup() {
+    visualGrid = new VisualGrid(grid);
     var i;
     if (game.currentScene.children) {
         for (i = 0; i < game.currentScene.children.length; i++) {
@@ -1131,15 +1170,25 @@ game.input.keyboard.on('up', function (evt) {
             numCols++;
         }
         grid = new LogicalGrid(numRows, numCols);
-        visualGrid = new VisualGrid(grid);
         InitSetup();
     }
 });
+var gameOverWidget = new UIWidget();
+//var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
+//gameOverWidget.addButton(postYourScore);
 function gameOver() {
     var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
-    var gameOverWidget = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() + 500, 300, 300, color);
-    game.addChild(gameOverWidget);
-    gameOverWidget.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1400);
+    var gameOverWidgetActor = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() + 500, 300, 300, color);
+    game.addChild(gameOverWidgetActor);
+    gameOverWidgetActor.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1400);
+    game.addChild(gameOverWidget.widget);
+    //gameOverWidget.widget.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1000);
+    //gameOverWidget.moveWidget(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 50);
+    //TODO buttons fade in once widget is in place? perhaps button actors are invisible, and the sprite for the widget has the buttons on it
+    var postScoreButton = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2 - 50, 250, 50, ex.Color.Blue);
+    gameOverWidget.addButton(postScoreButton);
+    var playAgainButton = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2 + 50, 250, 50, ex.Color.Green);
+    gameOverWidget.addButton(playAgainButton);
 }
 // TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {
