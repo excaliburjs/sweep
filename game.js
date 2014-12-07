@@ -25,8 +25,8 @@ var Config = (function () {
     Config.PieceHeight = 36;
     Config.CellWidth = 45;
     Config.CellHeight = 45;
-    Config.GridCellsHigh = 16;
-    Config.GridCellsWide = 8;
+    Config.GridCellsHigh = 12;
+    Config.GridCellsWide = 6;
     Config.NumStartingRows = 3;
     Config.ScoreXBuffer = 20;
     Config.MeterWidth = 90;
@@ -131,6 +131,9 @@ var Cell = (function () {
         }
         return result;
     };
+    Cell.prototype.getAbove = function () {
+        return this.logicalGrid.getCell(this.x, this.y - 1);
+    };
     Cell.prototype.getBelow = function () {
         return this.logicalGrid.getCell(this.x, this.y + 1);
     };
@@ -174,15 +177,18 @@ var LogicalGrid = (function (_super) {
             return null;
         return this.cells[(x + y * this.cols)];
     };
-    LogicalGrid.prototype.setCell = function (x, y, data, kill) {
-        if (kill === void 0) { kill = false; }
+    LogicalGrid.prototype.setCell = function (x, y, data, movePiece) {
+        if (movePiece === void 0) { movePiece = true; }
         var cell = this.getCell(x, y);
         if (!cell)
             return;
         if (data) {
             var center = cell.getCenter();
-            data.x = center.x;
-            data.y = center.y;
+            if (movePiece) {
+                //data.moveTo(center.x, center.y, 200).asPromise().then(() => {
+                data.x = center.x;
+                data.y = center.y;
+            }
             data.cell = cell;
             cell.piece = data;
             this.eventDispatcher.publish("pieceadd", new PieceEvent(cell));
@@ -218,8 +224,10 @@ var LogicalGrid = (function (_super) {
         }
     };
     LogicalGrid.prototype.shift = function (from, to) {
+        var _this = this;
         if (to > this.rows)
             return;
+        var promises = [];
         for (var i = 0; i < this.cols; i++) {
             if (to < 0) {
                 var piece = this.getCell(i, from).piece;
@@ -228,9 +236,25 @@ var LogicalGrid = (function (_super) {
                 }
             }
             else if (this.getCell(i, from).piece) {
-                this.setCell(i, to, this.getCell(i, from).piece);
-                this.setCell(i, from, null);
+                (function () {
+                    var p = _this.getCell(i, from).piece;
+                    var dest = _this.getCell(i, to).getCenter();
+                    promises.push(p.moveTo(dest.x, dest.y, 300).asPromise());
+                    _this.setCell(i, to, _this.getCell(i, from).piece, false);
+                    _this.setCell(i, from, null);
+                })();
             }
+        }
+        var agg = ex.Promise.join.apply(null, promises).then(function () {
+            console.log("Yo", from, to);
+        }).error(function (e) {
+            console.log(e);
+        });
+        if (promises.length) {
+            return agg;
+        }
+        else {
+            return ex.Promise.wrap(true);
         }
     };
     LogicalGrid.prototype.areNeighbors = function (cell1, cell2) {
@@ -451,23 +475,34 @@ var TurnManager = (function () {
         game.add(this._timer);
     }
     TurnManager.prototype.advanceTurn = function () {
-        this.advanceRows();
-        transitionManager.evaluate();
+        var _this = this;
+        transitionManager.evaluate().then(function () {
+            _this.advanceRows();
+            console.log("Done!");
+        });
     };
     TurnManager.prototype.advanceRows = function () {
+        var _this = this;
+        var promises = [];
         for (var i = 0; i < grid.rows; i++) {
-            this.logicalGrid.shift(i, i - 1);
+            promises.push(this.logicalGrid.shift(i, i - 1));
         }
         // fill first row
-        this.logicalGrid.fill(grid.rows - 1);
+        promises = _.filter(promises, function (p) {
+            return p;
+        });
+        ex.Promise.join.apply(null, promises).then(function () {
+            _this.logicalGrid.fill(grid.rows - 1);
+        }).error(function (e) {
+            console.log(e);
+        });
     };
     TurnManager.prototype._handleMatchEvent = function (evt) {
         if (evt.run.length >= 3) {
             stats.scorePieces(evt.run);
             stats.scoreChain(evt.run);
             evt.run.forEach(function (p) { return grid.clearPiece(p); });
-            transitionManager.evaluate();
-            this.advanceRows();
+            this.advanceTurn();
         }
     };
     TurnManager.prototype._tick = function () {
@@ -502,6 +537,7 @@ var TransitionManager = (function () {
     TransitionManager.prototype.evaluate = function () {
         var _this = this;
         var currentRow = this.logicalGrid.rows;
+        var promises = [];
         while (currentRow > 0) {
             currentRow--;
             this._findFloaters(currentRow).forEach(function (c) {
@@ -509,10 +545,13 @@ var TransitionManager = (function () {
                 if (landingCell) {
                     var piece = c.piece;
                     _this.logicalGrid.setCell(c.x, c.y, null);
-                    _this.logicalGrid.setCell(landingCell.x, landingCell.y, piece);
+                    _this.logicalGrid.setCell(landingCell.x, landingCell.y, piece, false);
+                    var promise = piece.moveTo(landingCell.getCenter().x, landingCell.getCenter().y, 300).asPromise();
+                    promises.push(promise);
                 }
             });
         }
+        return ex.Promise.join.apply(null, promises);
     };
     return TransitionManager;
 })();
