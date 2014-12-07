@@ -200,20 +200,22 @@ class VisualGrid extends ex.Actor {
    }
 
    public sweep(type: PieceType) {
+
+      // can sweep?
+      if (stats.getMeter(type) < Config.SweepThreshold) return;
+
       var cells = this.logicalGrid.cells.filter(cell => {
          return cell.piece && cell.piece.getType() === type;
       });
 
-      // todo transitions
       cells.forEach(cell => {
          stats.scorePieces([cell.piece]);
          grid.clearPiece(cell.piece);
       });
 
+      // reset meter
+      stats.resetMeter(type);
 
-      // todo advance turn
       turnManager.advanceTurn();
-
-
    }
 }

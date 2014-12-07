@@ -54,9 +54,9 @@ game.input.keyboard.on('down', (evt: ex.Input.KeyEvent) => {
    }
 
    if (evt.key === 49) visualGrid.sweep(PieceType.Circle);
-   if (evt.key === 50) visualGrid.sweep(PieceType.Square);
-   if (evt.key === 51) visualGrid.sweep(PieceType.Star);
-   if (evt.key === 52) visualGrid.sweep(PieceType.Triangle);
+   if (evt.key === 50) visualGrid.sweep(PieceType.Triangle);
+   if (evt.key === 51) visualGrid.sweep(PieceType.Square);
+   if (evt.key === 52) visualGrid.sweep(PieceType.Star);
 });
 
 // TODO clean up pieces that are not in play anymore after update loop
