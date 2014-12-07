@@ -8,10 +8,13 @@ var Config = (function () {
     Config.PieceHeight = 36;
     Config.CellWidth = 45;
     Config.CellHeight = 45;
-    Config.GridCellsHigh = 12;
-    Config.GridCellsWide = 6;
+    Config.GridCellsHigh = 16;
+    Config.GridCellsWide = 8;
     Config.NumStartingRows = 3;
     Config.ScoreXBuffer = 20;
+    Config.MeterWidth = 90;
+    Config.MeterHeight = 30;
+    Config.SweepThreshold = 20;
     return Config;
 })();
 var Util = (function () {
@@ -128,9 +131,6 @@ var Cell = (function () {
         }
         return result;
     };
-    Cell.prototype.getAbove = function () {
-        return this.logicalGrid.getCell(this.x, this.y - 1);
-    };
     Cell.prototype.getBelow = function () {
         return this.logicalGrid.getCell(this.x, this.y + 1);
     };
@@ -174,18 +174,15 @@ var LogicalGrid = (function (_super) {
             return null;
         return this.cells[(x + y * this.cols)];
     };
-    LogicalGrid.prototype.setCell = function (x, y, data, movePiece) {
-        if (movePiece === void 0) { movePiece = true; }
+    LogicalGrid.prototype.setCell = function (x, y, data, kill) {
+        if (kill === void 0) { kill = false; }
         var cell = this.getCell(x, y);
         if (!cell)
             return;
         if (data) {
             var center = cell.getCenter();
-            if (movePiece) {
-                //data.moveTo(center.x, center.y, 200).asPromise().then(() => {
-                data.x = center.x;
-                data.y = center.y;
-            }
+            data.x = center.x;
+            data.y = center.y;
             data.cell = cell;
             cell.piece = data;
             this.eventDispatcher.publish("pieceadd", new PieceEvent(cell));
@@ -194,6 +191,7 @@ var LogicalGrid = (function (_super) {
             this.eventDispatcher.publish("pieceremove", new PieceEvent(cell));
             cell.piece = null;
         }
+        return cell;
     };
     LogicalGrid.prototype.clearPiece = function (piece) {
         piece.cell.piece = null;
@@ -202,35 +200,37 @@ var LogicalGrid = (function (_super) {
     };
     LogicalGrid.prototype.fill = function (row) {
         for (var i = 0; i < this.cols; i++) {
-            this.setCell(i, row, PieceFactory.getRandomPiece());
+            var currentCell = this.setCell(i, row, PieceFactory.getRandomPiece());
+            var neighbors = currentCell.getNeighbors();
+            var hasMatchingNeighbor = false;
+            for (var j = 0; j < neighbors.length; j++) {
+                if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
+                    hasMatchingNeighbor = true;
+                    break;
+                }
+            }
+            if (hasMatchingNeighbor) {
+                if (currentCell.piece) {
+                    this.clearPiece(currentCell.piece);
+                }
+                this.setCell(i, row, PieceFactory.getRandomPiece());
+            }
         }
     };
     LogicalGrid.prototype.shift = function (from, to) {
-        var _this = this;
-        if (to > this.rows || to < 0)
+        if (to > this.rows)
             return;
-        var promises = [];
         for (var i = 0; i < this.cols; i++) {
-            if (this.getCell(i, from).piece) {
-                (function () {
-                    var p = _this.getCell(i, from).piece;
-                    var dest = _this.getCell(i, to).getCenter();
-                    promises.push(p.moveTo(dest.x, dest.y, 300).asPromise());
-                    _this.setCell(i, to, _this.getCell(i, from).piece, false);
-                    _this.setCell(i, from, null);
-                })();
+            if (to < 0) {
+                var piece = this.getCell(i, from).piece;
+                if (piece) {
+                    this.clearPiece(piece);
+                }
             }
-        }
-        var agg = ex.Promise.join.apply(null, promises).then(function () {
-            console.log("Yo", from, to);
-        }).error(function (e) {
-            console.log(e);
-        });
-        if (promises.length) {
-            return agg;
-        }
-        else {
-            return ex.Promise.wrap(true);
+            else if (this.getCell(i, from).piece) {
+                this.setCell(i, to, this.getCell(i, from).piece);
+                this.setCell(i, from, null);
+            }
         }
     };
     LogicalGrid.prototype.areNeighbors = function (cell1, cell2) {
@@ -303,15 +303,18 @@ var VisualGrid = (function (_super) {
         });
     };
     VisualGrid.prototype.sweep = function (type) {
+        // can sweep?
+        if (stats.getMeter(type) < Config.SweepThreshold)
+            return;
         var cells = this.logicalGrid.cells.filter(function (cell) {
             return cell.piece && cell.piece.getType() === type;
         });
-        // todo transitions
         cells.forEach(function (cell) {
             stats.scorePieces([cell.piece]);
             grid.clearPiece(cell.piece);
         });
-        // todo advance turn
+        // reset meter
+        stats.resetMeter(type);
         turnManager.advanceTurn();
     };
     return VisualGrid;
@@ -327,17 +330,37 @@ var MatchEvent = (function (_super) {
 var MatchManager = (function (_super) {
     __extends(MatchManager, _super);
     function MatchManager() {
+        var _this = this;
         _super.call(this);
         this._run = [];
         this.runInProgress = false;
-        game.input.pointers.primary.on("down", _.bind(this._handlePieceDown, this));
+        game.input.pointers.primary.on("down", _.bind(this._handlePointerDown, this));
         game.input.pointers.primary.on("up", _.bind(this._handlePointerUp, this));
         game.input.pointers.primary.on("move", _.bind(this._handlePointerMove, this));
+        // handle canceling via right-click
+        game.canvas.addEventListener("contextmenu", function (e) {
+            e.preventDefault();
+            _this._handleCancelRun();
+        });
+        window.addEventListener("contextmenu", function () { return _this._handleCancelRun(); });
+        // HACK: Handle off-canvas mouseup to commit run
+        window.addEventListener("mouseup", function (e) {
+            if (e.button === 0 /* Left */) {
+                _this._handlePointerUp(new ex.Input.PointerEvent(e.clientX, e.clientY, 0, 1 /* Mouse */, e.button, e));
+            }
+            else {
+                _this._handleCancelRun();
+            }
+        });
     }
-    MatchManager.prototype._handlePieceDown = function (pe) {
+    MatchManager.prototype._handlePointerDown = function (pe) {
         var cell = visualGrid.getCellByPos(pe.x, pe.y);
-        if (!cell)
+        if (!cell || this.runInProgress) {
             return;
+        }
+        if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
+            return;
+        }
         this.runInProgress = true;
         cell.piece.selected = true;
         this._run.push(cell.piece);
@@ -382,7 +405,10 @@ var MatchManager = (function (_super) {
             ex.Logger.getInstance().info("Run modified", this._run);
         }
     };
-    MatchManager.prototype._handlePointerUp = function () {
+    MatchManager.prototype._handlePointerUp = function (pe) {
+        if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
+            return;
+        }
         // have a valid run?
         if (this._run.length > 0) {
             ex.Logger.getInstance().info("Run ended", this._run);
@@ -391,6 +417,11 @@ var MatchManager = (function (_super) {
             this._run.forEach(function (p) { return p.selected = false; });
             this._run.length = 0;
         }
+        this.runInProgress = false;
+    };
+    MatchManager.prototype._handleCancelRun = function () {
+        this._run.forEach(function (p) { return p.selected = false; });
+        this._run.length = 0;
         this.runInProgress = false;
     };
     MatchManager.prototype.areNeighbors = function (piece1, piece2) {
@@ -420,34 +451,23 @@ var TurnManager = (function () {
         game.add(this._timer);
     }
     TurnManager.prototype.advanceTurn = function () {
-        var _this = this;
-        transitionManager.evaluate().then(function () {
-            _this.advanceRows();
-            console.log("Done!");
-        });
+        this.advanceRows();
+        transitionManager.evaluate();
     };
     TurnManager.prototype.advanceRows = function () {
-        var _this = this;
-        var promises = [];
         for (var i = 0; i < grid.rows; i++) {
-            promises.push(this.logicalGrid.shift(i, i - 1));
+            this.logicalGrid.shift(i, i - 1);
         }
         // fill first row
-        promises = _.filter(promises, function (p) {
-            return p;
-        });
-        ex.Promise.join.apply(null, promises).then(function () {
-            _this.logicalGrid.fill(grid.rows - 1);
-        }).error(function (e) {
-            console.log(e);
-        });
+        this.logicalGrid.fill(grid.rows - 1);
     };
     TurnManager.prototype._handleMatchEvent = function (evt) {
         if (evt.run.length >= 3) {
             stats.scorePieces(evt.run);
             stats.scoreChain(evt.run);
             evt.run.forEach(function (p) { return grid.clearPiece(p); });
-            this.advanceTurn();
+            transitionManager.evaluate();
+            this.advanceRows();
         }
     };
     TurnManager.prototype._tick = function () {
@@ -482,7 +502,6 @@ var TransitionManager = (function () {
     TransitionManager.prototype.evaluate = function () {
         var _this = this;
         var currentRow = this.logicalGrid.rows;
-        var promises = [];
         while (currentRow > 0) {
             currentRow--;
             this._findFloaters(currentRow).forEach(function (c) {
@@ -490,13 +509,10 @@ var TransitionManager = (function () {
                 if (landingCell) {
                     var piece = c.piece;
                     _this.logicalGrid.setCell(c.x, c.y, null);
-                    _this.logicalGrid.setCell(landingCell.x, landingCell.y, piece, false);
-                    var promise = piece.moveTo(landingCell.getCenter().x, landingCell.getCenter().y, 300).asPromise();
-                    promises.push(promise);
+                    _this.logicalGrid.setCell(landingCell.x, landingCell.y, piece);
                 }
             });
         }
-        return ex.Promise.join.apply(null, promises);
     };
     return TransitionManager;
 })();
@@ -506,16 +522,30 @@ var Stats = (function () {
         this._numTrianglesDestroyed = 0;
         this._numSquaresDestroyed = 0;
         this._numStarsDestroyed = 0;
+        this._numCirclesDestroyedMeter = 0;
+        this._numTrianglesDestroyedMeter = 0;
+        this._numSquaresDestroyedMeter = 0;
+        this._numStarsDestroyedMeter = 0;
         this._longestCircleCombo = 0;
         this._longestTriangleCombo = 0;
         this._longestSquareCombo = 0;
         this._longestStarCombo = 0;
         this._types = [0 /* Circle */, 1 /* Triangle */, 2 /* Square */, 3 /* Star */];
         this._scores = [this._numCirclesDestroyed, this._numTrianglesDestroyed, this._numSquaresDestroyed, this._numStarsDestroyed];
+        this._meters = [this._numCirclesDestroyedMeter, this._numTrianglesDestroyedMeter, this._numSquaresDestroyedMeter, this._numStarsDestroyedMeter];
         this._chains = [this._longestCircleCombo, this._longestTriangleCombo, this._longestSquareCombo, this._longestStarCombo];
     }
+    Stats.prototype.getMeter = function (pieceType) {
+        return this._meters[this._types.indexOf(pieceType)];
+    };
+    Stats.prototype.resetMeter = function (pieceType) {
+        this._meters[this._types.indexOf(pieceType)] = 0;
+    };
     Stats.prototype.scorePieces = function (pieces) {
-        this._scores[this._types.indexOf(pieces[0].getType())] += pieces.length;
+        var type = this._types.indexOf(pieces[0].getType());
+        this._scores[type] += pieces.length;
+        var newScore = this._meters[type] + pieces.length;
+        this._meters[type] = Math.min(newScore, Config.SweepThreshold);
     };
     Stats.prototype.scoreChain = function (pieces) {
         var chainScore = this._chains[this._types.indexOf(pieces[0].getType())];
@@ -525,25 +555,75 @@ var Stats = (function () {
     };
     Stats.prototype.drawScores = function () {
         var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
-        this._addScore("circles ", this._scores, 0, scoreXPos, 350);
-        this._addScore("triangles ", this._scores, 1, scoreXPos, 370);
-        this._addScore("squares ", this._scores, 2, scoreXPos, 390);
-        this._addScore("stars ", this._scores, 3, scoreXPos, 410);
-        this._addScore("circle chain ", this._chains, 0, scoreXPos, 440);
-        this._addScore("triangle chain ", this._chains, 1, scoreXPos, 460);
-        this._addScore("square chain ", this._chains, 2, scoreXPos, 480);
-        this._addScore("star chain ", this._chains, 3, scoreXPos, 500);
+        this._totalScore("total ", scoreXPos, 330);
+        var yPos = 350;
+        this._addMeter(0, scoreXPos, yPos);
+        this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
+        this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
+        this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
+        this._addScore("chain ", this._chains, 0, scoreXPos, yPos += Config.MeterHeight + 20);
+        this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
+        this._addScore("chain ", this._chains, 2, scoreXPos, yPos += 20);
+        this._addScore("chain ", this._chains, 3, scoreXPos, yPos += 20);
     };
     Stats.prototype._addScore = function (description, statArray, statIndex, xPos, yPos) {
-        var label = new ex.Label(description + statArray[statIndex].toString(), xPos, yPos);
+        var square = new ex.Actor(xPos, yPos, 15, 15, PieceTypeToColor[statIndex]);
+        square.anchor.setTo(0, 0);
+        var label = new ex.Label(null, xPos + 20, yPos + 8);
+        label.anchor.setTo(0, 0);
         label.color = ex.Color.Black;
         game.addEventListener('update', function (data) {
             label.text = description + statArray[statIndex].toString();
         });
+        game.add(label);
+        game.add(square);
+    };
+    Stats.prototype._totalScore = function (description, xPos, yPos) {
+        var _this = this;
+        var totalScore = 0;
+        var label = new ex.Label(description + totalScore.toString(), xPos, yPos);
+        label.color = ex.Color.Black;
+        game.addEventListener('update', function (data) {
+            var totalScore = _this._scores[0] + _this._scores[1] + _this._scores[2] + _this._scores[3];
+            label.text = description + totalScore.toString();
+        });
         game.currentScene.addChild(label);
+    };
+    Stats.prototype._addMeter = function (piece, x, y) {
+        var _this = this;
+        var square = new Meter(x, y, PieceTypeToColor[piece]);
+        var label = new ex.Label(null, square.getCenter().x, square.getCenter().y + 3);
+        label.textAlign = 2 /* Center */;
+        label.color = ex.Color.Black;
+        game.addEventListener('update', function (data) {
+            square.score = _this._meters[piece];
+            if (_this._meters[piece] === Config.SweepThreshold) {
+                label.text = "Press " + (piece + 1) + " to SWEEP";
+            }
+            else {
+                label.text = _this._meters[piece].toString();
+            }
+        });
+        game.add(square);
+        game.add(label);
     };
     return Stats;
 })();
+var Meter = (function (_super) {
+    __extends(Meter, _super);
+    function Meter(x, y, color) {
+        _super.call(this, x, y, Config.MeterWidth, Config.MeterHeight, color);
+    }
+    Meter.prototype.draw = function (ctx, delta) {
+        ctx.strokeStyle = this.color.toString();
+        ctx.lineWidth = 2;
+        ctx.strokeRect(this.x, this.y, this.getWidth(), this.getHeight());
+        var percentage = (this.score / Config.SweepThreshold);
+        ctx.fillStyle = this.color.toString();
+        ctx.fillRect(this.x, this.y, (this.getWidth() * percentage), this.getHeight());
+    };
+    return Meter;
+})(ex.Actor);
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
 /// <reference path="util.ts"/>
@@ -589,11 +669,11 @@ game.input.keyboard.on('down', function (evt) {
     if (evt.key === 49)
         visualGrid.sweep(0 /* Circle */);
     if (evt.key === 50)
-        visualGrid.sweep(2 /* Square */);
-    if (evt.key === 51)
-        visualGrid.sweep(3 /* Star */);
-    if (evt.key === 52)
         visualGrid.sweep(1 /* Triangle */);
+    if (evt.key === 51)
+        visualGrid.sweep(2 /* Square */);
+    if (evt.key === 52)
+        visualGrid.sweep(3 /* Star */);
 });
 // TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {

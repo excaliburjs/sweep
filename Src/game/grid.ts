@@ -1,6 +1,6 @@
 ﻿
 class Cell {
-   
+
    constructor(public x: number, public y: number, public piece: Piece, public logicalGrid: LogicalGrid) { }
    public getNeighbors(): Cell[] {
       var result = [];
@@ -23,7 +23,7 @@ class Cell {
    }
 
    public getCenter(): ex.Point {
-      return new ex.Point(this.x* Config.CellWidth + Config.CellWidth / 2, this.y*Config.CellHeight + Config.CellHeight/2);
+      return new ex.Point(this.x * Config.CellWidth + Config.CellWidth / 2, this.y * Config.CellHeight + Config.CellHeight / 2);
    }
 }
 
@@ -66,7 +66,7 @@ class LogicalGrid extends ex.Class {
    public setCell(x: number, y: number, data: Piece, movePiece: boolean = true): void {
       var cell = this.getCell(x, y);
 
-      if (!cell) return;          
+      if (!cell) return;
 
       if (data) {
          var center = cell.getCenter();
@@ -81,9 +81,10 @@ class LogicalGrid extends ex.Class {
          this.eventDispatcher.publish("pieceadd", new PieceEvent(cell));
       } else {
          this.eventDispatcher.publish("pieceremove", new PieceEvent(cell));
-         
+
          cell.piece = null;
-      }      
+      }
+      return cell;
    }
 
 
@@ -96,16 +97,38 @@ class LogicalGrid extends ex.Class {
 
    public fill(row: number) {
       for (var i = 0; i < this.cols; i++) {
-         this.setCell(i, row, PieceFactory.getRandomPiece());
+
+         var currentCell = this.setCell(i, row, PieceFactory.getRandomPiece());
+         var neighbors = currentCell.getNeighbors();
+         var hasMatchingNeighbor = false;
+
+            for (var j = 0; j < neighbors.length; j++) {
+               if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
+                  hasMatchingNeighbor = true;
+                  break;
+               }
+            }
+         
+         if (hasMatchingNeighbor) {
+            if (currentCell.piece) {
+               this.clearPiece(currentCell.piece);
+            }
+            this.setCell(i, row, PieceFactory.getRandomPiece());
+         }
       }
    }
 
    public shift(from: number, to: number): ex.Promise<any> {
-      if (to > this.rows || to < 0) return;
+      if (to > this.rows) return;
 
       var promises: ex.Promise<any>[] = [];
       for (var i = 0; i < this.cols; i++) {
-         if (this.getCell(i, from).piece) {
+         if (to < 0) {
+            var piece = this.getCell(i, from).piece
+            if (piece) {
+               this.clearPiece(piece);
+            }
+         } else if (this.getCell(i, from).piece) {
             (() => {
                var p = this.getCell(i, from).piece;
                var dest = this.getCell(i, to).getCenter();
@@ -174,6 +197,7 @@ class LogicalGrid extends ex.Class {
    }
 }
 
+
 class VisualGrid extends ex.Actor {
    constructor(public logicalGrid: LogicalGrid) {
       super(0, 0, Config.CellWidth * logicalGrid.cols, Config.CellHeight * logicalGrid.rows);
@@ -183,19 +207,20 @@ class VisualGrid extends ex.Actor {
 
    public update(engine: ex.Engine, delta: number) {
       super.update(engine, delta);
-      
+
    }
 
    public draw(ctx: CanvasRenderingContext2D, delta: number) {
       super.draw(ctx, delta);
-      
+
       this.logicalGrid.cells.forEach(c => {
 
-         ctx.fillStyle = Palette.GridBackgroundColor.toString();         
+         ctx.fillStyle = Palette.GridBackgroundColor.toString();
          ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
          ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
          ctx.lineWidth = 1;
          ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);         
+
       });
    }
 
@@ -206,20 +231,22 @@ class VisualGrid extends ex.Actor {
    }
 
    public sweep(type: PieceType) {
+
+      // can sweep?
+      if (stats.getMeter(type) < Config.SweepThreshold) return;
+
       var cells = this.logicalGrid.cells.filter(cell => {
          return cell.piece && cell.piece.getType() === type;
       });
 
-      // todo transitions
       cells.forEach(cell => {
          stats.scorePieces([cell.piece]);
          grid.clearPiece(cell.piece);
       });
 
+      // reset meter
+      stats.resetMeter(type);
 
-      // todo advance turn
       turnManager.advanceTurn();
-
-
    }
 }
