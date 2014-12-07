@@ -272,28 +272,4 @@ class VisualGrid extends ex.Actor {
       });
    }
 
-   public sweep(type: PieceType) {
-      if (!matcher.gameOver) {
-         // can sweep?
-         if (stats.getMeter(type) < Config.SweepThreshold) return;
-
-         var cells = this.logicalGrid.cells.filter(cell => {
-            return cell.piece && cell.piece.getType() === type;
-         });
-
-         cells.forEach(cell => {
-            stats.scorePieces([cell.piece]);
-            grid.clearPiece(cell.piece);
-         });
-
-         // reset meter
-         if (Config.ClearSweepMetersAfterSingleUse) {
-            stats.resetAllMeters();
-         } else {
-            stats.resetMeter(type);
-         }
-
-         turnManager.advanceTurn();
-      }
-   }
 }

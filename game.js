@@ -24,7 +24,7 @@ var Config = (function () {
     Config.resetDefault = function () {
         Config.EnableTimer = false;
         Config.AdvanceRowsOnMatch = true;
-        Config.SweepThreshold = 20;
+        Config.SweepThreshold = 3;
         Config.EnableSweepMeters = true;
         Config.ClearSweepMetersAfterSingleUse = true;
         Config.EnableSweeper = false;
@@ -431,28 +431,6 @@ var VisualGrid = (function (_super) {
             return cell.piece && cell.piece.contains(screenX, screenY);
         });
     };
-    VisualGrid.prototype.sweep = function (type) {
-        if (!matcher.gameOver) {
-            // can sweep?
-            if (stats.getMeter(type) < Config.SweepThreshold)
-                return;
-            var cells = this.logicalGrid.cells.filter(function (cell) {
-                return cell.piece && cell.piece.getType() === type;
-            });
-            cells.forEach(function (cell) {
-                stats.scorePieces([cell.piece]);
-                grid.clearPiece(cell.piece);
-            });
-            // reset meter
-            if (Config.ClearSweepMetersAfterSingleUse) {
-                stats.resetAllMeters();
-            }
-            else {
-                stats.resetMeter(type);
-            }
-            turnManager.advanceTurn();
-        }
-    };
     return VisualGrid;
 })(ex.Actor);
 var MatchEvent = (function (_super) {
@@ -497,7 +475,7 @@ var MatchManager = (function (_super) {
         });
     }
     MatchManager.prototype._playNote = function () {
-        var index = ex.Util.randomIntInRange(0, this._notes.length);
+        var index = ex.Util.randomIntInRange(0, this._notes.length - 1);
         this._notes[index].play();
     };
     MatchManager.prototype._handlePointerDown = function (pe) {
@@ -731,8 +709,17 @@ var Stats = (function () {
             this._meters[i] = 0;
         }
     };
-    Stats.prototype.canSweep = function () {
-        return this._sweepMeter === this._sweepMeterThreshold;
+    Stats.prototype.allMetersFull = function () {
+        return _.every(this._meters, function (m) { return m === Config.SweepThreshold; });
+    };
+    Stats.prototype.canSweep = function (type) {
+        if (type === void 0) { type = null; }
+        if (type !== null) {
+            return this.getMeter(type) > Config.SweepThreshold;
+        }
+        else {
+            return this._sweepMeter === this._sweepMeterThreshold;
+        }
     };
     Stats.prototype.resetSweeperMeter = function () {
         this._sweepMeter = 0;
@@ -743,6 +730,9 @@ var Stats = (function () {
         else {
             this._sweepMeterThreshold = Math.min(Config.SweepAltMaxThreshold, this._sweepMeterThreshold + Config.SweepAltThresholdDelta);
         }
+    };
+    Stats.prototype.increaseScoreMultiplier = function () {
+        // todo
     };
     Stats.prototype.scorePieces = function (pieces) {
         var type = this._types.indexOf(pieces[0].getType());
@@ -768,6 +758,7 @@ var Stats = (function () {
             this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
             this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
             this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
+            this._addMegaSweep(scoreXPos, 350);
         }
         if (Config.EnableSweeper) {
             this._addSweepMeter(scoreXPos, sweeper.y);
@@ -805,22 +796,51 @@ var Stats = (function () {
         });
         game.currentScene.addChild(label);
     };
+    Stats.prototype._addMegaSweep = function (x, y) {
+        var _this = this;
+        var meter = new ex.Actor(x, y, Config.MeterWidth, Config.MeterHeight * 4, ex.Color.Orange);
+        var label = new ex.Label("MEGA SWEEP", meter.getCenter().x, meter.getCenter().y);
+        var inputLabel = new ex.Label("PRESS S", meter.getCenter().x, meter.getCenter().y + 14);
+        label.textAlign = inputLabel.textAlign = 2 /* Center */;
+        label.color = inputLabel.color = ex.Color.White;
+        label.font = inputLabel.font = "14px";
+        meter.anchor.setTo(0, 0);
+        game.addEventListener('update', function (data) {
+            // mega sweep
+            if (_this.allMetersFull()) {
+                meter.visible = label.visible = true;
+            }
+            else {
+                meter.visible = label.visible = false;
+            }
+        });
+        game.add(meter);
+        game.add(label);
+        game.add(inputLabel);
+    };
     Stats.prototype._addMeter = function (piece, x, y) {
         var _this = this;
-        var square = new Meter(x, y, PieceTypeToColor[piece], Config.SweepThreshold);
-        var label = new ex.Label(null, square.getCenter().x, square.getCenter().y + 3);
+        var meter = new Meter(x, y, PieceTypeToColor[piece], Config.SweepThreshold);
+        var label = new ex.Label(null, meter.getCenter().x, meter.getCenter().y + 3);
         label.textAlign = 2 /* Center */;
         label.color = ex.Color.Black;
         game.addEventListener('update', function (data) {
-            square.score = _this._meters[piece];
-            if (_this._meters[piece] === Config.SweepThreshold) {
-                label.text = "Press " + (piece + 1) + " to SWEEP";
+            meter.score = _this._meters[piece];
+            // mega sweep
+            if (_this.allMetersFull()) {
+                meter.visible = label.visible = false;
             }
             else {
-                label.text = _this._meters[piece].toString();
+                meter.visible = label.visible = true;
+                if (_this._meters[piece] === Config.SweepThreshold) {
+                    label.text = "Press " + (piece + 1) + " to SWEEP";
+                }
+                else {
+                    label.text = _this._meters[piece].toString();
+                }
             }
         });
-        game.add(square);
+        game.add(meter);
         game.add(label);
     };
     Stats.prototype._addSweepMeter = function (x, y) {
@@ -877,7 +897,7 @@ var Sweeper = (function (_super) {
         this._emitter.maxVel = 137;
         this._emitter.minAngle = Math.PI;
         this._emitter.maxAngle = Math.PI;
-        this._emitter.isEmitting = true;
+        this._emitter.isEmitting = false;
         this._emitter.emitRate = 500;
         this._emitter.opacity = 0.9;
         this._emitter.fadeFlag = true;
@@ -893,9 +913,30 @@ var Sweeper = (function (_super) {
     }
     Sweeper.prototype.onInitialize = function (engine) {
         _super.prototype.onInitialize.call(this, engine);
-        game.add(this._label);
-        game.add(this._emitter);
+        if (Config.EnableSweeper) {
+            this._emitter.isEmitting = true;
+            game.add(this._label);
+            game.add(this._emitter);
+        }
         this.y = visualGrid.y + (this._row * Config.CellHeight);
+        game.input.keyboard.off("up", Sweeper._handleKeyDown);
+        game.input.keyboard.on("up", Sweeper._handleKeyDown);
+    };
+    Sweeper._handleKeyDown = function (evt) {
+        if (evt.key === 49)
+            sweeper.sweep(0 /* Circle */);
+        if (evt.key === 50)
+            sweeper.sweep(1 /* Triangle */);
+        if (evt.key === 51)
+            sweeper.sweep(2 /* Square */);
+        if (evt.key === 52)
+            sweeper.sweep(3 /* Star */);
+        // mega sweep
+        if (!Config.EnableSweeper && evt.key === 83 /* S */)
+            sweeper.sweepAll();
+        // alt sweep
+        if (Config.EnableSweeper && evt.key === 83 /* S */)
+            sweeper.sweep();
     };
     Sweeper.prototype.update = function (engine, delta) {
         _super.prototype.update.call(this, engine, delta);
@@ -905,31 +946,83 @@ var Sweeper = (function (_super) {
         this._emitter.x = visualGrid.x;
         this._emitter.y = this.y;
     };
-    Sweeper.prototype.sweep = function () {
-        if (!stats.canSweep())
+    Sweeper.prototype.sweepAll = function () {
+        if (matcher.gameOver)
             return;
-        var cells = [];
-        for (var i = 0; i < this._row; i++) {
-            grid.getRow(i).filter(function (c) { return c.piece !== null; }).forEach(function (c) { return cells.push(c); });
-        }
-        if (cells.length <= 0)
+        if (!stats.allMetersFull())
             return;
+        var cells = grid.cells.filter(function (cell) {
+            return !!cell.piece;
+        });
+        // todo mega animation!
         cells.forEach(function (cell) {
+            // todo adjust mega sweep scoring?
             stats.scorePieces([cell.piece]);
+            // clear
             grid.clearPiece(cell.piece);
         });
         // reset meter
-        stats.resetSweeperMeter();
-        // advance sweeper
-        if (!Config.SweepMovesUp && this._row < Config.SweepMaxRow) {
-            this._row++;
-            this.moveBy(this.x, this.y + Config.CellHeight, 200);
+        stats.resetAllMeters();
+        // add combo multiplier
+        stats.increaseScoreMultiplier();
+        for (var i = 0; i < Config.NumStartingRows; i++) {
+            grid.fill(grid.rows - (i + 1));
         }
-        else if (Config.SweepMovesUp && this._row > Config.SweepMinRow) {
-            this._row--;
-            this.moveBy(this.x, this.y - Config.CellHeight, 200);
+    };
+    Sweeper.prototype.sweep = function (type) {
+        if (type === void 0) { type = null; }
+        if (matcher.gameOver)
+            return;
+        if (type !== null) {
+            // can sweep?
+            if (!stats.canSweep(type))
+                return;
+            // don't allow individual sweeps if mega sweep is available
+            // that shouldn't happen
+            if (stats.allMetersFull())
+                return;
+            var cells = grid.cells.filter(function (cell) {
+                return cell.piece && cell.piece.getType() === type;
+            });
+            cells.forEach(function (cell) {
+                stats.scorePieces([cell.piece]);
+                grid.clearPiece(cell.piece);
+            });
+            // reset meter
+            if (Config.ClearSweepMetersAfterSingleUse) {
+                stats.resetAllMeters();
+            }
+            else {
+                stats.resetMeter(type);
+            }
+            turnManager.advanceTurn();
         }
-        turnManager.advanceTurn();
+        else {
+            if (!stats.canSweep())
+                return;
+            var cells = [];
+            for (var i = 0; i < this._row; i++) {
+                grid.getRow(i).filter(function (c) { return c.piece !== null; }).forEach(function (c) { return cells.push(c); });
+            }
+            if (cells.length <= 0)
+                return;
+            cells.forEach(function (cell) {
+                stats.scorePieces([cell.piece]);
+                grid.clearPiece(cell.piece);
+            });
+            // reset meter
+            stats.resetSweeperMeter();
+            // advance sweeper
+            if (!Config.SweepMovesUp && this._row < Config.SweepMaxRow) {
+                this._row++;
+                this.moveBy(this.x, this.y + Config.CellHeight, 200);
+            }
+            else if (Config.SweepMovesUp && this._row > Config.SweepMinRow) {
+                this._row--;
+                this.moveBy(this.x, this.y - Config.CellHeight, 200);
+            }
+            turnManager.advanceTurn();
+        }
     };
     return Sweeper;
 })(ex.Actor);
@@ -970,13 +1063,11 @@ loadConfig(Config.loadCasual);
 InitSetup();
 //reset the game with the given grid dimensions
 function InitSetup() {
+    var i;
     if (game.currentScene.children) {
-        for (var i = 0; i < game.currentScene.children.length; i++) {
+        for (i = 0; i < game.currentScene.children.length; i++) {
             game.removeChild(game.currentScene.children[i]);
         }
-    }
-    for (var i = 0; i < grid.cells.length; i++) {
-        grid.cells[i].piece = null;
     }
     game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
     //initialize game objects
@@ -991,11 +1082,9 @@ function InitSetup() {
     mask.anchor.setTo(0, 0);
     stats.drawScores();
     game.add(visualGrid);
-    if (Config.EnableSweeper) {
-        game.add(sweeper);
-    }
+    game.add(sweeper);
     game.add(mask);
-    for (var i = 0; i < Config.NumStartingRows; i++) {
+    for (i = 0; i < Config.NumStartingRows; i++) {
         grid.fill(grid.rows - (i + 1));
     }
 }
@@ -1010,14 +1099,6 @@ game.input.keyboard.on('up', function (evt) {
         // fill first row
         grid.fill(grid.rows - 1);
     }
-    if (evt.key === 49)
-        visualGrid.sweep(0 /* Circle */);
-    if (evt.key === 50)
-        visualGrid.sweep(1 /* Triangle */);
-    if (evt.key === 51)
-        visualGrid.sweep(2 /* Square */);
-    if (evt.key === 52)
-        visualGrid.sweep(3 /* Star */);
     if (evt.key === 38 /* Up */ || evt.key == 40 /* Down */ || evt.key === 37 /* Left */ || evt.key === 39 /* Right */) {
         var numCols = grid.cols || 0;
         var numRows = grid.rows || 0;
@@ -1037,9 +1118,6 @@ game.input.keyboard.on('up', function (evt) {
         visualGrid = new VisualGrid(grid);
         InitSetup();
     }
-    // alt sweep
-    if (Config.EnableSweeper && evt.key === 83 /* S */)
-        sweeper.sweep();
 });
 function gameOver() {
     var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);

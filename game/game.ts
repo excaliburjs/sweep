@@ -22,9 +22,6 @@ _.forIn(Resources, (resource) => {
    loader.addResource(resource);
 });
 
-
-
-
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
@@ -48,14 +45,12 @@ InitSetup();
 
 //reset the game with the given grid dimensions
 function InitSetup() {
+   var i: number;
+
    if (game.currentScene.children) {
-      for (var i = 0; i < game.currentScene.children.length; i++) {
+      for (i = 0; i < game.currentScene.children.length; i++) {
          game.removeChild(game.currentScene.children[i]);
       }
-   }
-
-   for (var i = 0; i < grid.cells.length; i++) {
-      grid.cells[i].piece = null;
    }
 
    game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
@@ -72,21 +67,16 @@ function InitSetup() {
    mask.anchor.setTo(0, 0);
  
    stats.drawScores();
+
    game.add(visualGrid);
-
-   if (Config.EnableSweeper) {
-      game.add(sweeper);
-   }
-
+   game.add(sweeper);
    game.add(mask);
 
    //add pieces to initial rows
-   for (var i = 0; i < Config.NumStartingRows; i++) {
+   for (i = 0; i < Config.NumStartingRows; i++) {
       grid.fill(grid.rows - (i + 1));
    }
 }
-
-
 
 game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
    if (evt.key === ex.Input.Keys.D) {
@@ -101,12 +91,6 @@ game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
       // fill first row
       grid.fill(grid.rows - 1);
    }
-
-   if (evt.key === 49) visualGrid.sweep(PieceType.Circle);
-   if (evt.key === 50) visualGrid.sweep(PieceType.Triangle);
-   if (evt.key === 51) visualGrid.sweep(PieceType.Square);
-   if (evt.key === 52) visualGrid.sweep(PieceType.Star);
-
 
    if (evt.key === ex.Input.Keys.Up || evt.key == ex.Input.Keys.Down || evt.key === ex.Input.Keys.Left || evt.key === ex.Input.Keys.Right) {
 
@@ -126,10 +110,7 @@ game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
       grid = new LogicalGrid(numRows, numCols);
       visualGrid = new VisualGrid(grid);
       InitSetup();
-   }
-
-   // alt sweep
-   if (Config.EnableSweeper && evt.key === ex.Input.Keys.S) sweeper.sweep();
+   }   
 });
 
 function gameOver() {
