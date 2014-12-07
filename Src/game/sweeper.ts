@@ -4,8 +4,8 @@ class Sweeper extends ex.Actor {
    private _row: number = 0;
    private _label: ex.Label;
 
-   constructor(startRow: number) {
-      super(0, 0, Config.CellWidth * Config.GridCellsWide, 2, ex.Color.Red);
+   constructor(startRow: number, gridCellsWide : number) {
+      super(0, 0, Config.CellWidth * gridCellsWide, 2, ex.Color.Red);
       this.anchor.setTo(0, 0);
 
       this._row = startRow;
@@ -20,7 +20,6 @@ class Sweeper extends ex.Actor {
 
    public update(engine: ex.Engine, delta: number) {
       super.update(engine, delta);
-
       this.x = visualGrid.x;
       this.y = visualGrid.y + (this._row * Config.CellHeight);
       this._label.x = visualGrid.x - 50;

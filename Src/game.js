@@ -370,6 +370,11 @@ var MatchManager = (function (_super) {
         _super.call(this);
         this._run = [];
         this.gameOver = false;
+        this.dispose = function () {
+            game.input.pointers.primary.off("down", _.bind(this._handlePointerDown, this));
+            game.input.pointers.primary.off("up", _.bind(this._handlePointerUp, this));
+            game.input.pointers.primary.off("move", _.bind(this._handlePointerMove, this));
+        };
         this.runInProgress = false;
         game.input.pointers.primary.on("down", _.bind(this._handlePointerDown, this));
         game.input.pointers.primary.on("up", _.bind(this._handlePointerUp, this));
@@ -393,7 +398,7 @@ var MatchManager = (function (_super) {
     MatchManager.prototype._handlePointerDown = function (pe) {
         if (!this.gameOver) {
             var cell = visualGrid.getCellByPos(pe.x, pe.y);
-            if (!cell || this.runInProgress) {
+            if (!cell || this.runInProgress || !cell.piece) {
                 return;
             }
             if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
@@ -725,8 +730,8 @@ var Meter = (function (_super) {
 // alt sweep mechanic 1
 var Sweeper = (function (_super) {
     __extends(Sweeper, _super);
-    function Sweeper(startRow) {
-        _super.call(this, 0, 0, Config.CellWidth * Config.GridCellsWide, 2, ex.Color.Red);
+    function Sweeper(startRow, gridCellsWide) {
+        _super.call(this, 0, 0, Config.CellWidth * gridCellsWide, 2, ex.Color.Red);
         this._row = 0;
         this.anchor.setTo(0, 0);
         this._row = startRow;
@@ -786,33 +791,40 @@ var loader = new ex.Loader();
 _.forIn(Resources, function (resource) {
     loader.addResource(resource);
 });
-var stats = new Stats();
-// build grid
+// game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
-var matcher = new MatchManager();
-var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
-var transitionManager = new TransitionManager(grid, visualGrid);
-var sweeper = new Sweeper(Config.SweepStartRow);
-var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
-mask.anchor.setTo(0, 0);
-game.add(mask);
-InitSetup(visualGrid, stats);
-//reset the game
-function InitSetup(visualGrid, stats) {
+var turnManager, matcher, transitionManager, sweeper, stats, mask;
+InitSetup();
+//reset the game with the given grid dimensions
+function InitSetup() {
     if (game.currentScene.children) {
         for (var i = 0; i < game.currentScene.children.length; i++) {
             game.removeChild(game.currentScene.children[i]);
         }
     }
+    for (var i = 0; i < grid.cells.length; i++) {
+        grid.cells[i].piece = null;
+    }
     game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
+    //initialize game objects
+    if (matcher)
+        matcher.dispose(); //unbind events
+    matcher = new MatchManager();
+    turnManager = new TurnManager(visualGrid.logicalGrid, matcher, 1 /* Match */);
+    transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
+    sweeper = new Sweeper(Config.SweepStartRow, visualGrid.logicalGrid.cols);
+    stats = new Stats();
+    mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
+    mask.anchor.setTo(0, 0);
+    stats.drawScores();
     game.add(visualGrid);
+    game.add(sweeper);
+    game.add(mask);
     for (var i = 0; i < Config.NumStartingRows; i++) {
         grid.fill(grid.rows - (i + 1));
     }
-    stats.drawScores();
 }
-game.add(sweeper);
 game.input.keyboard.on('up', function (evt) {
     if (evt.key === 68 /* D */) {
         game.isDebug = !game.isDebug;
@@ -849,7 +861,7 @@ game.input.keyboard.on('up', function (evt) {
         }
         grid = new LogicalGrid(numRows, numCols);
         visualGrid = new VisualGrid(grid);
-        InitSetup(visualGrid, stats);
+        InitSetup();
     }
     // alt sweep
     if (evt.key === 83 /* S */)
