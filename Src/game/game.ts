@@ -32,9 +32,8 @@ var turnManager = new TurnManager(grid, matcher, TurnMode.Match);
 var transitionManager = new TransitionManager(grid, visualGrid);
 var sweeper = new Sweeper(Config.SweepStartRow);
 
-var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
+var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth + 30, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
 mask.anchor.setTo(0, 0);
-game.add(mask);
 
 InitSetup(visualGrid, stats);
 
@@ -52,6 +51,8 @@ function InitSetup(visualGrid : VisualGrid, stats : Stats) {
       grid.fill(grid.rows - (i + 1));
    }
    stats.drawScores();
+   mask.kill();
+   game.add(mask);
 }
 
 game.add(sweeper);

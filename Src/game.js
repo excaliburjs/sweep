@@ -242,10 +242,10 @@ var LogicalGrid = (function (_super) {
                         piece.x = cell.getCenter().x;
                         piece.y = cell.getCenter().y;
                     });
-                    mask.kill();
-                    game.add(mask);
                 })();
             }
+            mask.kill();
+            game.add(mask);
         }
         else {
             for (var i = 0; i < this.cols; i++) {
@@ -862,9 +862,8 @@ var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
 var transitionManager = new TransitionManager(grid, visualGrid);
 var sweeper = new Sweeper(Config.SweepStartRow);
-var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
+var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth + 30, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
 mask.anchor.setTo(0, 0);
-game.add(mask);
 InitSetup(visualGrid, stats);
 //reset the game
 function InitSetup(visualGrid, stats) {
@@ -879,6 +878,8 @@ function InitSetup(visualGrid, stats) {
         grid.fill(grid.rows - (i + 1));
     }
     stats.drawScores();
+    mask.kill();
+    game.add(mask);
 }
 game.add(sweeper);
 game.input.keyboard.on('up', function (evt) {

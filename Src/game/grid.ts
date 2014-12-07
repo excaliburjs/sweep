@@ -123,10 +123,11 @@ class LogicalGrid extends ex.Class {
                   piece.x = cell.getCenter().x;
                   piece.y = cell.getCenter().y;
                });
-               mask.kill();
-               game.add(mask);
+               
             })();
          }
+         mask.kill();
+         game.add(mask);
       } else {
          for (var i = 0; i < this.cols; i++) {
             (() => {
