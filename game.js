@@ -273,9 +273,11 @@ var LogicalGrid = (function (_super) {
         return cell;
     };
     LogicalGrid.prototype.clearPiece = function (piece) {
-        piece.cell.piece = null;
-        piece.cell = null;
-        piece.kill();
+        if (piece && piece.cell) {
+            piece.cell.piece = null;
+            piece.cell = null;
+            piece.kill();
+        }
     };
     LogicalGrid.prototype.fill = function (row, smooth) {
         var _this = this;
