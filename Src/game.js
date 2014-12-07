@@ -853,7 +853,7 @@ var Stats = (function () {
     Stats.prototype.canSweep = function (type) {
         if (type === void 0) { type = null; }
         if (type !== null) {
-            return this.getMeter(type) > Config.SweepThreshold;
+            return this.getMeter(type) >= Config.SweepThreshold;
         }
         else {
             return this._sweepMeter === this._sweepMeterThreshold;

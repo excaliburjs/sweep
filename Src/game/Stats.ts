@@ -26,6 +26,15 @@
       this._sweepMeterThreshold = Config.SweepAltThreshold;
    }
 
+   public getTotalScore(): number {
+      var totalScore = this._scores[0] + this._scores[1] + this._scores[2] + this._scores[3];
+      return totalScore;
+   }
+
+   public getLongestChain(): number {
+      return Math.max.apply(Math, this._chains);
+   }
+
    public getMeter(pieceType: PieceType) {
       return this._meters[this._types.indexOf(pieceType)];
    }
@@ -46,7 +55,7 @@
 
    public canSweep(type: PieceType = null) {
       if (type !== null) {
-         return this.getMeter(type) > Config.SweepThreshold;
+         return this.getMeter(type) >= Config.SweepThreshold;
       } else {
          return this._sweepMeter === this._sweepMeterThreshold;
       }
