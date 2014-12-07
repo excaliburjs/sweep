@@ -36,10 +36,22 @@ var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.
 mask.anchor.setTo(0, 0);
 game.add(mask);
 
-InitSetup(visualGrid, stats);
+// game modes
+var loadConfig = (config) => {
+   Config.resetDefault();
+   config.call(this);
+   InitSetup(visualGrid, stats);
+};
+
+document.getElementById("loadCasual").addEventListener("mouseup", () => loadConfig(Config.loadCasual));
+document.getElementById("loadSurvial").addEventListener("mouseup", () => loadConfig(Config.loadSurvival));
+document.getElementById("loadSurvivalReverse").addEventListener("mouseup", () => loadConfig(Config.loadSurvivalReverse));
+
+// casual by default
+loadConfig(Config.loadCasual);
 
 //reset the game
-function InitSetup(visualGrid : VisualGrid, stats : Stats) {
+function InitSetup(visualGrid: VisualGrid, stats: Stats) {
    if (game.currentScene.children) {
       for (var i = 0; i < game.currentScene.children.length; i++) {
          game.removeChild(game.currentScene.children[i]);

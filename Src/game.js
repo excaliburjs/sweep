@@ -1,6 +1,40 @@
 var Config = (function () {
     function Config() {
     }
+    //
+    // cascade configs
+    //
+    Config.resetDefault = function () {
+        Config.SweepThreshold = 20;
+        Config.EnableSweepMeters = true;
+        Config.ClearSweepMetersAfterSingleUse = true;
+        Config.EnableSweeper = false;
+        Config.SweepMovesUp = false;
+        Config.SweepStartRow = 3;
+        Config.SweepMaxRow = 7;
+        Config.SweepAltThreshold = 20;
+        Config.SweepAltThresholdIncrease = 5;
+    };
+    Config.loadCasual = function () {
+        // same as default, for now
+    };
+    Config.loadSurvival = function () {
+        Config.EnableSweepMeters = false;
+        Config.EnableSweeper = true;
+        Config.SweepMovesUp = false;
+        Config.SweepStartRow = 3;
+        Config.SweepMaxRow = Config.GridCellsHigh - 6;
+        Config.SweepAltThreshold = 20;
+        Config.SweepAltThresholdIncrease = 5;
+    };
+    Config.loadSurvivalReverse = function () {
+        Config.EnableSweeper = true;
+        Config.SweepMovesUp = true;
+        Config.SweepStartRow = Config.GridCellsHigh - 2;
+        Config.SweepMaxRow = 3;
+        Config.SweepAltThreshold = 20;
+        Config.SweepAltThresholdIncrease = 5;
+    };
     Config.gameWidth = 720;
     Config.gameHeight = 720;
     Config.PieceContainsPadding = 5;
@@ -14,16 +48,6 @@ var Config = (function () {
     Config.ScoreXBuffer = 20;
     Config.MeterWidth = 90;
     Config.MeterHeight = 30;
-    // sweep mechanic
-    Config.SweepThreshold = 20;
-    Config.EnableSweepMeters = true;
-    Config.ClearSweepMetersAfterSingleUse = true;
-    // alt sweep mechanic 1
-    Config.EnableSweeper = false;
-    Config.SweepStartRow = 3;
-    Config.SweepMaxRow = 7;
-    Config.SweepAltThreshold = 20;
-    Config.SweepAltThresholdIncrease = 5;
     return Config;
 })();
 var Util = (function () {
@@ -822,6 +846,7 @@ var Sweeper = (function (_super) {
 /// <reference path="transition.ts"/>
 /// <reference path="Stats.ts"/>
 /// <reference path="sweeper.ts"/>
+var _this = this;
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 game.backgroundColor = Palette.GameBackgroundColor;
 var loader = new ex.Loader();
@@ -840,7 +865,17 @@ var sweeper = new Sweeper(Config.SweepStartRow);
 var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
 mask.anchor.setTo(0, 0);
 game.add(mask);
-InitSetup(visualGrid, stats);
+// game modes
+var loadConfig = function (config) {
+    Config.resetDefault();
+    config.call(_this);
+    InitSetup(visualGrid, stats);
+};
+document.getElementById("loadCasual").addEventListener("mouseup", function () { return loadConfig(Config.loadCasual); });
+document.getElementById("loadSurvial").addEventListener("mouseup", function () { return loadConfig(Config.loadSurvival); });
+document.getElementById("loadSurvivalReverse").addEventListener("mouseup", function () { return loadConfig(Config.loadSurvivalReverse); });
+// casual by default
+loadConfig(Config.loadCasual);
 //reset the game
 function InitSetup(visualGrid, stats) {
     if (game.currentScene.children) {
