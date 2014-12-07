@@ -1,6 +1,15 @@
 ﻿/// <reference path="util.ts"/>
 
-var Resources: { [key: string]: ex.ILoadable } = {
+var Resources = {
+   LoopSound: new ex.Sound('sounds/loop.mp3'),
+   Note1Sound: new ex.Sound('sounds/note1.mp3'),
+   Note2Sound: new ex.Sound('sounds/note2.mp3'),
+   Note3Sound: new ex.Sound('sounds/note3.mp3'),
+   Note4Sound: new ex.Sound('sounds/note4.mp3'),
+   Note5Sound: new ex.Sound('sounds/note5.mp3'),
+   Note6Sound: new ex.Sound('sounds/note6.mp3'),
+   Note7Sound: new ex.Sound('sounds/note7.mp3'),
+   Note8Sound: new ex.Sound('sounds/note8.mp3'),
 
    // Textures
    // TextureLevel: new ex.Texture("/images/tex-1.jpg")

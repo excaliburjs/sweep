@@ -24,6 +24,7 @@ _.forIn(Resources, (resource) => {
 
 
 
+
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
@@ -123,5 +124,9 @@ game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
 // TODO clean up pieces that are not in play anymore after update loop
 
 game.start(loader).then(() => {
-   // todo build game
+   
+   // play some sounds
+   Resources.LoopSound.setLoop(true);
+   Resources.LoopSound.play();
+
 });
