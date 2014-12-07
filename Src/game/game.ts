@@ -33,7 +33,8 @@ var transitionManager = new TransitionManager(grid, visualGrid);
 game.currentScene.camera.setFocus(visualGrid.getWidth()/2, visualGrid.getHeight()/2);
 game.add(visualGrid);
 
-var mask = new ex.Actor(0, 0, Config.gameWidth, Config.GridCellsHigh * 2, Palette.GameBackgroundColor.clone());
+var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
+mask.anchor.setTo(0, 0);
 game.add(mask);
 
 stats.drawScores();
