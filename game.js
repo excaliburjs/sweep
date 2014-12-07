@@ -1212,7 +1212,6 @@ var UIWidget = (function (_super) {
 var _this = this;
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game", 0 /* FullScreen */);
 game.backgroundColor = ex.Color.Transparent;
-var analytics = window.ga;
 var gameMode = 0 /* Standard */;
 var loader = new ex.Loader();
 // load up all resources in dictionary
@@ -1297,9 +1296,10 @@ var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
 function gameOver() {
+    var analytics = window.ga;
     if (analytics) {
-        analytics('send', 'event', 'ludum-30-stats', gameMode, 'total score', { 'eventValue': stats.getTotalScore(), 'nonInteraction': 1 });
-        analytics('send', 'event', 'ludum-30-stats', gameMode, 'longest chain', { 'eventValue': stats.getLongestChain(), 'nonInteraction': 1 });
+        analytics('send', 'event', 'ludum-30-stats', gameMode.toString(), 'total score', { 'eventValue': stats.getTotalScore(), 'nonInteraction': 1 });
+        analytics('send', 'event', 'ludum-30-stats', gameMode.toString(), 'longest chain', { 'eventValue': stats.getLongestChain(), 'nonInteraction': 1 });
     }
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
