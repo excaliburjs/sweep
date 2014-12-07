@@ -37,7 +37,7 @@ class Piece extends ex.Actor {
    public getType(): PieceType {
       return this._type;
    }
-
+   
    public setType(type: PieceType): void {
       this._type = type;
    }
@@ -60,6 +60,15 @@ class PieceFactory {
    public static getRandomPiece(): Piece {
       var index = Math.floor(Math.random() * PieceTypes.length);
       var piece = new Piece(PieceFactory._maxId++, 0, 0, PieceTypeToColor[index].clone(), index);
+
+      game.add(piece);
+
+      return piece;
+   }
+
+   public static getPiece(type: PieceType) {
+      
+      var piece = new Piece(PieceFactory._maxId++, 0, 0, PieceTypeToColor[type].clone(), type);
 
       game.add(piece);
 

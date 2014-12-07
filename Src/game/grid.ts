@@ -95,27 +95,66 @@ class LogicalGrid extends ex.Class {
       piece.kill();
    }
 
-   public fill(row: number) {
-      for (var i = 0; i < this.cols; i++) {
-
-         var currentCell = this.setCell(i, row, PieceFactory.getRandomPiece());
-         var neighbors = currentCell.getNeighbors();
-         var hasMatchingNeighbor = false;
-
-            for (var j = 0; j < neighbors.length; j++) {
-               if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
-                  hasMatchingNeighbor = true;
-                  break;
+   public fill(row: number, smooth: boolean = false) {
+      if (smooth) {
+         for (var i = 0; i < this.cols; i++) {
+            (() => {
+               var piece = PieceFactory.getRandomPiece();
+               
+               var cell = this.getCell(i, row);
+               piece.x = cell.getCenter().x;
+               piece.y = mask.y + Config.CellHeight;
+               var intendedCell = this.setCell(i, row, piece, false);
+               var hasSameType = intendedCell.getNeighbors().some((c) => {
+                  if (c && c.piece) {
+                     return c.piece.getType() === piece.getType();
+                  }
+                  return false;
+               });
+               if (hasSameType) {
+                  this.clearPiece(piece);
+                  piece = PieceFactory.getRandomPiece();
+                  piece.x = cell.getCenter().x;
+                  piece.y = mask.y + Config.CellHeight;
+                  this.setCell(i, row, piece, false);
                }
-            }
-         
-         if (hasMatchingNeighbor) {
-            if (currentCell.piece) {
-               this.clearPiece(currentCell.piece);
-            }
-            this.setCell(i, row, PieceFactory.getRandomPiece());
+
+               piece.moveTo(cell.getCenter().x, cell.getCenter().y, 300).asPromise().then(() => {
+                  piece.x = cell.getCenter().x;
+                  piece.y = cell.getCenter().y;
+               });
+               mask.kill();
+               game.add(mask);
+            })();
+         }
+      } else {
+         for (var i = 0; i < this.cols; i++) {
+            (() => {
+               var currentPiece = PieceFactory.getRandomPiece();
+               var currentCell = this.setCell(i, row, currentPiece, !smooth);
+               var neighbors = currentCell.getNeighbors();
+               var hasMatchingNeighbor = false;
+
+               for (var j = 0; j < neighbors.length; j++) {
+                  if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
+                     hasMatchingNeighbor = true;
+                     break;
+                  }
+               }
+
+               if (hasMatchingNeighbor) {
+                  if (currentCell.piece) {
+                     this.clearPiece(currentCell.piece);
+                  }
+                  this.setCell(i, row, PieceFactory.getRandomPiece(), !smooth);
+               }
+
+            })();
          }
       }
+     
+
+      
    }
 
    public shift(from: number, to: number): ex.Promise<any> {
@@ -139,11 +178,7 @@ class LogicalGrid extends ex.Class {
          }
       }
 
-      var agg = ex.Promise.join.apply(null, promises).then(() => {
-         console.log("Yo", from, to);
-      }).error((e) => {
-         console.log(e);
-      });
+      var agg = ex.Promise.join.apply(null, promises);
       if (promises.length) {
          return agg;
       } else {

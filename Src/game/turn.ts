@@ -29,7 +29,7 @@ class TurnManager {
       // fill first row
       promises = _.filter(promises, (p) => { return p; });
       ex.Promise.join.apply(null, promises).then(() => {
-         this.logicalGrid.fill(grid.rows - 1);
+         this.logicalGrid.fill(grid.rows - 1, true);
       }).error((e) => {
          console.log(e);
       });
