@@ -26,6 +26,15 @@
       this._sweepMeterThreshold = Config.SweepAltThreshold;
    }
 
+   public getTotalScore(): number {
+      var totalScore = this._scores[0] + this._scores[1] + this._scores[2] + this._scores[3];
+      return totalScore;
+   }
+
+   public getLongestChain(): number {
+      return Math.max.apply(Math, this._chains);
+   }
+
    public getMeter(pieceType: PieceType) {
       return this._meters[this._types.indexOf(pieceType)];
    }
