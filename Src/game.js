@@ -14,8 +14,12 @@ var Config = (function () {
     Config.ScoreXBuffer = 20;
     Config.MeterWidth = 90;
     Config.MeterHeight = 30;
+    // sweep mechanic
     Config.SweepThreshold = 20;
+    Config.EnableSweepMeters = true;
+    Config.ClearSweepMetersAfterSingleUse = true;
     // alt sweep mechanic 1
+    Config.EnableSweeper = false;
     Config.SweepStartRow = 3;
     Config.SweepMaxRow = 7;
     Config.SweepAltThreshold = 20;
@@ -115,6 +119,11 @@ var PieceFactory = (function () {
         game.add(piece);
         return piece;
     };
+    PieceFactory.getPiece = function (type) {
+        var piece = new Piece(PieceFactory._maxId++, 0, 0, PieceTypeToColor[type].clone(), type);
+        game.add(piece);
+        return piece;
+    };
     PieceFactory._maxId = 0;
     return PieceFactory;
 })();
@@ -209,22 +218,59 @@ var LogicalGrid = (function (_super) {
         piece.cell = null;
         piece.kill();
     };
-    LogicalGrid.prototype.fill = function (row) {
-        for (var i = 0; i < this.cols; i++) {
-            var currentCell = this.setCell(i, row, PieceFactory.getRandomPiece());
-            var neighbors = currentCell.getNeighbors();
-            var hasMatchingNeighbor = false;
-            for (var j = 0; j < neighbors.length; j++) {
-                if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
-                    hasMatchingNeighbor = true;
-                    break;
-                }
+    LogicalGrid.prototype.fill = function (row, smooth) {
+        var _this = this;
+        if (smooth === void 0) { smooth = false; }
+        if (smooth) {
+            for (var i = 0; i < this.cols; i++) {
+                (function () {
+                    var piece = PieceFactory.getRandomPiece();
+                    var cell = _this.getCell(i, row);
+                    piece.x = cell.getCenter().x;
+                    piece.y = mask.y + Config.CellHeight;
+                    var intendedCell = _this.setCell(i, row, piece, false);
+                    var hasSameType = intendedCell.getNeighbors().some(function (c) {
+                        if (c && c.piece) {
+                            return c.piece.getType() === piece.getType();
+                        }
+                        return false;
+                    });
+                    if (hasSameType) {
+                        _this.clearPiece(piece);
+                        piece = PieceFactory.getRandomPiece();
+                        piece.x = cell.getCenter().x;
+                        piece.y = mask.y + Config.CellHeight;
+                        _this.setCell(i, row, piece, false);
+                    }
+                    piece.moveTo(cell.getCenter().x, cell.getCenter().y, 300).asPromise().then(function () {
+                        piece.x = cell.getCenter().x;
+                        piece.y = cell.getCenter().y;
+                    });
+                })();
             }
-            if (hasMatchingNeighbor) {
-                if (currentCell.piece) {
-                    this.clearPiece(currentCell.piece);
-                }
-                this.setCell(i, row, PieceFactory.getRandomPiece());
+            mask.kill();
+            game.add(mask);
+        }
+        else {
+            for (var i = 0; i < this.cols; i++) {
+                (function () {
+                    var currentPiece = PieceFactory.getRandomPiece();
+                    var currentCell = _this.setCell(i, row, currentPiece, !smooth);
+                    var neighbors = currentCell.getNeighbors();
+                    var hasMatchingNeighbor = false;
+                    for (var j = 0; j < neighbors.length; j++) {
+                        if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
+                            hasMatchingNeighbor = true;
+                            break;
+                        }
+                    }
+                    if (hasMatchingNeighbor) {
+                        if (currentCell.piece) {
+                            _this.clearPiece(currentCell.piece);
+                        }
+                        _this.setCell(i, row, PieceFactory.getRandomPiece(), !smooth);
+                    }
+                })();
             }
         }
     };
@@ -255,11 +301,7 @@ var LogicalGrid = (function (_super) {
                 })();
             }
         }
-        var agg = ex.Promise.join.apply(null, promises).then(function () {
-            console.log("Yo", from, to);
-        }).error(function (e) {
-            console.log(e);
-        });
+        var agg = ex.Promise.join.apply(null, promises);
         if (promises.length) {
             return agg;
         }
@@ -349,7 +391,12 @@ var VisualGrid = (function (_super) {
                 grid.clearPiece(cell.piece);
             });
             // reset meter
-            stats.resetMeter(type);
+            if (Config.ClearSweepMetersAfterSingleUse) {
+                stats.resetAllMeters();
+            }
+            else {
+                stats.resetMeter(type);
+            }
             turnManager.advanceTurn();
         }
     };
@@ -516,7 +563,7 @@ var TurnManager = (function () {
             return p;
         });
         ex.Promise.join.apply(null, promises).then(function () {
-            _this.logicalGrid.fill(grid.rows - 1);
+            _this.logicalGrid.fill(grid.rows - 1, true);
         }).error(function (e) {
             console.log(e);
         });
@@ -575,7 +622,12 @@ var TransitionManager = (function () {
                 }
             });
         }
-        return ex.Promise.join.apply(null, promises);
+        if (promises.length) {
+            return ex.Promise.join.apply(null, promises);
+        }
+        else {
+            return ex.Promise.wrap(true);
+        }
     };
     return TransitionManager;
 })();
@@ -608,6 +660,11 @@ var Stats = (function () {
     Stats.prototype.resetMeter = function (pieceType) {
         this._meters[this._types.indexOf(pieceType)] = 0;
     };
+    Stats.prototype.resetAllMeters = function () {
+        for (var i = 0; i < this._meters.length; i++) {
+            this._meters[i] = 0;
+        }
+    };
     Stats.prototype.canSweep = function () {
         return this._sweepMeter === this._sweepMeterThreshold;
     };
@@ -634,11 +691,15 @@ var Stats = (function () {
         var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
         this._totalScore("total ", scoreXPos, 330);
         var yPos = 350;
-        //this._addMeter(0, scoreXPos, yPos);
-        //this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
-        //this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
-        //this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
-        this._addSweepMeter(scoreXPos, sweeper.y);
+        if (Config.EnableSweepMeters) {
+            this._addMeter(0, scoreXPos, yPos);
+            this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
+            this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
+            this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
+        }
+        if (Config.EnableSweeper) {
+            this._addSweepMeter(scoreXPos, sweeper.y);
+        }
         this._addScore("chain ", this._chains, 0, scoreXPos, yPos += Config.MeterHeight + 20);
         this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
         this._addScore("chain ", this._chains, 2, scoreXPos, yPos += 20);
@@ -734,19 +795,43 @@ var Sweeper = (function (_super) {
         _super.call(this, 0, 0, Config.CellWidth * gridCellsWide, 2, ex.Color.Red);
         this._row = 0;
         this.anchor.setTo(0, 0);
+        this.visible = false;
         this._row = startRow;
         this._label = new ex.Label("Sweeper");
+        this._emitter = new ex.ParticleEmitter(0, 0, Config.CellWidth * Config.GridCellsWide, 2);
+        this._emitter.emitterType = 1 /* Rectangle */;
+        this._emitter.radius = 0;
+        this._emitter.minVel = 13;
+        this._emitter.maxVel = 137;
+        this._emitter.minAngle = Math.PI;
+        this._emitter.maxAngle = Math.PI;
+        this._emitter.isEmitting = true;
+        this._emitter.emitRate = 500;
+        this._emitter.opacity = 0.9;
+        this._emitter.fadeFlag = true;
+        this._emitter.particleLife = 150;
+        this._emitter.maxSize = 2;
+        this._emitter.minSize = 1;
+        this._emitter.startSize = 0;
+        this._emitter.endSize = 0;
+        this._emitter.acceleration = new ex.Vector(0, -955);
+        this._emitter.beginColor = ex.Color.Red;
+        this._emitter.endColor = ex.Color.Transparent;
+        this._emitter.anchor.setTo(0, 1);
     }
     Sweeper.prototype.onInitialize = function (engine) {
         _super.prototype.onInitialize.call(this, engine);
         game.add(this._label);
+        game.add(this._emitter);
+        this.y = visualGrid.y + (this._row * Config.CellHeight);
     };
     Sweeper.prototype.update = function (engine, delta) {
         _super.prototype.update.call(this, engine, delta);
         this.x = visualGrid.x;
-        this.y = visualGrid.y + (this._row * Config.CellHeight);
         this._label.x = visualGrid.x - 50;
         this._label.y = this.y;
+        this._emitter.x = visualGrid.x;
+        this._emitter.y = this.y;
     };
     Sweeper.prototype.sweep = function () {
         if (!stats.canSweep())
@@ -767,6 +852,7 @@ var Sweeper = (function (_super) {
         // todo advance every so often?
         if (this._row < Config.SweepMaxRow) {
             this._row++;
+            this.moveBy(this.x, this.y + Config.CellHeight, 200);
         }
         turnManager.advanceTurn();
     };
@@ -815,11 +901,13 @@ function InitSetup() {
     transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
     sweeper = new Sweeper(Config.SweepStartRow, visualGrid.logicalGrid.cols);
     stats = new Stats();
-    mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
+    mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, visualGrid.logicalGrid.cols * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
     mask.anchor.setTo(0, 0);
     stats.drawScores();
     game.add(visualGrid);
-    game.add(sweeper);
+    if (Config.EnableSweeper) {
+        game.add(sweeper);
+    }
     game.add(mask);
     for (var i = 0; i < Config.NumStartingRows; i++) {
         grid.fill(grid.rows - (i + 1));
@@ -864,7 +952,7 @@ game.input.keyboard.on('up', function (evt) {
         InitSetup();
     }
     // alt sweep
-    if (evt.key === 83 /* S */)
+    if (Config.EnableSweeper && evt.key === 83 /* S */)
         sweeper.sweep();
 });
 // TODO clean up pieces that are not in play anymore after update loop

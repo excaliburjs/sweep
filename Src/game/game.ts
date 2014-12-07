@@ -52,14 +52,18 @@ function InitSetup() {
    transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
    sweeper = new Sweeper(Config.SweepStartRow, visualGrid.logicalGrid.cols);
    stats = new Stats();
-   mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
+   mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, visualGrid.logicalGrid.cols * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
 
 
    mask.anchor.setTo(0, 0);
  
    stats.drawScores();
    game.add(visualGrid);
-   game.add(sweeper);
+
+   if (Config.EnableSweeper) {
+      game.add(sweeper);
+   }
+
    game.add(mask);
 
    //add pieces to initial rows
@@ -111,7 +115,7 @@ game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
    }
 
    // alt sweep
-   if (evt.key === ex.Input.Keys.S) sweeper.sweep();
+   if (Config.EnableSweeper && evt.key === ex.Input.Keys.S) sweeper.sweep();
 });
 
 
