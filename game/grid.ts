@@ -110,10 +110,15 @@ class LogicalGrid extends ex.Class {
    }
 
    public shift(from: number, to: number) {
-      if (to > this.rows || to < 0) return;
+      if (to > this.rows) return;
 
       for (var i = 0; i < this.cols; i++) {
-         if (this.getCell(i, from).piece) {
+         if (to < 0) {
+            var piece = this.getCell(i, from).piece
+            if (piece) {
+               this.clearPiece(piece);
+            }
+         } else if (this.getCell(i, from).piece) {
             this.setCell(i, to, this.getCell(i, from).piece);
             this.setCell(i, from, null);
          }
