@@ -330,17 +330,37 @@ var MatchEvent = (function (_super) {
 var MatchManager = (function (_super) {
     __extends(MatchManager, _super);
     function MatchManager() {
+        var _this = this;
         _super.call(this);
         this._run = [];
         this.runInProgress = false;
-        game.input.pointers.primary.on("down", _.bind(this._handlePieceDown, this));
+        game.input.pointers.primary.on("down", _.bind(this._handlePointerDown, this));
         game.input.pointers.primary.on("up", _.bind(this._handlePointerUp, this));
         game.input.pointers.primary.on("move", _.bind(this._handlePointerMove, this));
+        // handle canceling via right-click
+        game.canvas.addEventListener("contextmenu", function (e) {
+            e.preventDefault();
+            _this._handleCancelRun();
+        });
+        window.addEventListener("contextmenu", function () { return _this._handleCancelRun(); });
+        // HACK: Handle off-canvas mouseup to commit run
+        window.addEventListener("mouseup", function (e) {
+            if (e.button === 0 /* Left */) {
+                _this._handlePointerUp(new ex.Input.PointerEvent(e.clientX, e.clientY, 0, 1 /* Mouse */, e.button, e));
+            }
+            else {
+                _this._handleCancelRun();
+            }
+        });
     }
-    MatchManager.prototype._handlePieceDown = function (pe) {
+    MatchManager.prototype._handlePointerDown = function (pe) {
         var cell = visualGrid.getCellByPos(pe.x, pe.y);
-        if (!cell)
+        if (!cell || this.runInProgress) {
             return;
+        }
+        if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
+            return;
+        }
         this.runInProgress = true;
         cell.piece.selected = true;
         this._run.push(cell.piece);
@@ -385,7 +405,10 @@ var MatchManager = (function (_super) {
             ex.Logger.getInstance().info("Run modified", this._run);
         }
     };
-    MatchManager.prototype._handlePointerUp = function () {
+    MatchManager.prototype._handlePointerUp = function (pe) {
+        if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
+            return;
+        }
         // have a valid run?
         if (this._run.length > 0) {
             ex.Logger.getInstance().info("Run ended", this._run);
@@ -394,6 +417,11 @@ var MatchManager = (function (_super) {
             this._run.forEach(function (p) { return p.selected = false; });
             this._run.length = 0;
         }
+        this.runInProgress = false;
+    };
+    MatchManager.prototype._handleCancelRun = function () {
+        this._run.forEach(function (p) { return p.selected = false; });
+        this._run.length = 0;
         this.runInProgress = false;
     };
     MatchManager.prototype.areNeighbors = function (piece1, piece2) {
