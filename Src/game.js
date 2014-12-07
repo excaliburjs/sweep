@@ -621,13 +621,16 @@ var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
 var transitionManager = new TransitionManager(grid, visualGrid);
-game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
-game.add(visualGrid);
-stats.drawScores();
-for (var i = 0; i < Config.NumStartingRows; i++) {
-    grid.fill(grid.rows - (i + 1));
+InitSetup();
+function InitSetup() {
+    game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
+    game.add(visualGrid);
+    for (var i = 0; i < Config.NumStartingRows; i++) {
+        grid.fill(grid.rows - (i + 1));
+    }
+    stats.drawScores();
 }
-game.input.keyboard.on('down', function (evt) {
+game.input.keyboard.on('up', function (evt) {
     if (evt.key === 68 /* D */) {
         game.isDebug = !game.isDebug;
     }
@@ -646,6 +649,28 @@ game.input.keyboard.on('down', function (evt) {
         visualGrid.sweep(2 /* Square */);
     if (evt.key === 52)
         visualGrid.sweep(3 /* Star */);
+    if (evt.key === 38 || evt.key == 40 || evt.key === 37 || evt.key === 39) {
+        var numCols = grid.cols || 0;
+        var numRows = grid.rows || 0;
+        if (evt.key === 38) {
+            numRows++;
+        }
+        else if (evt.key === 40) {
+            numRows--;
+        }
+        else if (evt.key === 37) {
+            numCols--;
+        }
+        else if (evt.key === 39) {
+            numCols++;
+        }
+        for (var i = 0; i < game.currentScene.children.length; i++) {
+            game.removeChild(game.currentScene.children[i]);
+        }
+        grid = new LogicalGrid(numRows, numCols);
+        visualGrid = new VisualGrid(grid);
+        InitSetup();
+    }
 });
 // TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {

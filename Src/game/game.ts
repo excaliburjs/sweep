@@ -30,16 +30,20 @@ var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, TurnMode.Match);
 var transitionManager = new TransitionManager(grid, visualGrid);
 
-game.currentScene.camera.setFocus(visualGrid.getWidth()/2, visualGrid.getHeight()/2);
-game.add(visualGrid);
 
-stats.drawScores();
+InitSetup();
 
-for (var i = 0; i < Config.NumStartingRows; i++) {
-   grid.fill(grid.rows - (i + 1));
+function InitSetup() {
+   game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
+   game.add(visualGrid);
+
+   for (var i = 0; i < Config.NumStartingRows; i++) {
+      grid.fill(grid.rows - (i + 1));
+   }
+   stats.drawScores();
 }
 
-game.input.keyboard.on('down', (evt: ex.Input.KeyEvent) => {
+game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
    if (evt.key === ex.Input.Keys.D) {
       game.isDebug = !game.isDebug;
    }
@@ -47,7 +51,7 @@ game.input.keyboard.on('down', (evt: ex.Input.KeyEvent) => {
    if (evt.key === ex.Input.Keys.S) {
       // shift all rows up 1
       for (var i = 0; i < grid.rows; i++) {
-         grid.shift(i, i - 1);         
+         grid.shift(i, i - 1);
       }
       // fill first row
       grid.fill(grid.rows - 1);
@@ -57,6 +61,33 @@ game.input.keyboard.on('down', (evt: ex.Input.KeyEvent) => {
    if (evt.key === 50) visualGrid.sweep(PieceType.Triangle);
    if (evt.key === 51) visualGrid.sweep(PieceType.Square);
    if (evt.key === 52) visualGrid.sweep(PieceType.Star);
+
+
+   if (evt.key === 38 || evt.key == 40 || evt.key === 37 || evt.key === 39) {
+
+      var numCols = grid.cols || 0;
+      var numRows = grid.rows || 0;
+
+      if (evt.key === 38) {
+         numRows++;
+      } else if (evt.key === 40) {
+         numRows--;
+      } else if (evt.key === 37) {
+         numCols--;
+      } else if (evt.key === 39) {
+         numCols++;
+      }
+  
+      //reset the game when adding a new row/column
+      for (var i = 0; i < game.currentScene.children.length; i++) {
+         game.removeChild(game.currentScene.children[i]);
+      }
+
+      grid = new LogicalGrid(numRows, numCols);
+      visualGrid = new VisualGrid(grid);
+      InitSetup();
+   }
+
 });
 
 // TODO clean up pieces that are not in play anymore after update loop
