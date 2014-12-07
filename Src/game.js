@@ -1,3 +1,8 @@
+var GameMode;
+(function (GameMode) {
+    GameMode[GameMode["Standard"] = 0] = "Standard";
+    GameMode[GameMode["Timed"] = 1] = "Timed";
+})(GameMode || (GameMode = {}));
 var Config = (function () {
     function Config() {
     }
@@ -69,6 +74,7 @@ var Config = (function () {
     Config.ScoreXBuffer = 20;
     Config.MeterWidth = 90;
     Config.MeterHeight = 30;
+    Config.EnableGridLines = false;
     return Config;
 })();
 var Util = (function () {
@@ -157,7 +163,7 @@ var Resources = {
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
-    GridBackgroundColor: ex.Color.fromHex("#efefef"),
+    GridBackgroundColor: new ex.Color(0, 20, 25, 0.9),
     // Beach
     PieceColor1: ex.Color.fromHex("#DBB96D"),
     PieceColor2: ex.Color.fromHex("#BF6D72"),
@@ -515,9 +521,11 @@ var VisualGrid = (function (_super) {
         this.logicalGrid.cells.forEach(function (c) {
             ctx.fillStyle = Palette.GridBackgroundColor.toString();
             ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
-            ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
-            ctx.lineWidth = 1;
-            ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
+            if (Config.EnableGridLines) {
+                ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
+                ctx.lineWidth = 1;
+                ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
+            }
         });
     };
     VisualGrid.prototype.getCellByPos = function (screenX, screenY) {
@@ -1195,8 +1203,10 @@ var UIWidget = (function (_super) {
 /// <reference path="sweeper.ts"/>
 /// <reference path="UIWidget.ts"/>
 var _this = this;
-var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
-game.backgroundColor = Palette.GameBackgroundColor;
+var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game", 0 /* FullScreen */);
+game.backgroundColor = ex.Color.Transparent;
+var analytics = window.ga;
+var gameMode = 0 /* Standard */;
 var loader = new ex.Loader();
 // load up all resources in dictionary
 _.forIn(Resources, function (resource) {
@@ -1280,6 +1290,9 @@ var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
 function gameOver() {
+    if (analytics) {
+        analytics('send', 'event', 'ludum-30-stats', gameMode, 'total score', { 'nonInteraction': 1 });
+    }
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
     var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
