@@ -134,6 +134,7 @@ var Config = (function () {
     Config.ScoreXBuffer = 20;
     Config.MeterWidth = 90;
     Config.MeterHeight = 30;
+    Config.EnableGridLines = false;
     return Config;
 })();
 /// <reference path="util.ts"/>
@@ -162,7 +163,7 @@ var Resources = {
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
-    GridBackgroundColor: ex.Color.fromHex("#efefef"),
+    GridBackgroundColor: new ex.Color(0, 20, 25, 0.9),
     // Beach
     PieceColor1: ex.Color.fromHex("#DBB96D"),
     PieceColor2: ex.Color.fromHex("#BF6D72"),
@@ -520,9 +521,11 @@ var VisualGrid = (function (_super) {
         this.logicalGrid.cells.forEach(function (c) {
             ctx.fillStyle = Palette.GridBackgroundColor.toString();
             ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
-            ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
-            ctx.lineWidth = 1;
-            ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
+            if (Config.EnableGridLines) {
+                ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
+                ctx.lineWidth = 1;
+                ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
+            }
         });
     };
     VisualGrid.prototype.getCellByPos = function (screenX, screenY) {
@@ -1200,8 +1203,8 @@ var UIWidget = (function (_super) {
 /// <reference path="sweeper.ts"/>
 /// <reference path="UIWidget.ts"/>
 var _this = this;
-var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
-game.backgroundColor = Palette.GameBackgroundColor;
+var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game", 0 /* FullScreen */);
+game.backgroundColor = ex.Color.Transparent;
 var analytics = window.ga;
 var gameMode = 0 /* Standard */;
 var loader = new ex.Loader();

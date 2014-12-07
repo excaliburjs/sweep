@@ -12,8 +12,8 @@
 /// <reference path="sweeper.ts"/>
 /// <reference path="UIWidget.ts"/>
 
-var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
-game.backgroundColor = Palette.GameBackgroundColor;
+var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game", ex.DisplayMode.FullScreen);
+game.backgroundColor = ex.Color.Transparent;
 
 var analytics = (<any>window).ga;
 var gameMode = GameMode.Standard;

@@ -17,6 +17,7 @@ class Config {
    static ScoreXBuffer: number = 20;
    static MeterWidth: number = 90;
    static MeterHeight: number = 30;
+   static EnableGridLines = false;
 
    //
    // game modes
