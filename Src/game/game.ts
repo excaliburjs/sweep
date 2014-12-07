@@ -131,6 +131,12 @@ game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
    if (Config.EnableSweeper && evt.key === ex.Input.Keys.S) sweeper.sweep();
 });
 
+function gameOver() {
+   var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3)
+   var gameOverWidget = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() + 500, 300, 300, color);
+   game.addChild(gameOverWidget);
+   gameOverWidget.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1400);
+}
 
 // TODO clean up pieces that are not in play anymore after update loop
 
