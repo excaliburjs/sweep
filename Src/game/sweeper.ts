@@ -9,7 +9,12 @@ class Sweeper extends ex.Actor {
       this.anchor.setTo(0, 0);
 
       this._row = startRow;
-      this._label = new ex.Label("Sweeper");
+      this._label = new ex.Label("Sweeper");      
+   }
+
+   public onInitialize(engine: ex.Engine) {
+      super.onInitialize(engine);
+
       game.add(this._label);
    }
 
@@ -24,7 +29,7 @@ class Sweeper extends ex.Actor {
 
    public sweep(): void {
 
-      if (stats.getSweepMeter() !== Config.SweepAltThreshold) return;
+      if (!stats.canSweep()) return;
 
       var cells: Cell[] = [];
 
@@ -44,7 +49,10 @@ class Sweeper extends ex.Actor {
       stats.resetSweeperMeter();
 
       // advance sweeper
-      this._row++;
+      // todo advance every so often?
+      if (this._row < Config.SweepMaxRow) {
+         this._row++;
+      }
 
       turnManager.advanceTurn();
    }

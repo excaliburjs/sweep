@@ -16,5 +16,7 @@
    
    // alt sweep mechanic 1
    static SweepStartRow = 3;
+   static SweepMaxRow = 7;
    static SweepAltThreshold = 20;
+   static SweepAltThresholdIncrease = 5;
 }

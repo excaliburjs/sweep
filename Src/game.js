@@ -17,7 +17,9 @@ var Config = (function () {
     Config.SweepThreshold = 20;
     // alt sweep mechanic 1
     Config.SweepStartRow = 3;
+    Config.SweepMaxRow = 7;
     Config.SweepAltThreshold = 20;
+    Config.SweepAltThresholdIncrease = 5;
     return Config;
 })();
 var Util = (function () {
@@ -236,6 +238,11 @@ var LogicalGrid = (function (_super) {
                 var piece = this.getCell(i, from).piece;
                 if (piece) {
                     this.clearPiece(piece);
+                    //TODO add game over logic here
+                    //TODO disable input (on board), add score card with play again button
+                    matcher.gameOver = true;
+                    var gameOverLabel = new ex.Label("GAME OVER", visualGrid.x + visualGrid.getWidth() + 30, visualGrid.y + visualGrid.getHeight() / 2);
+                    game.currentScene.addChild(gameOverLabel);
                 }
             }
             else if (this.getCell(i, from).piece) {
@@ -330,19 +337,21 @@ var VisualGrid = (function (_super) {
         });
     };
     VisualGrid.prototype.sweep = function (type) {
-        // can sweep?
-        if (stats.getMeter(type) < Config.SweepThreshold)
-            return;
-        var cells = this.logicalGrid.cells.filter(function (cell) {
-            return cell.piece && cell.piece.getType() === type;
-        });
-        cells.forEach(function (cell) {
-            stats.scorePieces([cell.piece]);
-            grid.clearPiece(cell.piece);
-        });
-        // reset meter
-        stats.resetMeter(type);
-        turnManager.advanceTurn();
+        if (!matcher.gameOver) {
+            // can sweep?
+            if (stats.getMeter(type) < Config.SweepThreshold)
+                return;
+            var cells = this.logicalGrid.cells.filter(function (cell) {
+                return cell.piece && cell.piece.getType() === type;
+            });
+            cells.forEach(function (cell) {
+                stats.scorePieces([cell.piece]);
+                grid.clearPiece(cell.piece);
+            });
+            // reset meter
+            stats.resetMeter(type);
+            turnManager.advanceTurn();
+        }
     };
     return VisualGrid;
 })(ex.Actor);
@@ -360,6 +369,7 @@ var MatchManager = (function (_super) {
         var _this = this;
         _super.call(this);
         this._run = [];
+        this.gameOver = false;
         this.runInProgress = false;
         game.input.pointers.primary.on("down", _.bind(this._handlePointerDown, this));
         game.input.pointers.primary.on("up", _.bind(this._handlePointerUp, this));
@@ -381,75 +391,81 @@ var MatchManager = (function (_super) {
         });
     }
     MatchManager.prototype._handlePointerDown = function (pe) {
-        var cell = visualGrid.getCellByPos(pe.x, pe.y);
-        if (!cell || this.runInProgress) {
-            return;
+        if (!this.gameOver) {
+            var cell = visualGrid.getCellByPos(pe.x, pe.y);
+            if (!cell || this.runInProgress) {
+                return;
+            }
+            if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
+                return;
+            }
+            this.runInProgress = true;
+            cell.piece.selected = true;
+            this._run.push(cell.piece);
+            ex.Logger.getInstance().info("Run started", this._run);
         }
-        if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
-            return;
-        }
-        this.runInProgress = true;
-        cell.piece.selected = true;
-        this._run.push(cell.piece);
-        ex.Logger.getInstance().info("Run started", this._run);
-        // darken/highlight
-        // draw line?
     };
     MatchManager.prototype._handlePointerMove = function (pe) {
-        // add piece to run if valid
-        // draw line?
-        if (!this.runInProgress)
-            return;
-        var cell = visualGrid.getCellByPos(pe.x, pe.y);
-        if (!cell)
-            return;
-        var piece = cell.piece;
-        if (!piece)
-            return;
-        var removePiece = -1;
-        var containsBounds = new ex.BoundingBox(piece.getBounds().left + Config.PieceContainsPadding, piece.getBounds().top + Config.PieceContainsPadding, piece.getBounds().right - Config.PieceContainsPadding, piece.getBounds().bottom - Config.PieceContainsPadding);
-        // if piece contains screen coords and we don't already have it in the run
-        if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
-            // if the two pieces aren't neighbors or aren't the same type, invalid move
-            if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) || piece.getType() !== this._run[this._run.length - 1].getType()))
+        if (!this.gameOver) {
+            // add piece to run if valid
+            // draw line?
+            if (!this.runInProgress)
                 return;
-            // add to run
-            piece.selected = true;
-            this._run.push(piece);
-            ex.Logger.getInstance().info("Run modified", this._run);
-            // notify
-            this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
-        }
-        // did user go backwards?
-        if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
-            // mark for removal
-            removePiece = this._run.indexOf(piece) + 1;
-        }
-        if (removePiece > -1) {
-            // remove from run
-            this._run[removePiece].selected = false;
-            this._run.splice(removePiece, 1);
-            ex.Logger.getInstance().info("Run modified", this._run);
+            var cell = visualGrid.getCellByPos(pe.x, pe.y);
+            if (!cell)
+                return;
+            var piece = cell.piece;
+            if (!piece)
+                return;
+            var removePiece = -1;
+            var containsBounds = new ex.BoundingBox(piece.getBounds().left + Config.PieceContainsPadding, piece.getBounds().top + Config.PieceContainsPadding, piece.getBounds().right - Config.PieceContainsPadding, piece.getBounds().bottom - Config.PieceContainsPadding);
+            // if piece contains screen coords and we don't already have it in the run
+            if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
+                // if the two pieces aren't neighbors or aren't the same type, invalid move
+                if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) || piece.getType() !== this._run[this._run.length - 1].getType()))
+                    return;
+                // add to run
+                piece.selected = true;
+                this._run.push(piece);
+                ex.Logger.getInstance().info("Run modified", this._run);
+                // notify
+                this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
+            }
+            // did user go backwards?
+            if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
+                // mark for removal
+                removePiece = this._run.indexOf(piece) + 1;
+            }
+            if (removePiece > -1) {
+                // remove from run
+                this._run[removePiece].selected = false;
+                this._run.splice(removePiece, 1);
+                ex.Logger.getInstance().info("Run modified", this._run);
+            }
         }
     };
     MatchManager.prototype._handlePointerUp = function (pe) {
-        if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
-            return;
+        if (!this.gameOver) {
+            if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
+                return;
+            }
+            // have a valid run?
+            if (this._run.length > 0) {
+                ex.Logger.getInstance().info("Run ended", this._run);
+                // notify
+                this.eventDispatcher.publish("match", new MatchEvent(_.clone(this._run)));
+                this._run.forEach(function (p) { return p.selected = false; });
+                this._run.length = 0;
+            }
+            this.runInProgress = false;
         }
-        // have a valid run?
-        if (this._run.length > 0) {
-            ex.Logger.getInstance().info("Run ended", this._run);
-            // notify
-            this.eventDispatcher.publish("match", new MatchEvent(_.clone(this._run)));
-            this._run.forEach(function (p) { return p.selected = false; });
-            this._run.length = 0;
-        }
-        this.runInProgress = false;
     };
     MatchManager.prototype._handleCancelRun = function () {
-        this._run.forEach(function (p) { return p.selected = false; });
-        this._run.length = 0;
-        this.runInProgress = false;
+        if (!this.gameOver) {
+            this._run.forEach(function (p) { return p.selected = false; });
+            this._run.length = 0;
+            this.runInProgress = false;
+        }
     };
     MatchManager.prototype.areNeighbors = function (piece1, piece2) {
         var cell1 = _.find(grid.cells, { piece: piece1 });
@@ -576,8 +592,10 @@ var Stats = (function () {
         this._scores = [this._numCirclesDestroyed, this._numTrianglesDestroyed, this._numSquaresDestroyed, this._numStarsDestroyed];
         this._meters = [this._numCirclesDestroyedMeter, this._numTrianglesDestroyedMeter, this._numSquaresDestroyedMeter, this._numStarsDestroyedMeter];
         this._sweepMeter = 0;
+        this._sweepMeterThreshold = 0;
         this._chains = [this._longestCircleCombo, this._longestTriangleCombo, this._longestSquareCombo, this._longestStarCombo];
         this._lastChain = 0;
+        this._sweepMeterThreshold = Config.SweepAltThreshold;
     }
     Stats.prototype.getMeter = function (pieceType) {
         return this._meters[this._types.indexOf(pieceType)];
@@ -585,18 +603,19 @@ var Stats = (function () {
     Stats.prototype.resetMeter = function (pieceType) {
         this._meters[this._types.indexOf(pieceType)] = 0;
     };
-    Stats.prototype.getSweepMeter = function () {
-        return this._sweepMeter;
+    Stats.prototype.canSweep = function () {
+        return this._sweepMeter === this._sweepMeterThreshold;
     };
     Stats.prototype.resetSweeperMeter = function () {
         this._sweepMeter = 0;
+        this._sweepMeterThreshold += Config.SweepAltThresholdIncrease;
     };
     Stats.prototype.scorePieces = function (pieces) {
         var type = this._types.indexOf(pieces[0].getType());
         this._scores[type] += pieces.length;
         var newScore = this._meters[type] + pieces.length;
         this._meters[type] = Math.min(newScore, Config.SweepThreshold);
-        this._sweepMeter = Math.min(this._sweepMeter + pieces.length, Config.SweepAltThreshold);
+        this._sweepMeter = Math.min(this._sweepMeter + pieces.length, this._sweepMeterThreshold);
     };
     Stats.prototype.scoreChain = function (pieces) {
         var chainScore = this._chains[this._types.indexOf(pieces[0].getType())];
@@ -668,17 +687,18 @@ var Stats = (function () {
     };
     Stats.prototype._addSweepMeter = function (x, y) {
         var _this = this;
-        var square = new Meter(x, y, ex.Color.Red, Config.SweepAltThreshold);
+        var square = new Meter(x, y, ex.Color.Red, this._sweepMeterThreshold);
         var label = new ex.Label(null, square.getCenter().x, y + 20);
         label.textAlign = 2 /* Center */;
         label.color = ex.Color.Black;
         game.addEventListener('update', function (data) {
             square.score = _this._sweepMeter;
-            if (_this._sweepMeter === Config.SweepAltThreshold) {
+            square.threshold = _this._sweepMeterThreshold;
+            if (_this._sweepMeter === _this._sweepMeterThreshold) {
                 label.text = "'S' TO SWEEP";
             }
             else {
-                label.text = Math.floor((_this._sweepMeter / Config.SweepAltThreshold) * 100) + '%';
+                label.text = Math.floor((_this._sweepMeter / _this._sweepMeterThreshold) * 100) + '%';
             }
         });
         game.add(square);
@@ -688,15 +708,15 @@ var Stats = (function () {
 })();
 var Meter = (function (_super) {
     __extends(Meter, _super);
-    function Meter(x, y, color, _threshold) {
+    function Meter(x, y, color, threshold) {
         _super.call(this, x, y, Config.MeterWidth, Config.MeterHeight, color);
-        this._threshold = _threshold;
+        this.threshold = threshold;
     }
     Meter.prototype.draw = function (ctx, delta) {
         ctx.strokeStyle = this.color.toString();
         ctx.lineWidth = 2;
         ctx.strokeRect(this.x, this.y, this.getWidth(), this.getHeight());
-        var percentage = (this.score / this._threshold);
+        var percentage = (this.score / this.threshold);
         ctx.fillStyle = this.color.toString();
         ctx.fillRect(this.x, this.y, (this.getWidth() * percentage), this.getHeight());
     };
@@ -711,8 +731,11 @@ var Sweeper = (function (_super) {
         this.anchor.setTo(0, 0);
         this._row = startRow;
         this._label = new ex.Label("Sweeper");
-        game.add(this._label);
     }
+    Sweeper.prototype.onInitialize = function (engine) {
+        _super.prototype.onInitialize.call(this, engine);
+        game.add(this._label);
+    };
     Sweeper.prototype.update = function (engine, delta) {
         _super.prototype.update.call(this, engine, delta);
         this.x = visualGrid.x;
@@ -721,7 +744,7 @@ var Sweeper = (function (_super) {
         this._label.y = this.y;
     };
     Sweeper.prototype.sweep = function () {
-        if (stats.getSweepMeter() !== Config.SweepAltThreshold)
+        if (!stats.canSweep())
             return;
         var cells = [];
         for (var i = 0; i < this._row; i++) {
@@ -736,7 +759,10 @@ var Sweeper = (function (_super) {
         // reset meter
         stats.resetSweeperMeter();
         // advance sweeper
-        this._row++;
+        // todo advance every so often?
+        if (this._row < Config.SweepMaxRow) {
+            this._row++;
+        }
         turnManager.advanceTurn();
     };
     return Sweeper;
@@ -768,17 +794,26 @@ var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
 var transitionManager = new TransitionManager(grid, visualGrid);
 var sweeper = new Sweeper(Config.SweepStartRow);
-game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
-game.add(visualGrid);
 var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
 mask.anchor.setTo(0, 0);
 game.add(mask);
-stats.drawScores();
-game.add(sweeper);
-for (var i = 0; i < Config.NumStartingRows; i++) {
-    grid.fill(grid.rows - (i + 1));
+InitSetup(visualGrid, stats);
+//reset the game
+function InitSetup(visualGrid, stats) {
+    if (game.currentScene.children) {
+        for (var i = 0; i < game.currentScene.children.length; i++) {
+            game.removeChild(game.currentScene.children[i]);
+        }
+    }
+    game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
+    game.add(visualGrid);
+    for (var i = 0; i < Config.NumStartingRows; i++) {
+        grid.fill(grid.rows - (i + 1));
+    }
+    stats.drawScores();
 }
-game.input.keyboard.on('down', function (evt) {
+game.add(sweeper);
+game.input.keyboard.on('up', function (evt) {
     if (evt.key === 68 /* D */) {
         game.isDebug = !game.isDebug;
     }
@@ -797,6 +832,25 @@ game.input.keyboard.on('down', function (evt) {
         visualGrid.sweep(2 /* Square */);
     if (evt.key === 52)
         visualGrid.sweep(3 /* Star */);
+    if (evt.key === 38 /* Up */ || evt.key == 40 /* Down */ || evt.key === 37 /* Left */ || evt.key === 39 /* Right */) {
+        var numCols = grid.cols || 0;
+        var numRows = grid.rows || 0;
+        if (evt.key === 38 /* Up */) {
+            numRows++;
+        }
+        else if (evt.key === 40 /* Down */) {
+            numRows--;
+        }
+        else if (evt.key === 37 /* Left */) {
+            numCols--;
+        }
+        else if (evt.key === 39 /* Right */) {
+            numCols++;
+        }
+        grid = new LogicalGrid(numRows, numCols);
+        visualGrid = new VisualGrid(grid);
+        InitSetup(visualGrid, stats);
+    }
     // alt sweep
     if (evt.key === 83 /* S */)
         sweeper.sweep();
