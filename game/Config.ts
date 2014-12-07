@@ -42,7 +42,7 @@
    static resetDefault() {
       Config.EnableTimer = false;
       Config.AdvanceRowsOnMatch = true;
-      Config.SweepThreshold = 3;
+      Config.SweepThreshold = 15;
       Config.EnableSweepMeters = true;
       Config.ClearSweepMetersAfterSingleUse = true;
 

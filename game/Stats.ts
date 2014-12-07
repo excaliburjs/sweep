@@ -155,12 +155,12 @@
 
          // mega sweep
          if (this.allMetersFull()) {
-            meter.visible = label.visible = true;
+            meter.visible = label.visible = inputLabel.visible = true;
 
             // show mega sweep
 
          } else {
-            meter.visible = label.visible = false;
+            meter.visible = label.visible = inputLabel.visible = false;
          }
 
       });

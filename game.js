@@ -24,7 +24,7 @@ var Config = (function () {
     Config.resetDefault = function () {
         Config.EnableTimer = false;
         Config.AdvanceRowsOnMatch = true;
-        Config.SweepThreshold = 3;
+        Config.SweepThreshold = 15;
         Config.EnableSweepMeters = true;
         Config.ClearSweepMetersAfterSingleUse = true;
         Config.EnableSweeper = false;
@@ -808,10 +808,10 @@ var Stats = (function () {
         game.addEventListener('update', function (data) {
             // mega sweep
             if (_this.allMetersFull()) {
-                meter.visible = label.visible = true;
+                meter.visible = label.visible = inputLabel.visible = true;
             }
             else {
-                meter.visible = label.visible = false;
+                meter.visible = label.visible = inputLabel.visible = false;
             }
         });
         game.add(meter);
