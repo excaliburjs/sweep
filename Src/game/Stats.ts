@@ -17,11 +17,13 @@
    private _types = [PieceType.Circle, PieceType.Triangle, PieceType.Square, PieceType.Star];
    private _scores = [this._numCirclesDestroyed, this._numTrianglesDestroyed, this._numSquaresDestroyed, this._numStarsDestroyed];
    private _meters = [this._numCirclesDestroyedMeter, this._numTrianglesDestroyedMeter, this._numSquaresDestroyedMeter, this._numStarsDestroyedMeter];
+   private _sweepMeter = 0;
+   private _sweepMeterThreshold = 0;
    private _chains = [this._longestCircleCombo, this._longestTriangleCombo, this._longestSquareCombo, this._longestStarCombo];
    private _lastChain: number = 0;
 
    constructor() {
-
+      this._sweepMeterThreshold = Config.SweepAltThreshold;
    }
 
    public getMeter(pieceType: PieceType) {
@@ -32,6 +34,15 @@
       this._meters[this._types.indexOf(pieceType)] = 0;
    }
 
+   public canSweep() {
+      return this._sweepMeter === this._sweepMeterThreshold;
+   }
+
+   public resetSweeperMeter() {
+      this._sweepMeter = 0;
+      this._sweepMeterThreshold += Config.SweepAltThresholdIncrease;
+   }
+
    public scorePieces(pieces: Piece[]) {
       var type = this._types.indexOf(pieces[0].getType());
 
@@ -39,6 +50,7 @@
       var newScore = this._meters[type] + pieces.length;
 
       this._meters[type] = Math.min(newScore, Config.SweepThreshold);
+      this._sweepMeter = Math.min(this._sweepMeter + pieces.length, this._sweepMeterThreshold);
    }
 
    public scoreChain(pieces: Piece[]) {
@@ -58,10 +70,11 @@
       this._totalScore("total ", scoreXPos, 330);
 
       var yPos = 350;
-      this._addMeter(0, scoreXPos, yPos);
-      this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
-      this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
-      this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
+      //this._addMeter(0, scoreXPos, yPos);
+      //this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
+      //this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
+      //this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
+      this._addSweepMeter(scoreXPos, sweeper.y);
 
       this._addScore("chain ", this._chains, 0, scoreXPos, yPos += Config.MeterHeight + 20);
       this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
@@ -100,7 +113,7 @@
    }
 
    private _addMeter(piece: PieceType, x: number, y: number) {
-      var square = new Meter(x, y, PieceTypeToColor[piece]);
+      var square = new Meter(x, y, PieceTypeToColor[piece], Config.SweepThreshold);
       var label = new ex.Label(null, square.getCenter().x, square.getCenter().y + 3);
       label.textAlign = ex.TextAlign.Center;
       label.color = ex.Color.Black;
@@ -116,12 +129,32 @@
       game.add(square);
       game.add(label);
    }
+
+   private _addSweepMeter(x: number, y: number) {
+      var square = new Meter(x, y, ex.Color.Red, this._sweepMeterThreshold);
+      var label = new ex.Label(null, square.getCenter().x, y + 20);
+      label.textAlign = ex.TextAlign.Center;
+      label.color = ex.Color.Black;
+
+      game.addEventListener('update', (data?: ex.UpdateEvent) => {
+         square.score = this._sweepMeter;
+         square.threshold = this._sweepMeterThreshold;
+
+         if (this._sweepMeter === this._sweepMeterThreshold) {
+            label.text = "'S' TO SWEEP";
+         } else {
+            label.text = Math.floor((this._sweepMeter / this._sweepMeterThreshold) * 100) + '%';
+         }
+      });
+      game.add(square);
+      game.add(label);
+   }
 }
 
 class Meter extends ex.Actor {
    public score: number;
 
-   constructor(x: number, y: number, color: ex.Color) {
+   constructor(x: number, y: number, color: ex.Color, public threshold: number) {
       super(x, y, Config.MeterWidth, Config.MeterHeight, color);
    }
 
@@ -131,7 +164,7 @@ class Meter extends ex.Actor {
       ctx.lineWidth = 2;
       ctx.strokeRect(this.x, this.y, this.getWidth(), this.getHeight());
 
-      var percentage = (this.score / Config.SweepThreshold);
+      var percentage = (this.score / this.threshold);
 
       ctx.fillStyle = this.color.toString();
       ctx.fillRect(this.x, this.y, (this.getWidth() * percentage), this.getHeight());
