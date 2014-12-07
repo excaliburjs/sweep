@@ -292,6 +292,7 @@ var LogicalGrid = (function (_super) {
                     matcher.gameOver = true;
                     var gameOverLabel = new ex.Label("GAME OVER", visualGrid.x + visualGrid.getWidth() + 30, visualGrid.y + visualGrid.getHeight() / 2);
                     game.currentScene.addChild(gameOverLabel);
+                    gameOver();
                 }
             }
             else if (this.getCell(i, from).piece) {
@@ -958,6 +959,12 @@ game.input.keyboard.on('up', function (evt) {
     if (Config.EnableSweeper && evt.key === 83 /* S */)
         sweeper.sweep();
 });
+function gameOver() {
+    var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
+    var gameOverWidget = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() + 500, 300, 300, color);
+    game.addChild(gameOverWidget);
+    gameOverWidget.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1400);
+}
 // TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {
     // todo build game
