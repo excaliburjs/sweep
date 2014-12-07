@@ -22,9 +22,9 @@ class MatchManager extends ex.Class {
 
    public gameOver: boolean = false;
    public dispose = function () {
-      game.input.pointers.primary.off("down", _.bind(this._handlePointerDown, this));
-      game.input.pointers.primary.off("up", _.bind(this._handlePointerUp, this));
-      game.input.pointers.primary.off("move", _.bind(this._handlePointerMove, this));
+      game.input.pointers.primary.off("down");
+      game.input.pointers.primary.off("up");
+      game.input.pointers.primary.off("move");
    }
 
    constructor() {

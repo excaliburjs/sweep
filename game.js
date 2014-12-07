@@ -464,9 +464,9 @@ var MatchManager = (function (_super) {
         this._run = [];
         this.gameOver = false;
         this.dispose = function () {
-            game.input.pointers.primary.off("down", _.bind(this._handlePointerDown, this));
-            game.input.pointers.primary.off("up", _.bind(this._handlePointerUp, this));
-            game.input.pointers.primary.off("move", _.bind(this._handlePointerMove, this));
+            game.input.pointers.primary.off("down");
+            game.input.pointers.primary.off("up");
+            game.input.pointers.primary.off("move");
         };
         this.runInProgress = false;
         game.input.pointers.primary.on("down", _.bind(this._handlePointerDown, this));
