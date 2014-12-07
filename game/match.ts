@@ -13,18 +13,42 @@ class MatchManager extends ex.Class {
    constructor() {
       super();
 
-      game.input.pointers.primary.on("down", _.bind(this._handlePieceDown, this));
+      game.input.pointers.primary.on("down", _.bind(this._handlePointerDown, this));
       game.input.pointers.primary.on("up", _.bind(this._handlePointerUp, this));
-      game.input.pointers.primary.on("move", _.bind(this._handlePointerMove, this));      
+      game.input.pointers.primary.on("move", _.bind(this._handlePointerMove, this));
+
+      // handle canceling via right-click
+      game.canvas.addEventListener("contextmenu", (e: MouseEvent) => {
+         e.preventDefault();
+
+         this._handleCancelRun();
+      });
+
+      window.addEventListener("contextmenu", () => this._handleCancelRun());
+
+      // HACK: Handle off-canvas mouseup to commit run
+      window.addEventListener("mouseup", (e: MouseEvent) => {
+         if (e.button === ex.Input.PointerButton.Left) {
+            this._handlePointerUp(new ex.Input.PointerEvent(e.clientX, e.clientY, 0, ex.Input.PointerType.Mouse, e.button, e));
+         } else {
+            this._handleCancelRun();
+         }
+      });
    }
 
    public runInProgress = false;
 
-   private _handlePieceDown(pe: PointerEvent) {
+   private _handlePointerDown(pe: PointerEvent) {
 
       var cell = visualGrid.getCellByPos(pe.x, pe.y);
 
-      if (!cell) return;
+      if (!cell || this.runInProgress) {
+         return;
+      }
+
+      if (pe.pointerType === ex.Input.PointerType.Mouse && pe.button !== ex.Input.PointerButton.Left) {
+         return;
+      }
 
       this.runInProgress = true;
       cell.piece.selected = true;
@@ -92,7 +116,11 @@ class MatchManager extends ex.Class {
       }
    }
 
-   private _handlePointerUp() {
+   private _handlePointerUp(pe: ex.Input.PointerEvent) {
+
+      if (pe.pointerType === ex.Input.PointerType.Mouse && pe.button !== ex.Input.PointerButton.Left) {
+         return;
+      }
 
       // have a valid run?
       if (this._run.length > 0) {
@@ -105,6 +133,12 @@ class MatchManager extends ex.Class {
          this._run.length = 0;
       }
 
+      this.runInProgress = false;
+   }
+
+   private _handleCancelRun() {
+      this._run.forEach(p => p.selected = false);
+      this._run.length = 0;
       this.runInProgress = false;
    }
 
