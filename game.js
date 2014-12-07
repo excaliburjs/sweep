@@ -32,6 +32,11 @@ var Config = (function () {
     Config.MeterWidth = 90;
     Config.MeterHeight = 30;
     Config.SweepThreshold = 20;
+    // alt sweep mechanic 1
+    Config.SweepStartRow = 3;
+    Config.SweepMaxRow = 7;
+    Config.SweepAltThreshold = 20;
+    Config.SweepAltThresholdIncrease = 5;
     return Config;
 })();
 /// <reference path="util.ts"/>
@@ -586,8 +591,11 @@ var Stats = (function () {
         this._types = [0 /* Circle */, 1 /* Triangle */, 2 /* Square */, 3 /* Star */];
         this._scores = [this._numCirclesDestroyed, this._numTrianglesDestroyed, this._numSquaresDestroyed, this._numStarsDestroyed];
         this._meters = [this._numCirclesDestroyedMeter, this._numTrianglesDestroyedMeter, this._numSquaresDestroyedMeter, this._numStarsDestroyedMeter];
+        this._sweepMeter = 0;
+        this._sweepMeterThreshold = 0;
         this._chains = [this._longestCircleCombo, this._longestTriangleCombo, this._longestSquareCombo, this._longestStarCombo];
         this._lastChain = 0;
+        this._sweepMeterThreshold = Config.SweepAltThreshold;
     }
     Stats.prototype.getMeter = function (pieceType) {
         return this._meters[this._types.indexOf(pieceType)];
@@ -595,11 +603,19 @@ var Stats = (function () {
     Stats.prototype.resetMeter = function (pieceType) {
         this._meters[this._types.indexOf(pieceType)] = 0;
     };
+    Stats.prototype.canSweep = function () {
+        return this._sweepMeter === this._sweepMeterThreshold;
+    };
+    Stats.prototype.resetSweeperMeter = function () {
+        this._sweepMeter = 0;
+        this._sweepMeterThreshold += Config.SweepAltThresholdIncrease;
+    };
     Stats.prototype.scorePieces = function (pieces) {
         var type = this._types.indexOf(pieces[0].getType());
         this._scores[type] += pieces.length;
         var newScore = this._meters[type] + pieces.length;
         this._meters[type] = Math.min(newScore, Config.SweepThreshold);
+        this._sweepMeter = Math.min(this._sweepMeter + pieces.length, this._sweepMeterThreshold);
     };
     Stats.prototype.scoreChain = function (pieces) {
         var chainScore = this._chains[this._types.indexOf(pieces[0].getType())];
@@ -613,10 +629,11 @@ var Stats = (function () {
         var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
         this._totalScore("total ", scoreXPos, 330);
         var yPos = 350;
-        this._addMeter(0, scoreXPos, yPos);
-        this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
-        this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
-        this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
+        //this._addMeter(0, scoreXPos, yPos);
+        //this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
+        //this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
+        //this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
+        this._addSweepMeter(scoreXPos, sweeper.y);
         this._addScore("chain ", this._chains, 0, scoreXPos, yPos += Config.MeterHeight + 20);
         this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
         this._addScore("chain ", this._chains, 2, scoreXPos, yPos += 20);
@@ -652,7 +669,7 @@ var Stats = (function () {
     };
     Stats.prototype._addMeter = function (piece, x, y) {
         var _this = this;
-        var square = new Meter(x, y, PieceTypeToColor[piece]);
+        var square = new Meter(x, y, PieceTypeToColor[piece], Config.SweepThreshold);
         var label = new ex.Label(null, square.getCenter().x, square.getCenter().y + 3);
         label.textAlign = 2 /* Center */;
         label.color = ex.Color.Black;
@@ -668,22 +685,87 @@ var Stats = (function () {
         game.add(square);
         game.add(label);
     };
+    Stats.prototype._addSweepMeter = function (x, y) {
+        var _this = this;
+        var square = new Meter(x, y, ex.Color.Red, this._sweepMeterThreshold);
+        var label = new ex.Label(null, square.getCenter().x, y + 20);
+        label.textAlign = 2 /* Center */;
+        label.color = ex.Color.Black;
+        game.addEventListener('update', function (data) {
+            square.score = _this._sweepMeter;
+            square.threshold = _this._sweepMeterThreshold;
+            if (_this._sweepMeter === _this._sweepMeterThreshold) {
+                label.text = "'S' TO SWEEP";
+            }
+            else {
+                label.text = Math.floor((_this._sweepMeter / _this._sweepMeterThreshold) * 100) + '%';
+            }
+        });
+        game.add(square);
+        game.add(label);
+    };
     return Stats;
 })();
 var Meter = (function (_super) {
     __extends(Meter, _super);
-    function Meter(x, y, color) {
+    function Meter(x, y, color, threshold) {
         _super.call(this, x, y, Config.MeterWidth, Config.MeterHeight, color);
+        this.threshold = threshold;
     }
     Meter.prototype.draw = function (ctx, delta) {
         ctx.strokeStyle = this.color.toString();
         ctx.lineWidth = 2;
         ctx.strokeRect(this.x, this.y, this.getWidth(), this.getHeight());
-        var percentage = (this.score / Config.SweepThreshold);
+        var percentage = (this.score / this.threshold);
         ctx.fillStyle = this.color.toString();
         ctx.fillRect(this.x, this.y, (this.getWidth() * percentage), this.getHeight());
     };
     return Meter;
+})(ex.Actor);
+// alt sweep mechanic 1
+var Sweeper = (function (_super) {
+    __extends(Sweeper, _super);
+    function Sweeper(startRow) {
+        _super.call(this, 0, 0, Config.CellWidth * Config.GridCellsWide, 2, ex.Color.Red);
+        this._row = 0;
+        this.anchor.setTo(0, 0);
+        this._row = startRow;
+        this._label = new ex.Label("Sweeper");
+    }
+    Sweeper.prototype.onInitialize = function (engine) {
+        _super.prototype.onInitialize.call(this, engine);
+        game.add(this._label);
+    };
+    Sweeper.prototype.update = function (engine, delta) {
+        _super.prototype.update.call(this, engine, delta);
+        this.x = visualGrid.x;
+        this.y = visualGrid.y + (this._row * Config.CellHeight);
+        this._label.x = visualGrid.x - 50;
+        this._label.y = this.y;
+    };
+    Sweeper.prototype.sweep = function () {
+        if (!stats.canSweep())
+            return;
+        var cells = [];
+        for (var i = 0; i < this._row; i++) {
+            grid.getRow(i).filter(function (c) { return c.piece !== null; }).forEach(function (c) { return cells.push(c); });
+        }
+        if (cells.length <= 0)
+            return;
+        cells.forEach(function (cell) {
+            stats.scorePieces([cell.piece]);
+            grid.clearPiece(cell.piece);
+        });
+        // reset meter
+        stats.resetSweeperMeter();
+        // advance sweeper
+        // todo advance every so often?
+        if (this._row < Config.SweepMaxRow) {
+            this._row++;
+        }
+        turnManager.advanceTurn();
+    };
+    return Sweeper;
 })(ex.Actor);
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
@@ -696,6 +778,7 @@ var Meter = (function (_super) {
 /// <reference path="turn.ts"/>
 /// <reference path="transition.ts"/>
 /// <reference path="Stats.ts"/>
+/// <reference path="sweeper.ts"/>
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 game.backgroundColor = Palette.GameBackgroundColor;
 var loader = new ex.Loader();
@@ -710,6 +793,7 @@ var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
 var transitionManager = new TransitionManager(grid, visualGrid);
+var sweeper = new Sweeper(Config.SweepStartRow);
 var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
 mask.anchor.setTo(0, 0);
 game.add(mask);
@@ -728,11 +812,12 @@ function InitSetup(visualGrid, stats) {
     }
     stats.drawScores();
 }
+game.add(sweeper);
 game.input.keyboard.on('up', function (evt) {
     if (evt.key === 68 /* D */) {
         game.isDebug = !game.isDebug;
     }
-    if (evt.key === 83 /* S */) {
+    if (evt.key === 85 /* U */) {
         for (var i = 0; i < grid.rows; i++) {
             grid.shift(i, i - 1);
         }
@@ -766,6 +851,9 @@ game.input.keyboard.on('up', function (evt) {
         visualGrid = new VisualGrid(grid);
         InitSetup(visualGrid, stats);
     }
+    // alt sweep
+    if (evt.key === 83 /* S */)
+        sweeper.sweep();
 });
 // TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {

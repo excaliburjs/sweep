@@ -9,6 +9,7 @@
 /// <reference path="turn.ts"/>
 /// <reference path="transition.ts"/>
 /// <reference path="Stats.ts"/>
+/// <reference path="sweeper.ts"/>
 
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 game.backgroundColor = Palette.GameBackgroundColor;
@@ -29,6 +30,7 @@ var visualGrid = new VisualGrid(grid);
 var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, TurnMode.Match);
 var transitionManager = new TransitionManager(grid, visualGrid);
+var sweeper = new Sweeper(Config.SweepStartRow);
 
 var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
 mask.anchor.setTo(0, 0);
@@ -52,15 +54,17 @@ function InitSetup(visualGrid : VisualGrid, stats : Stats) {
    stats.drawScores();
 }
 
+game.add(sweeper);
+
 game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
    if (evt.key === ex.Input.Keys.D) {
       game.isDebug = !game.isDebug;
    }
 
-   if (evt.key === ex.Input.Keys.S) {
+   if (evt.key === ex.Input.Keys.U) {
       // shift all rows up 1
       for (var i = 0; i < grid.rows; i++) {
-         grid.shift(i, i - 1);
+         grid.shift(i, i - 1);         
       }
       // fill first row
       grid.fill(grid.rows - 1);
@@ -92,6 +96,8 @@ game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
       InitSetup(visualGrid, stats);
    }
 
+   // alt sweep
+   if (evt.key === ex.Input.Keys.S) sweeper.sweep();
 });
 
 
