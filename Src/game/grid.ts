@@ -90,9 +90,15 @@ class LogicalGrid extends ex.Class {
 
 
    public clearPiece(piece: Piece) {
-      piece.cell.piece = null;
-      piece.cell = null;
-      piece.kill();
+
+      if (piece && piece.cell) {
+         piece.cell.piece = null;
+
+         piece.cell = null;
+
+
+         piece.kill();
+      }
    }
 
    public fill(row: number, smooth: boolean = false) {
