@@ -86,7 +86,17 @@ var Config = (function () {
     return Config;
 })();
 /// <reference path="util.ts"/>
-var Resources = {};
+var Resources = {
+    LoopSound: new ex.Sound('sounds/loop.mp3'),
+    Note1Sound: new ex.Sound('sounds/note1.mp3'),
+    Note2Sound: new ex.Sound('sounds/note2.mp3'),
+    Note3Sound: new ex.Sound('sounds/note3.mp3'),
+    Note4Sound: new ex.Sound('sounds/note4.mp3'),
+    Note5Sound: new ex.Sound('sounds/note5.mp3'),
+    Note6Sound: new ex.Sound('sounds/note6.mp3'),
+    Note7Sound: new ex.Sound('sounds/note7.mp3'),
+    Note8Sound: new ex.Sound('sounds/note8.mp3')
+};
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
     GridBackgroundColor: ex.Color.fromHex("#efefef"),
@@ -458,6 +468,7 @@ var MatchManager = (function (_super) {
     function MatchManager() {
         var _this = this;
         _super.call(this);
+        this._notes = [Resources.Note1Sound, Resources.Note2Sound, Resources.Note3Sound, Resources.Note4Sound, Resources.Note5Sound, Resources.Note6Sound, Resources.Note7Sound, Resources.Note8Sound];
         this._run = [];
         this.gameOver = false;
         this.dispose = function () {
@@ -485,6 +496,10 @@ var MatchManager = (function (_super) {
             }
         });
     }
+    MatchManager.prototype._playNote = function () {
+        var index = ex.Util.randomIntInRange(0, this._notes.length);
+        this._notes[index].play();
+    };
     MatchManager.prototype._handlePointerDown = function (pe) {
         if (!this.gameOver) {
             var cell = visualGrid.getCellByPos(pe.x, pe.y);
@@ -497,6 +512,7 @@ var MatchManager = (function (_super) {
             this.runInProgress = true;
             cell.piece.selected = true;
             this._run.push(cell.piece);
+            this._playNote();
             ex.Logger.getInstance().info("Run started", this._run);
         }
     };
@@ -522,6 +538,7 @@ var MatchManager = (function (_super) {
                 // add to run
                 piece.selected = true;
                 this._run.push(piece);
+                this._playNote();
                 ex.Logger.getInstance().info("Run modified", this._run);
                 // notify
                 this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
@@ -1032,6 +1049,8 @@ function gameOver() {
 }
 // TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {
-    // todo build game
+    // play some sounds
+    Resources.LoopSound.setLoop(true);
+    Resources.LoopSound.play();
 });
 //# sourceMappingURL=game.js.map

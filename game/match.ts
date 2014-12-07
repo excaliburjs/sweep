@@ -8,6 +8,15 @@
 
 class MatchManager extends ex.Class {
 
+   private _notes: ex.Sound[] = [Resources.Note1Sound,
+      Resources.Note2Sound,
+      Resources.Note3Sound,
+      Resources.Note4Sound,
+      Resources.Note5Sound,
+      Resources.Note6Sound,
+      Resources.Note7Sound,
+      Resources.Note8Sound]
+
    private _run: Piece[] = [];   
 
    public gameOver: boolean = false;
@@ -45,6 +54,11 @@ class MatchManager extends ex.Class {
 
    public runInProgress = false;
 
+   private _playNote(): void {
+      var index = ex.Util.randomIntInRange(0, this._notes.length);
+      this._notes[index].play();
+   }
+
    private _handlePointerDown(pe: PointerEvent) {
       if (!this.gameOver) {
          var cell = visualGrid.getCellByPos(pe.x, pe.y);
@@ -60,7 +74,7 @@ class MatchManager extends ex.Class {
          this.runInProgress = true;
          cell.piece.selected = true;
          this._run.push(cell.piece);
-
+         this._playNote();
          ex.Logger.getInstance().info("Run started", this._run);
 
          // darken/highlight
@@ -100,6 +114,7 @@ class MatchManager extends ex.Class {
             // add to run
             piece.selected = true;
             this._run.push(piece);
+            this._playNote();
 
             ex.Logger.getInstance().info("Run modified", this._run);
 
