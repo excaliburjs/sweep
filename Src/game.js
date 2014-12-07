@@ -551,7 +551,12 @@ var TransitionManager = (function () {
                 }
             });
         }
-        return ex.Promise.join.apply(null, promises);
+        if (promises.length) {
+            return ex.Promise.join.apply(null, promises);
+        }
+        else {
+            return ex.Promise.wrap(true);
+        }
     };
     return TransitionManager;
 })();

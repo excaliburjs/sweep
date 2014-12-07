@@ -124,7 +124,7 @@ class LogicalGrid extends ex.Class {
       var promises: ex.Promise<any>[] = [];
       for (var i = 0; i < this.cols; i++) {
          if (to < 0) {
-            var piece = this.getCell(i, from).piece
+            var piece = this.getCell(i, from).piece;
             if (piece) {
                this.clearPiece(piece);
             }
