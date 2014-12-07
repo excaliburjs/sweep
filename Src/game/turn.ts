@@ -9,7 +9,7 @@ class TurnManager {
 
    constructor(public logicalGrid: LogicalGrid, public matcher: MatchManager, public turnMode: TurnMode) {
       matcher.on('match', _.bind(this._handleMatchEvent, this));
-      this._timer = new ex.Timer(_.bind(this._tick, this), 2000, true);
+      this._timer = new ex.Timer(_.bind(this._tick, this), Config.TimerValue, true);
       game.add(this._timer);
    }
 
@@ -29,7 +29,7 @@ class TurnManager {
       // fill first row
       promises = _.filter(promises, (p) => { return p; });
       ex.Promise.join.apply(null, promises).then(() => {
-         this.logicalGrid.fill(grid.rows - 1);
+         this.logicalGrid.fill(grid.rows - 1, true);
       }).error((e) => {
          console.log(e);
       });

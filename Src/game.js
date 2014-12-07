@@ -48,6 +48,11 @@ var Config = (function () {
     Config.ScoreXBuffer = 20;
     Config.MeterWidth = 90;
     Config.MeterHeight = 30;
+    //
+    // game modes
+    //
+    Config.EnableTimer = false;
+    Config.TimerValue = 7000;
     return Config;
 })();
 var Util = (function () {
@@ -140,6 +145,11 @@ var PieceFactory = (function () {
     PieceFactory.getRandomPiece = function () {
         var index = Math.floor(Math.random() * PieceTypes.length);
         var piece = new Piece(PieceFactory._maxId++, 0, 0, PieceTypeToColor[index].clone(), index);
+        game.add(piece);
+        return piece;
+    };
+    PieceFactory.getPiece = function (type) {
+        var piece = new Piece(PieceFactory._maxId++, 0, 0, PieceTypeToColor[type].clone(), type);
         game.add(piece);
         return piece;
     };
@@ -237,22 +247,59 @@ var LogicalGrid = (function (_super) {
         piece.cell = null;
         piece.kill();
     };
-    LogicalGrid.prototype.fill = function (row) {
-        for (var i = 0; i < this.cols; i++) {
-            var currentCell = this.setCell(i, row, PieceFactory.getRandomPiece());
-            var neighbors = currentCell.getNeighbors();
-            var hasMatchingNeighbor = false;
-            for (var j = 0; j < neighbors.length; j++) {
-                if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
-                    hasMatchingNeighbor = true;
-                    break;
-                }
+    LogicalGrid.prototype.fill = function (row, smooth) {
+        var _this = this;
+        if (smooth === void 0) { smooth = false; }
+        if (smooth) {
+            for (var i = 0; i < this.cols; i++) {
+                (function () {
+                    var piece = PieceFactory.getRandomPiece();
+                    var cell = _this.getCell(i, row);
+                    piece.x = cell.getCenter().x;
+                    piece.y = mask.y + Config.CellHeight;
+                    var intendedCell = _this.setCell(i, row, piece, false);
+                    var hasSameType = intendedCell.getNeighbors().some(function (c) {
+                        if (c && c.piece) {
+                            return c.piece.getType() === piece.getType();
+                        }
+                        return false;
+                    });
+                    if (hasSameType) {
+                        _this.clearPiece(piece);
+                        piece = PieceFactory.getRandomPiece();
+                        piece.x = cell.getCenter().x;
+                        piece.y = mask.y + Config.CellHeight;
+                        _this.setCell(i, row, piece, false);
+                    }
+                    piece.moveTo(cell.getCenter().x, cell.getCenter().y, 300).asPromise().then(function () {
+                        piece.x = cell.getCenter().x;
+                        piece.y = cell.getCenter().y;
+                    });
+                })();
             }
-            if (hasMatchingNeighbor) {
-                if (currentCell.piece) {
-                    this.clearPiece(currentCell.piece);
-                }
-                this.setCell(i, row, PieceFactory.getRandomPiece());
+            mask.kill();
+            game.add(mask);
+        }
+        else {
+            for (var i = 0; i < this.cols; i++) {
+                (function () {
+                    var currentPiece = PieceFactory.getRandomPiece();
+                    var currentCell = _this.setCell(i, row, currentPiece, !smooth);
+                    var neighbors = currentCell.getNeighbors();
+                    var hasMatchingNeighbor = false;
+                    for (var j = 0; j < neighbors.length; j++) {
+                        if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
+                            hasMatchingNeighbor = true;
+                            break;
+                        }
+                    }
+                    if (hasMatchingNeighbor) {
+                        if (currentCell.piece) {
+                            _this.clearPiece(currentCell.piece);
+                        }
+                        _this.setCell(i, row, PieceFactory.getRandomPiece(), !smooth);
+                    }
+                })();
             }
         }
     };
@@ -283,11 +330,7 @@ var LogicalGrid = (function (_super) {
                 })();
             }
         }
-        var agg = ex.Promise.join.apply(null, promises).then(function () {
-            console.log("Yo", from, to);
-        }).error(function (e) {
-            console.log(e);
-        });
+        var agg = ex.Promise.join.apply(null, promises);
         if (promises.length) {
             return agg;
         }
@@ -403,6 +446,11 @@ var MatchManager = (function (_super) {
         _super.call(this);
         this._run = [];
         this.gameOver = false;
+        this.dispose = function () {
+            game.input.pointers.primary.off("down", _.bind(this._handlePointerDown, this));
+            game.input.pointers.primary.off("up", _.bind(this._handlePointerUp, this));
+            game.input.pointers.primary.off("move", _.bind(this._handlePointerMove, this));
+        };
         this.runInProgress = false;
         game.input.pointers.primary.on("down", _.bind(this._handlePointerDown, this));
         game.input.pointers.primary.on("up", _.bind(this._handlePointerUp, this));
@@ -426,7 +474,7 @@ var MatchManager = (function (_super) {
     MatchManager.prototype._handlePointerDown = function (pe) {
         if (!this.gameOver) {
             var cell = visualGrid.getCellByPos(pe.x, pe.y);
-            if (!cell || this.runInProgress) {
+            if (!cell || this.runInProgress || !cell.piece) {
                 return;
             }
             if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
@@ -523,7 +571,7 @@ var TurnManager = (function () {
         this.matcher = matcher;
         this.turnMode = turnMode;
         matcher.on('match', _.bind(this._handleMatchEvent, this));
-        this._timer = new ex.Timer(_.bind(this._tick, this), 2000, true);
+        this._timer = new ex.Timer(_.bind(this._tick, this), Config.TimerValue, true);
         game.add(this._timer);
     }
     TurnManager.prototype.advanceTurn = function () {
@@ -544,7 +592,7 @@ var TurnManager = (function () {
             return p;
         });
         ex.Promise.join.apply(null, promises).then(function () {
-            _this.logicalGrid.fill(grid.rows - 1);
+            _this.logicalGrid.fill(grid.rows - 1, true);
         }).error(function (e) {
             console.log(e);
         });
@@ -603,7 +651,12 @@ var TransitionManager = (function () {
                 }
             });
         }
-        return ex.Promise.join.apply(null, promises);
+        if (promises.length) {
+            return ex.Promise.join.apply(null, promises);
+        }
+        else {
+            return ex.Promise.wrap(true);
+        }
     };
     return TransitionManager;
 })();
@@ -767,8 +820,8 @@ var Meter = (function (_super) {
 // alt sweep mechanic 1
 var Sweeper = (function (_super) {
     __extends(Sweeper, _super);
-    function Sweeper(startRow) {
-        _super.call(this, 0, 0, Config.CellWidth * Config.GridCellsWide, 2);
+    function Sweeper(startRow, gridCellsWide) {
+        _super.call(this, 0, 0, Config.CellWidth * gridCellsWide, 2, ex.Color.Red);
         this._row = 0;
         this.anchor.setTo(0, 0);
         this.visible = false;
@@ -854,44 +907,51 @@ var loader = new ex.Loader();
 _.forIn(Resources, function (resource) {
     loader.addResource(resource);
 });
-var stats = new Stats();
-// build grid
+// game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
-var matcher = new MatchManager();
-var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
-var transitionManager = new TransitionManager(grid, visualGrid);
-var sweeper = new Sweeper(Config.SweepStartRow);
-var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
-mask.anchor.setTo(0, 0);
-game.add(mask);
+var turnManager, matcher, transitionManager, sweeper, stats, mask;
 // game modes
 var loadConfig = function (config) {
     Config.resetDefault();
     config.call(_this);
-    InitSetup(visualGrid, stats);
+    InitSetup();
 };
 document.getElementById("loadCasual").addEventListener("mouseup", function () { return loadConfig(Config.loadCasual); });
 document.getElementById("loadSurvial").addEventListener("mouseup", function () { return loadConfig(Config.loadSurvival); });
 document.getElementById("loadSurvivalReverse").addEventListener("mouseup", function () { return loadConfig(Config.loadSurvivalReverse); });
-// casual by default
 loadConfig(Config.loadCasual);
-//reset the game
-function InitSetup(visualGrid, stats) {
+InitSetup();
+//reset the game with the given grid dimensions
+function InitSetup() {
     if (game.currentScene.children) {
         for (var i = 0; i < game.currentScene.children.length; i++) {
             game.removeChild(game.currentScene.children[i]);
         }
     }
+    for (var i = 0; i < grid.cells.length; i++) {
+        grid.cells[i].piece = null;
+    }
     game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
+    //initialize game objects
+    if (matcher)
+        matcher.dispose(); //unbind events
+    matcher = new MatchManager();
+    turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? 0 /* Timed */ : 1 /* Match */);
+    transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
+    sweeper = new Sweeper(Config.SweepStartRow, visualGrid.logicalGrid.cols);
+    stats = new Stats();
+    mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, visualGrid.logicalGrid.cols * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
+    mask.anchor.setTo(0, 0);
+    stats.drawScores();
     game.add(visualGrid);
+    if (Config.EnableSweeper) {
+        game.add(sweeper);
+    }
+    game.add(mask);
     for (var i = 0; i < Config.NumStartingRows; i++) {
         grid.fill(grid.rows - (i + 1));
     }
-    stats.drawScores();
-}
-if (Config.EnableSweeper) {
-    game.add(sweeper);
 }
 game.input.keyboard.on('up', function (evt) {
     if (evt.key === 68 /* D */) {
@@ -929,7 +989,7 @@ game.input.keyboard.on('up', function (evt) {
         }
         grid = new LogicalGrid(numRows, numCols);
         visualGrid = new VisualGrid(grid);
-        InitSetup(visualGrid, stats);
+        InitSetup();
     }
     // alt sweep
     if (Config.EnableSweeper && evt.key === 83 /* S */)

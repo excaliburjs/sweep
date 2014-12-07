@@ -22,53 +22,70 @@ _.forIn(Resources, (resource) => {
    loader.addResource(resource);
 });
 
-var stats = new Stats();
 
-// build grid
+
+// game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
-var matcher = new MatchManager();
-var turnManager = new TurnManager(grid, matcher, TurnMode.Match);
-var transitionManager = new TransitionManager(grid, visualGrid);
-var sweeper = new Sweeper(Config.SweepStartRow);
 
-var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
-mask.anchor.setTo(0, 0);
-game.add(mask);
+var turnManager, matcher, transitionManager, sweeper, stats, mask;
 
 // game modes
 var loadConfig = (config) => {
    Config.resetDefault();
    config.call(this);
-   InitSetup(visualGrid, stats);
+   InitSetup();
 };
 
 document.getElementById("loadCasual").addEventListener("mouseup", () => loadConfig(Config.loadCasual));
 document.getElementById("loadSurvial").addEventListener("mouseup", () => loadConfig(Config.loadSurvival));
 document.getElementById("loadSurvivalReverse").addEventListener("mouseup", () => loadConfig(Config.loadSurvivalReverse));
 
-// casual by default
 loadConfig(Config.loadCasual);
 
-//reset the game
-function InitSetup(visualGrid: VisualGrid, stats: Stats) {
+InitSetup();
+
+//reset the game with the given grid dimensions
+function InitSetup() {
    if (game.currentScene.children) {
       for (var i = 0; i < game.currentScene.children.length; i++) {
          game.removeChild(game.currentScene.children[i]);
       }
    }
+
+   for (var i = 0; i < grid.cells.length; i++) {
+      grid.cells[i].piece = null;
+   }
+
    game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
+   //initialize game objects
+   if (matcher) matcher.dispose(); //unbind events
+   matcher = new MatchManager();
+   turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? TurnMode.Timed : TurnMode.Match);
+   transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
+   sweeper = new Sweeper(Config.SweepStartRow, visualGrid.logicalGrid.cols);
+   stats = new Stats();
+   mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, visualGrid.logicalGrid.cols * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
+
+
+   mask.anchor.setTo(0, 0);
+ 
+   stats.drawScores();
    game.add(visualGrid);
 
+   if (Config.EnableSweeper) {
+      game.add(sweeper);
+   }
+
+   game.add(mask);
+
+   //add pieces to initial rows
    for (var i = 0; i < Config.NumStartingRows; i++) {
       grid.fill(grid.rows - (i + 1));
    }
-   stats.drawScores();
 }
 
-if (Config.EnableSweeper) {
-   game.add(sweeper);
-}
+
 
 game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
    if (evt.key === ex.Input.Keys.D) {
@@ -107,7 +124,7 @@ game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
 
       grid = new LogicalGrid(numRows, numCols);
       visualGrid = new VisualGrid(grid);
-      InitSetup(visualGrid, stats);
+      InitSetup();
    }
 
    // alt sweep

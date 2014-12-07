@@ -16,6 +16,8 @@
    //
    // game modes
    //
+   static EnableTimer: boolean = false;
+   static TimerValue: number = 7000;
 
    // sweep mechanic
    static SweepThreshold: number;

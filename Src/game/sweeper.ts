@@ -5,13 +5,13 @@ class Sweeper extends ex.Actor {
    private _label: ex.Label;
    private _emitter: ex.ParticleEmitter;
 
-   constructor(startRow: number) {
-      super(0, 0, Config.CellWidth * Config.GridCellsWide, 2);
+   constructor(startRow: number, gridCellsWide : number) {
+      super(0, 0, Config.CellWidth * gridCellsWide, 2, ex.Color.Red);
       this.anchor.setTo(0, 0);
       this.visible = false;
 
       this._row = startRow;
-      this._label = new ex.Label("Sweeper");
+      this._label = new ex.Label("Sweeper");      
       this._emitter = new ex.ParticleEmitter(0, 0, Config.CellWidth * Config.GridCellsWide, 2);
       this._emitter.emitterType = ex.EmitterType.Rectangle;
       this._emitter.radius = 0;
@@ -45,8 +45,7 @@ class Sweeper extends ex.Actor {
 
    public update(engine: ex.Engine, delta: number) {
       super.update(engine, delta);
-
-      this.x = visualGrid.x;      
+      this.x = visualGrid.x;
       this._label.x = visualGrid.x - 50;
       this._label.y = this.y;
       this._emitter.x = visualGrid.x;
