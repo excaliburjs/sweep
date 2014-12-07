@@ -7,7 +7,7 @@ div#background {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url(/images/bg2.png);
+  background-image: url(images/bg2.png);
   z-index: -1;
 }
 .animate div#background {
