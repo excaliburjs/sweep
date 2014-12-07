@@ -1,4 +1,9 @@
-﻿class Config {
+﻿enum GameMode {
+   Standard,
+   Timed
+}
+
+class Config {
    static gameWidth: number = 720;
    static gameHeight: number = 720;
    static PieceContainsPadding: number = 5;
