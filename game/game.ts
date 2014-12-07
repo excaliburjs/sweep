@@ -28,8 +28,20 @@ _.forIn(Resources, (resource) => {
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
 
-
 var turnManager, matcher, transitionManager, sweeper, stats, mask;
+
+// game modes
+var loadConfig = (config) => {
+   Config.resetDefault();
+   config.call(this);
+   InitSetup();
+};
+
+document.getElementById("loadCasual").addEventListener("mouseup", () => loadConfig(Config.loadCasual));
+document.getElementById("loadSurvial").addEventListener("mouseup", () => loadConfig(Config.loadSurvival));
+document.getElementById("loadSurvivalReverse").addEventListener("mouseup", () => loadConfig(Config.loadSurvivalReverse));
+
+loadConfig(Config.loadCasual);
 
 InitSetup();
 
@@ -51,7 +63,7 @@ function InitSetup() {
    matcher = new MatchManager();
    turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? TurnMode.Timed : TurnMode.Match);
    transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
-   sweeper = new Sweeper(Config.SweepStartRow, visualGrid.logicalGrid.cols);
+   sweeper = new Sweeper(Config.SweepMovesUp ? Config.SweepMaxRow : Config.SweepMinRow, visualGrid.logicalGrid.cols);
    stats = new Stats();
    mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, visualGrid.logicalGrid.cols * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
 

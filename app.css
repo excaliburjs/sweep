@@ -9,4 +9,19 @@ canvas {
   margin: auto;
   display: block;
 }
+#modes {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+#modes ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+#modes #instructions {
+  margin-top: 1em;
+  width: 200px;
+  font-size: 12px;
+}
 /*# sourceMappingURL=app.css.map */

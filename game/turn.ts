@@ -13,9 +13,15 @@ class TurnManager {
       game.add(this._timer);
    }
 
-   public advanceTurn(): void {
+   public advanceTurn(isMatch = false): void {
       transitionManager.evaluate().then(() => {
-         this.advanceRows(); 
+
+         if (isMatch && Config.AdvanceRowsOnMatch) {
+            this.advanceRows();
+         } else if (!isMatch) {
+            this.advanceRows();
+         }
+
          console.log("Done!");
       });
    }
@@ -40,7 +46,8 @@ class TurnManager {
          stats.scorePieces(evt.run);
          stats.scoreChain(evt.run);
          evt.run.forEach(p => grid.clearPiece(p));
-         this.advanceTurn();
+
+         this.advanceTurn(true);
       }
    }
 

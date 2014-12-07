@@ -18,6 +18,57 @@ var Util = (function () {
 var Config = (function () {
     function Config() {
     }
+    //
+    // cascade configs
+    //
+    Config.resetDefault = function () {
+        Config.EnableTimer = false;
+        Config.AdvanceRowsOnMatch = true;
+        Config.SweepThreshold = 20;
+        Config.EnableSweepMeters = true;
+        Config.ClearSweepMetersAfterSingleUse = true;
+        Config.EnableSweeper = false;
+        Config.SweepMovesUp = false;
+        Config.SweepMinRow = 3;
+        Config.SweepMaxRow = Config.GridCellsHigh - 6;
+        Config.SweepAltThreshold = 20;
+        Config.SweepAltThresholdDelta = 5;
+        Config.SweepAltMinThreshold = 10;
+        Config.SweepAltMaxThreshold = 50;
+    };
+    Config.loadCasual = function () {
+        // same as default, for now
+        document.getElementById("instructions").innerHTML = "Take your time and prevent the tiles from reaching the top. <strong>Drag</strong> to chain tiles together to remove them. " + "If things get hairy, <strong>press 1-4</strong> to choose a color to SWEEP and remove them from the board. Be careful, though, all other " + "meters will be depleted after each use.";
+    };
+    Config.loadSurvival = function () {
+        Config.EnableTimer = true;
+        Config.AdvanceRowsOnMatch = false;
+        Config.TimerValue = 3000;
+        Config.EnableSweepMeters = false;
+        Config.EnableSweeper = true;
+        Config.SweepMovesUp = false;
+        Config.SweepMinRow = 3;
+        Config.SweepMaxRow = Config.GridCellsHigh - 6;
+        Config.SweepAltThreshold = 20;
+        Config.SweepAltThresholdDelta = 5;
+        Config.SweepAltMinThreshold = 10;
+        Config.SweepAltMaxThreshold = 50;
+        document.getElementById("instructions").innerHTML = "Battle against the clock and stop the tiles from reaching the top. <strong>Drag</strong> to chain tiles together to remove them. " + "If things get hairy, press <strong>S</strong> to SWEEP everything above the sweeper line! Each time the sweeper will move " + "down. As time goes on, it'll cost less to earn a SWEEP so play wisely.";
+    };
+    Config.loadSurvivalReverse = function () {
+        Config.EnableTimer = true;
+        Config.AdvanceRowsOnMatch = false;
+        Config.TimerValue = 3000;
+        Config.EnableSweeper = true;
+        Config.SweepMovesUp = true;
+        Config.SweepMinRow = 3;
+        Config.SweepMaxRow = Config.GridCellsHigh - 2;
+        Config.SweepAltThreshold = 50;
+        Config.SweepAltThresholdDelta = 5;
+        Config.SweepAltMinThreshold = 10;
+        Config.SweepAltMaxThreshold = 50;
+        document.getElementById("instructions").innerHTML = "Battle against the clock and stop the tiles from reaching the top. <strong>Drag</strong> to chain tiles together to remove them. " + "If things get hairy, press <strong>S</strong> to SWEEP everything above the sweeper line! Each time the sweeper will move up. " + "As time goes on, it'll cost more to earn a SWEEP so play wisely.";
+    };
     Config.gameWidth = 720;
     Config.gameHeight = 720;
     Config.PieceContainsPadding = 5;
@@ -31,19 +82,6 @@ var Config = (function () {
     Config.ScoreXBuffer = 20;
     Config.MeterWidth = 90;
     Config.MeterHeight = 30;
-    // Timer
-    Config.EnableTimer = false;
-    Config.TimerValue = 7000;
-    // sweep mechanic
-    Config.SweepThreshold = 20;
-    Config.EnableSweepMeters = true;
-    Config.ClearSweepMetersAfterSingleUse = true;
-    // alt sweep mechanic 1
-    Config.EnableSweeper = false;
-    Config.SweepStartRow = 3;
-    Config.SweepMaxRow = 7;
-    Config.SweepAltThreshold = 20;
-    Config.SweepAltThresholdIncrease = 5;
     return Config;
 })();
 /// <reference path="util.ts"/>
@@ -549,10 +587,16 @@ var TurnManager = (function () {
         this._timer = new ex.Timer(_.bind(this._tick, this), Config.TimerValue, true);
         game.add(this._timer);
     }
-    TurnManager.prototype.advanceTurn = function () {
+    TurnManager.prototype.advanceTurn = function (isMatch) {
         var _this = this;
+        if (isMatch === void 0) { isMatch = false; }
         transitionManager.evaluate().then(function () {
-            _this.advanceRows();
+            if (isMatch && Config.AdvanceRowsOnMatch) {
+                _this.advanceRows();
+            }
+            else if (!isMatch) {
+                _this.advanceRows();
+            }
             console.log("Done!");
         });
     };
@@ -577,7 +621,7 @@ var TurnManager = (function () {
             stats.scorePieces(evt.run);
             stats.scoreChain(evt.run);
             evt.run.forEach(function (p) { return grid.clearPiece(p); });
-            this.advanceTurn();
+            this.advanceTurn(true);
         }
     };
     TurnManager.prototype._tick = function () {
@@ -674,7 +718,13 @@ var Stats = (function () {
     };
     Stats.prototype.resetSweeperMeter = function () {
         this._sweepMeter = 0;
-        this._sweepMeterThreshold += Config.SweepAltThresholdIncrease;
+        // if moving upwards, decrease threshold
+        if (Config.SweepMovesUp) {
+            this._sweepMeterThreshold = Math.max(Config.SweepAltMinThreshold, this._sweepMeterThreshold - Config.SweepAltThresholdDelta);
+        }
+        else {
+            this._sweepMeterThreshold = Math.min(Config.SweepAltMaxThreshold, this._sweepMeterThreshold + Config.SweepAltThresholdDelta);
+        }
     };
     Stats.prototype.scorePieces = function (pieces) {
         var type = this._types.indexOf(pieces[0].getType());
@@ -853,10 +903,13 @@ var Sweeper = (function (_super) {
         // reset meter
         stats.resetSweeperMeter();
         // advance sweeper
-        // todo advance every so often?
-        if (this._row < Config.SweepMaxRow) {
+        if (!Config.SweepMovesUp && this._row < Config.SweepMaxRow) {
             this._row++;
             this.moveBy(this.x, this.y + Config.CellHeight, 200);
+        }
+        else if (Config.SweepMovesUp && this._row > Config.SweepMinRow) {
+            this._row--;
+            this.moveBy(this.x, this.y - Config.CellHeight, 200);
         }
         turnManager.advanceTurn();
     };
@@ -874,6 +927,7 @@ var Sweeper = (function (_super) {
 /// <reference path="transition.ts"/>
 /// <reference path="Stats.ts"/>
 /// <reference path="sweeper.ts"/>
+var _this = this;
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 game.backgroundColor = Palette.GameBackgroundColor;
 var loader = new ex.Loader();
@@ -885,6 +939,16 @@ _.forIn(Resources, function (resource) {
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
 var turnManager, matcher, transitionManager, sweeper, stats, mask;
+// game modes
+var loadConfig = function (config) {
+    Config.resetDefault();
+    config.call(_this);
+    InitSetup();
+};
+document.getElementById("loadCasual").addEventListener("mouseup", function () { return loadConfig(Config.loadCasual); });
+document.getElementById("loadSurvial").addEventListener("mouseup", function () { return loadConfig(Config.loadSurvival); });
+document.getElementById("loadSurvivalReverse").addEventListener("mouseup", function () { return loadConfig(Config.loadSurvivalReverse); });
+loadConfig(Config.loadCasual);
 InitSetup();
 //reset the game with the given grid dimensions
 function InitSetup() {
@@ -903,7 +967,7 @@ function InitSetup() {
     matcher = new MatchManager();
     turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? 0 /* Timed */ : 1 /* Match */);
     transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
-    sweeper = new Sweeper(Config.SweepStartRow, visualGrid.logicalGrid.cols);
+    sweeper = new Sweeper(Config.SweepMovesUp ? Config.SweepMaxRow : Config.SweepMinRow, visualGrid.logicalGrid.cols);
     stats = new Stats();
     mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, visualGrid.logicalGrid.cols * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
     mask.anchor.setTo(0, 0);
