@@ -30,10 +30,19 @@ var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, TurnMode.Match);
 var transitionManager = new TransitionManager(grid, visualGrid);
 
+var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
+mask.anchor.setTo(0, 0);
+game.add(mask);
 
-InitSetup();
+InitSetup(visualGrid, stats);
 
-function InitSetup() {
+//reset the game
+function InitSetup(visualGrid : VisualGrid, stats : Stats) {
+   if (game.currentScene.children) {
+      for (var i = 0; i < game.currentScene.children.length; i++) {
+         game.removeChild(game.currentScene.children[i]);
+      }
+   }
    game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
    game.add(visualGrid);
 
@@ -63,32 +72,28 @@ game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
    if (evt.key === 52) visualGrid.sweep(PieceType.Star);
 
 
-   if (evt.key === 38 || evt.key == 40 || evt.key === 37 || evt.key === 39) {
+   if (evt.key === ex.Input.Keys.Up || evt.key == ex.Input.Keys.Down || evt.key === ex.Input.Keys.Left || evt.key === ex.Input.Keys.Right) {
 
       var numCols = grid.cols || 0;
       var numRows = grid.rows || 0;
 
-      if (evt.key === 38) {
+      if (evt.key === ex.Input.Keys.Up) {
          numRows++;
-      } else if (evt.key === 40) {
+      } else if (evt.key === ex.Input.Keys.Down) {
          numRows--;
-      } else if (evt.key === 37) {
+      } else if (evt.key === ex.Input.Keys.Left) {
          numCols--;
-      } else if (evt.key === 39) {
+      } else if (evt.key === ex.Input.Keys.Right) {
          numCols++;
-      }
-  
-      //reset the game when adding a new row/column
-      for (var i = 0; i < game.currentScene.children.length; i++) {
-         game.removeChild(game.currentScene.children[i]);
       }
 
       grid = new LogicalGrid(numRows, numCols);
       visualGrid = new VisualGrid(grid);
-      InitSetup();
+      InitSetup(visualGrid, stats);
    }
 
 });
+
 
 // TODO clean up pieces that are not in play anymore after update loop
 

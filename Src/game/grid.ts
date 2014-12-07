@@ -15,6 +15,9 @@ class Cell {
       return result;
    }
 
+   public getAbove(): Cell {
+      return this.logicalGrid.getCell(this.x, this.y -1);
+   }
    public getBelow(): Cell {
       return this.logicalGrid.getCell(this.x, this.y + 1);
    }
@@ -60,15 +63,19 @@ class LogicalGrid extends ex.Class {
       return this.cells[(x + y * this.cols)];
    }
 
-   public setCell(x: number, y: number, data: Piece, kill: boolean = false): Cell {
+   public setCell(x: number, y: number, data: Piece, movePiece: boolean = true): Cell {
       var cell = this.getCell(x, y);
 
       if (!cell) return;
 
       if (data) {
          var center = cell.getCenter();
-         data.x = center.x;
-         data.y = center.y;
+         if (movePiece) {
+            //data.moveTo(center.x, center.y, 200).asPromise().then(() => {
+               data.x = center.x;
+               data.y = center.y;
+            //});
+         }
          data.cell = cell;
          cell.piece = data;
          this.eventDispatcher.publish("pieceadd", new PieceEvent(cell));
@@ -79,6 +86,8 @@ class LogicalGrid extends ex.Class {
       }
       return cell;
    }
+
+
 
    public clearPiece(piece: Piece) {
       piece.cell.piece = null;
@@ -109,9 +118,10 @@ class LogicalGrid extends ex.Class {
       }
    }
 
-   public shift(from: number, to: number) {
+   public shift(from: number, to: number): ex.Promise<any> {
       if (to > this.rows) return;
 
+      var promises: ex.Promise<any>[] = [];
       for (var i = 0; i < this.cols; i++) {
          if (to < 0) {
             var piece = this.getCell(i, from).piece
@@ -119,9 +129,25 @@ class LogicalGrid extends ex.Class {
                this.clearPiece(piece);
             }
          } else if (this.getCell(i, from).piece) {
-            this.setCell(i, to, this.getCell(i, from).piece);
-            this.setCell(i, from, null);
+            (() => {
+               var p = this.getCell(i, from).piece;
+               var dest = this.getCell(i, to).getCenter();
+               promises.push(p.moveTo(dest.x, dest.y, 300).asPromise());
+               this.setCell(i, to, this.getCell(i, from).piece, false);
+               this.setCell(i, from, null);
+            })();
          }
+      }
+
+      var agg = ex.Promise.join.apply(null, promises).then(() => {
+         console.log("Yo", from, to);
+      }).error((e) => {
+         console.log(e);
+      });
+      if (promises.length) {
+         return agg;
+      } else {
+         return ex.Promise.wrap(true);
       }
    }
 
