@@ -13,6 +13,10 @@ class TurnManager {
       game.add(this._timer);
    }
 
+   public dispose() {
+      this._timer.cancel();
+   }
+
    public advanceTurn(isMatch = false): void {
       transitionManager.evaluate().then(() => {
 

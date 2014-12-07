@@ -58,6 +58,7 @@ function InitSetup() {
    game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
    //initialize game objects
    if (matcher) matcher.dispose(); //unbind events
+   if (turnManager) turnManager.dispose(); //cancel the timer
    matcher = new MatchManager();
    turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? TurnMode.Timed : TurnMode.Match);
    transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
@@ -119,6 +120,7 @@ var gameOverWidget = new UIWidget();
 //gameOverWidget.addButton(postYourScore);
 
 function gameOver() {
+   if (turnManager) turnManager.dispose(); // stop game over from happening infinitely in time attack
    var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3)
    var gameOverWidgetActor = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() - 800, 300, 300, color);
    game.addChild(gameOverWidgetActor);
