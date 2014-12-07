@@ -29,8 +29,20 @@ _.forIn(Resources, (resource) => {
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var visualGrid = new VisualGrid(grid);
 
-
 var turnManager, matcher, transitionManager, sweeper, stats, mask;
+
+// game modes
+var loadConfig = (config) => {
+   Config.resetDefault();
+   config.call(this);
+   InitSetup();
+};
+
+document.getElementById("loadCasual").addEventListener("mouseup", () => loadConfig(Config.loadCasual));
+document.getElementById("loadSurvial").addEventListener("mouseup", () => loadConfig(Config.loadSurvival));
+document.getElementById("loadSurvivalReverse").addEventListener("mouseup", () => loadConfig(Config.loadSurvivalReverse));
+
+loadConfig(Config.loadCasual);
 
 InitSetup();
 
@@ -52,7 +64,7 @@ function InitSetup() {
    matcher = new MatchManager();
    turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? TurnMode.Timed : TurnMode.Match);
    transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
-   sweeper = new Sweeper(Config.SweepStartRow, visualGrid.logicalGrid.cols);
+   sweeper = new Sweeper(Config.SweepMovesUp ? Config.SweepMaxRow : Config.SweepMinRow, visualGrid.logicalGrid.cols);
    stats = new Stats();
    mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, visualGrid.logicalGrid.cols * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
 
@@ -120,6 +132,12 @@ game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
    if (Config.EnableSweeper && evt.key === ex.Input.Keys.S) sweeper.sweep();
 });
 
+function gameOver() {
+   var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3)
+   var gameOverWidget = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() + 500, 300, 300, color);
+   game.addChild(gameOverWidget);
+   gameOverWidget.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1400);
+}
 
 // TODO clean up pieces that are not in play anymore after update loop
 

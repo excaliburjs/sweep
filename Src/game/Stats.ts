@@ -46,7 +46,14 @@
 
    public resetSweeperMeter() {
       this._sweepMeter = 0;
-      this._sweepMeterThreshold += Config.SweepAltThresholdIncrease;
+
+      // if moving upwards, decrease threshold
+
+      if (Config.SweepMovesUp) {
+         this._sweepMeterThreshold = Math.max(Config.SweepAltMinThreshold, this._sweepMeterThreshold - Config.SweepAltThresholdDelta);
+      } else {
+         this._sweepMeterThreshold = Math.min(Config.SweepAltMaxThreshold, this._sweepMeterThreshold + Config.SweepAltThresholdDelta);
+      }
    }
 
    public scorePieces(pieces: Piece[]) {

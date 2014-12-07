@@ -13,19 +13,95 @@
    static MeterWidth: number = 90;
    static MeterHeight: number = 30;
 
-   // Timer
-   static EnableTimer: boolean = false;
-   static TimerValue: number = 7000;
+   //
+   // game modes
+   //
+   static EnableTimer: boolean;
+   static TimerValue: number;
+   static AdvanceRowsOnMatch: boolean;
 
    // sweep mechanic
-   static SweepThreshold: number = 20;
-   static EnableSweepMeters: boolean = true;
-   static ClearSweepMetersAfterSingleUse = true;
+   static SweepThreshold: number;
+   static EnableSweepMeters: boolean;
+   static ClearSweepMetersAfterSingleUse: boolean;
 
    // alt sweep mechanic 1
-   static EnableSweeper = false;
-   static SweepStartRow = 3;
-   static SweepMaxRow = 7;
-   static SweepAltThreshold = 20;
-   static SweepAltThresholdIncrease = 5;
+   static EnableSweeper: boolean;
+   static SweepMovesUp: boolean;
+   static SweepMinRow: number;
+   static SweepMaxRow: number;
+   static SweepAltThreshold: number;
+   static SweepAltThresholdDelta: number;
+   static SweepAltMinThreshold: number;
+   static SweepAltMaxThreshold: number;
+
+   //
+   // cascade configs
+   //
+
+   static resetDefault() {
+      Config.EnableTimer = false;
+      Config.AdvanceRowsOnMatch = true;
+      Config.SweepThreshold = 20;
+      Config.EnableSweepMeters = true;
+      Config.ClearSweepMetersAfterSingleUse = true;
+
+      Config.EnableSweeper = false;
+      Config.SweepMovesUp = false;
+      Config.SweepMinRow = 3;
+      Config.SweepMaxRow = Config.GridCellsHigh - 6;
+      Config.SweepAltThreshold = 20;
+      Config.SweepAltThresholdDelta = 5;
+      Config.SweepAltMinThreshold = 10;
+      Config.SweepAltMaxThreshold = 50;
+   }
+
+   static loadCasual() {
+      // same as default, for now
+      document.getElementById("instructions").innerHTML =
+         "Take your time and prevent the tiles from reaching the top. <strong>Drag</strong> to chain tiles together to remove them. " +
+         "If things get hairy, <strong>press 1-4</strong> to choose a color to SWEEP and remove them from the board. Be careful, though, all other " +
+         "meters will be depleted after each use.";
+   }
+
+   static loadSurvival() {
+      Config.EnableTimer = true;
+      Config.AdvanceRowsOnMatch = false;
+      Config.TimerValue = 5000;
+      Config.EnableSweepMeters = false;      
+      Config.EnableSweeper = true;
+      Config.SweepMovesUp = false;
+      Config.SweepMinRow = 3;
+      Config.SweepMaxRow = Config.GridCellsHigh - 6;
+      Config.SweepAltThreshold = 20;
+      Config.SweepAltThresholdDelta = 5;
+      Config.SweepAltMinThreshold = 10;
+      Config.SweepAltMaxThreshold = 50;
+
+      document.getElementById("instructions").innerHTML =
+         "Battle against the clock and stop the tiles from reaching the top. <strong>Drag</strong> to chain tiles together to remove them. " +
+         "If things get hairy, press <strong>S</strong> to SWEEP everything above the sweeper line! Each time the sweeper will move " +
+         "down. As time goes on, it'll cost less to earn a SWEEP so play wisely.";
+   }
+
+   static loadSurvivalReverse() {
+      Config.EnableTimer = true;
+      Config.AdvanceRowsOnMatch = false;
+      Config.TimerValue = 3000;
+      Config.EnableSweepMeters = false;
+      Config.EnableSweeper = true;
+      Config.SweepMovesUp = true;
+      Config.SweepMinRow = 3;
+      Config.SweepMaxRow = Config.GridCellsHigh - 2;
+      Config.SweepAltThreshold = 50;
+      Config.SweepAltThresholdDelta = 5;
+      Config.SweepAltMinThreshold = 10;
+      Config.SweepAltMaxThreshold = 50;
+
+      document.getElementById("instructions").innerHTML =
+      "Battle against the clock and stop the tiles from reaching the top. <strong>Drag</strong> to chain tiles together to remove them. " +
+      "If things get hairy, press <strong>S</strong> to SWEEP everything above the sweeper line! Each time the sweeper will move up. " +
+      "As time goes on, it'll cost more to earn a SWEEP so play wisely.";
+   }
+
 }

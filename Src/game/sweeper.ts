@@ -74,10 +74,12 @@ class Sweeper extends ex.Actor {
       stats.resetSweeperMeter();
 
       // advance sweeper
-      // todo advance every so often?
-      if (this._row < Config.SweepMaxRow) {
+      if (!Config.SweepMovesUp && this._row < Config.SweepMaxRow) {
          this._row++;
          this.moveBy(this.x, this.y + Config.CellHeight, 200);
+      } else if (Config.SweepMovesUp && this._row > Config.SweepMinRow) {
+         this._row--;
+         this.moveBy(this.x, this.y - Config.CellHeight, 200);
       }
 
       turnManager.advanceTurn();
