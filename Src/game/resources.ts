@@ -11,6 +11,14 @@ var Resources = {
    Note7Sound: new ex.Sound('sounds/note7.mp3'),
    Note8Sound: new ex.Sound('sounds/note8.mp3'),
 
+   ChallengeLoopSound: new ex.Sound('sounds/challengeloopfixed.mp3'),
+   ChallengeNote1Sound: new ex.Sound('sounds/challengenote1.mp3'),
+   ChallengeNote2Sound: new ex.Sound('sounds/challengenote2.mp3'),
+   ChallengeNote3Sound: new ex.Sound('sounds/challengenote3.mp3'),
+   ChallengeNote4Sound: new ex.Sound('sounds/challengenote4.mp3'),
+   ChallengeNote5Sound: new ex.Sound('sounds/challengenote5.mp3'),
+   ChallengeNote6Sound: new ex.Sound('sounds/challengenote6.mp3'),
+
    // Textures
    // TextureLevel: new ex.Texture("/images/tex-1.jpg")
 
