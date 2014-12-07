@@ -18,6 +18,7 @@
    private _scores = [this._numCirclesDestroyed, this._numTrianglesDestroyed, this._numSquaresDestroyed, this._numStarsDestroyed];
    private _meters = [this._numCirclesDestroyedMeter, this._numTrianglesDestroyedMeter, this._numSquaresDestroyedMeter, this._numStarsDestroyedMeter];
    private _chains = [this._longestCircleCombo, this._longestTriangleCombo, this._longestSquareCombo, this._longestStarCombo];
+   private _lastChain: number = 0;
 
    constructor() {
 
@@ -43,6 +44,7 @@
    public scoreChain(pieces: Piece[]) {
 
       var chainScore = this._chains[this._types.indexOf(pieces[0].getType())];
+      this._lastChain = pieces.length;
 
       if (chainScore < pieces.length) {
          this._chains[this._types.indexOf(pieces[0].getType())] = pieces.length;
@@ -65,6 +67,12 @@
       this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
       this._addScore("chain ", this._chains, 2, scoreXPos, yPos += 20);
       this._addScore("chain ", this._chains, 3, scoreXPos, yPos += 20);
+
+      var lastChainLabel = new ex.Label("last chain " + this._lastChain, scoreXPos, yPos += 30);
+      game.addEventListener('update', (data?: ex.UpdateEvent) => {
+         lastChainLabel.text = "last chain " + this._lastChain;
+      });
+      game.currentScene.addChild(lastChainLabel);
    }
 
    private _addScore(description: String, statArray: Array<any>, statIndex: number, xPos: number, yPos: number) {

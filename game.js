@@ -506,6 +506,7 @@ var Stats = (function () {
         this._scores = [this._numCirclesDestroyed, this._numTrianglesDestroyed, this._numSquaresDestroyed, this._numStarsDestroyed];
         this._meters = [this._numCirclesDestroyedMeter, this._numTrianglesDestroyedMeter, this._numSquaresDestroyedMeter, this._numStarsDestroyedMeter];
         this._chains = [this._longestCircleCombo, this._longestTriangleCombo, this._longestSquareCombo, this._longestStarCombo];
+        this._lastChain = 0;
     }
     Stats.prototype.getMeter = function (pieceType) {
         return this._meters[this._types.indexOf(pieceType)];
@@ -521,11 +522,13 @@ var Stats = (function () {
     };
     Stats.prototype.scoreChain = function (pieces) {
         var chainScore = this._chains[this._types.indexOf(pieces[0].getType())];
+        this._lastChain = pieces.length;
         if (chainScore < pieces.length) {
             this._chains[this._types.indexOf(pieces[0].getType())] = pieces.length;
         }
     };
     Stats.prototype.drawScores = function () {
+        var _this = this;
         var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
         this._totalScore("total ", scoreXPos, 330);
         var yPos = 350;
@@ -537,6 +540,11 @@ var Stats = (function () {
         this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
         this._addScore("chain ", this._chains, 2, scoreXPos, yPos += 20);
         this._addScore("chain ", this._chains, 3, scoreXPos, yPos += 20);
+        var lastChainLabel = new ex.Label("last chain " + this._lastChain, scoreXPos, yPos += 30);
+        game.addEventListener('update', function (data) {
+            lastChainLabel.text = "last chain " + _this._lastChain;
+        });
+        game.currentScene.addChild(lastChainLabel);
     };
     Stats.prototype._addScore = function (description, statArray, statIndex, xPos, yPos) {
         var square = new ex.Actor(xPos, yPos, 15, 15, PieceTypeToColor[statIndex]);
