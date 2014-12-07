@@ -853,6 +853,13 @@ var Stats = (function () {
         this._lastChain = 0;
         this._sweepMeterThreshold = Config.SweepAltThreshold;
     }
+    Stats.prototype.getTotalScore = function () {
+        var totalScore = this._scores[0] + this._scores[1] + this._scores[2] + this._scores[3];
+        return totalScore;
+    };
+    Stats.prototype.getLongestChain = function () {
+        return Math.max.apply(Math, this._chains);
+    };
     Stats.prototype.getMeter = function (pieceType) {
         return this._meters[this._types.indexOf(pieceType)];
     };
@@ -1308,7 +1315,8 @@ var gameOverWidget = new UIWidget();
 //gameOverWidget.addButton(postYourScore);
 function gameOver() {
     if (analytics) {
-        analytics('send', 'event', 'ludum-30-stats', gameMode, 'total score', { 'nonInteraction': 1 });
+        analytics('send', 'event', 'ludum-30-stats', gameMode, 'total score', { 'eventValue': stats.getTotalScore(), 'nonInteraction': 1 });
+        analytics('send', 'event', 'ludum-30-stats', gameMode, 'longest chain', { 'eventValue': stats.getLongestChain(), 'nonInteraction': 1 });
     }
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
