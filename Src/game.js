@@ -419,26 +419,6 @@ var LogicalGrid = (function (_super) {
         }
         mask.kill();
         game.add(mask);
-        //} else {
-        //   for (var i = 0; i < this.cols; i++) {
-        //      (() => {
-        //         var currentPiece = PieceFactory.getRandomPiece();
-        //         var currentCell = this.setCell(i, row, currentPiece, !smooth);
-        //         var neighbors = currentCell.getNeighbors();
-        //         var hasMatchingNeighbor = false;
-        //         for (var j = 0; j < neighbors.length; j++) {
-        //            if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
-        //               hasMatchingNeighbor = true;
-        //               break;
-        //            }
-        //         }
-        //         if (hasMatchingNeighbor) {
-        //            if (currentCell.piece) {
-        //               this.clearPiece(currentCell.piece);
-        //            }
-        //            this.setCell(i, row, PieceFactory.getRandomPiece(), !smooth);
-        //         }
-        //      })(); }}
     };
     LogicalGrid.prototype.shift = function (from, to) {
         var _this = this;
@@ -865,7 +845,7 @@ var Stats = (function () {
     Stats.prototype.canSweep = function (type) {
         if (type === void 0) { type = null; }
         if (type !== null) {
-            return this.getMeter(type) > Config.SweepThreshold;
+            return this.getMeter(type) >= Config.SweepThreshold;
         }
         else {
             return this._sweepMeter === this._sweepMeterThreshold;
