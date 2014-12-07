@@ -172,6 +172,7 @@ class LogicalGrid extends ex.Class {
                matcher.gameOver = true;
                var gameOverLabel = new ex.Label("GAME OVER", visualGrid.x + visualGrid.getWidth() + 30, visualGrid.y + visualGrid.getHeight() / 2);
                game.currentScene.addChild(gameOverLabel);
+               gameOver();
             }
          } else if (this.getCell(i, from).piece) {
             (() => {
