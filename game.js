@@ -119,6 +119,11 @@ var PieceFactory = (function () {
         game.add(piece);
         return piece;
     };
+    PieceFactory.getPiece = function (type) {
+        var piece = new Piece(PieceFactory._maxId++, 0, 0, PieceTypeToColor[type].clone(), type);
+        game.add(piece);
+        return piece;
+    };
     PieceFactory._maxId = 0;
     return PieceFactory;
 })();
@@ -213,22 +218,59 @@ var LogicalGrid = (function (_super) {
         piece.cell = null;
         piece.kill();
     };
-    LogicalGrid.prototype.fill = function (row) {
-        for (var i = 0; i < this.cols; i++) {
-            var currentCell = this.setCell(i, row, PieceFactory.getRandomPiece());
-            var neighbors = currentCell.getNeighbors();
-            var hasMatchingNeighbor = false;
-            for (var j = 0; j < neighbors.length; j++) {
-                if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
-                    hasMatchingNeighbor = true;
-                    break;
-                }
+    LogicalGrid.prototype.fill = function (row, smooth) {
+        var _this = this;
+        if (smooth === void 0) { smooth = false; }
+        if (smooth) {
+            for (var i = 0; i < this.cols; i++) {
+                (function () {
+                    var piece = PieceFactory.getRandomPiece();
+                    var cell = _this.getCell(i, row);
+                    piece.x = cell.getCenter().x;
+                    piece.y = mask.y + Config.CellHeight;
+                    var intendedCell = _this.setCell(i, row, piece, false);
+                    var hasSameType = intendedCell.getNeighbors().some(function (c) {
+                        if (c && c.piece) {
+                            return c.piece.getType() === piece.getType();
+                        }
+                        return false;
+                    });
+                    if (hasSameType) {
+                        _this.clearPiece(piece);
+                        piece = PieceFactory.getRandomPiece();
+                        piece.x = cell.getCenter().x;
+                        piece.y = mask.y + Config.CellHeight;
+                        _this.setCell(i, row, piece, false);
+                    }
+                    piece.moveTo(cell.getCenter().x, cell.getCenter().y, 300).asPromise().then(function () {
+                        piece.x = cell.getCenter().x;
+                        piece.y = cell.getCenter().y;
+                    });
+                })();
             }
-            if (hasMatchingNeighbor) {
-                if (currentCell.piece) {
-                    this.clearPiece(currentCell.piece);
-                }
-                this.setCell(i, row, PieceFactory.getRandomPiece());
+            mask.kill();
+            game.add(mask);
+        }
+        else {
+            for (var i = 0; i < this.cols; i++) {
+                (function () {
+                    var currentPiece = PieceFactory.getRandomPiece();
+                    var currentCell = _this.setCell(i, row, currentPiece, !smooth);
+                    var neighbors = currentCell.getNeighbors();
+                    var hasMatchingNeighbor = false;
+                    for (var j = 0; j < neighbors.length; j++) {
+                        if ((neighbors[j].piece) && currentCell.piece.getType() == neighbors[j].piece.getType()) {
+                            hasMatchingNeighbor = true;
+                            break;
+                        }
+                    }
+                    if (hasMatchingNeighbor) {
+                        if (currentCell.piece) {
+                            _this.clearPiece(currentCell.piece);
+                        }
+                        _this.setCell(i, row, PieceFactory.getRandomPiece(), !smooth);
+                    }
+                })();
             }
         }
     };
@@ -259,11 +301,7 @@ var LogicalGrid = (function (_super) {
                 })();
             }
         }
-        var agg = ex.Promise.join.apply(null, promises).then(function () {
-            console.log("Yo", from, to);
-        }).error(function (e) {
-            console.log(e);
-        });
+        var agg = ex.Promise.join.apply(null, promises);
         if (promises.length) {
             return agg;
         }
@@ -520,7 +558,7 @@ var TurnManager = (function () {
             return p;
         });
         ex.Promise.join.apply(null, promises).then(function () {
-            _this.logicalGrid.fill(grid.rows - 1);
+            _this.logicalGrid.fill(grid.rows - 1, true);
         }).error(function (e) {
             console.log(e);
         });
@@ -579,7 +617,12 @@ var TransitionManager = (function () {
                 }
             });
         }
-        return ex.Promise.join.apply(null, promises);
+        if (promises.length) {
+            return ex.Promise.join.apply(null, promises);
+        }
+        else {
+            return ex.Promise.wrap(true);
+        }
     };
     return TransitionManager;
 })();
@@ -837,9 +880,8 @@ var matcher = new MatchManager();
 var turnManager = new TurnManager(grid, matcher, 1 /* Match */);
 var transitionManager = new TransitionManager(grid, visualGrid);
 var sweeper = new Sweeper(Config.SweepStartRow);
-var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
+var mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, Config.GridCellsWide * Config.CellWidth + 15, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
 mask.anchor.setTo(0, 0);
-game.add(mask);
 InitSetup(visualGrid, stats);
 //reset the game
 function InitSetup(visualGrid, stats) {
@@ -854,6 +896,8 @@ function InitSetup(visualGrid, stats) {
         grid.fill(grid.rows - (i + 1));
     }
     stats.drawScores();
+    mask.kill();
+    game.add(mask);
 }
 if (Config.EnableSweeper) {
     game.add(sweeper);
