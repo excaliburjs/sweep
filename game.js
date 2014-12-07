@@ -26,6 +26,7 @@ var Config = (function () {
         Config.AdvanceRowsOnMatch = true;
         Config.SweepThreshold = 15;
         Config.EnableSweepMeters = true;
+        Config.EnableSingleTapClear = false;
         Config.ClearSweepMetersAfterSingleUse = true;
         Config.EnableSweeper = false;
         Config.SweepMovesUp = false;
@@ -43,7 +44,8 @@ var Config = (function () {
     Config.loadSurvival = function () {
         Config.EnableTimer = true;
         Config.AdvanceRowsOnMatch = false;
-        Config.TimerValue = 5000;
+        Config.TimerValue = 1000;
+        Config.EnableSingleTapClear = true;
         Config.EnableSweepMeters = false;
         Config.EnableSweeper = true;
         Config.SweepMovesUp = false;
@@ -58,7 +60,8 @@ var Config = (function () {
     Config.loadSurvivalReverse = function () {
         Config.EnableTimer = true;
         Config.AdvanceRowsOnMatch = false;
-        Config.TimerValue = 3000;
+        Config.TimerValue = 1000;
+        Config.EnableSingleTapClear = true;
         Config.EnableSweepMeters = false;
         Config.EnableSweeper = true;
         Config.SweepMovesUp = true;
@@ -278,6 +281,39 @@ var LogicalGrid = (function (_super) {
             piece.cell = null;
             piece.kill();
         }
+    };
+    /* private _getPieceGroupHelper(currentPiece: Piece, currentGroup: Piece[]) {
+        var unexploredNeighbors = currentPiece.cell.getNeighbors().filter(c => {
+           return c.piece && currentGroup.indexOf(c.piece) === -1 && c.piece.getType() === currentPiece.getType();
+        }).map(c => c.piece);
+        currentGroup = currentGroup.concat(unexploredNeighbors);
+        if (unexploredNeighbors.length === 0) {
+           return currentGroup;
+        } else {
+           for (var i = 0; i < unexploredNeighbors.length; i++) {
+              this._getPieceGroupHelper(unexploredNeighbors[i], currentGroup);
+           }
+           return currentGroup;
+        }
+     }*/
+    LogicalGrid.prototype.getAdjacentPieceGroup = function (piece) {
+        var currentGroup = [piece];
+        function _getPieceGroupHelper(currentPiece) {
+            var unexploredNeighbors = currentPiece.cell.getNeighbors().filter(function (c) {
+                return c.piece && currentGroup.indexOf(c.piece) === -1 && c.piece.getType() === currentPiece.getType();
+            }).map(function (c) { return c.piece; });
+            currentGroup = currentGroup.concat(unexploredNeighbors);
+            if (unexploredNeighbors.length === 0) {
+                return;
+            }
+            else {
+                for (var i = 0; i < unexploredNeighbors.length; i++) {
+                    _getPieceGroupHelper(unexploredNeighbors[i]);
+                }
+            }
+        }
+        _getPieceGroupHelper(piece);
+        return currentGroup;
     };
     LogicalGrid.prototype.fill = function (row, smooth) {
         var _this = this;
@@ -503,11 +539,20 @@ var MatchManager = (function (_super) {
             if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
                 return;
             }
-            this.runInProgress = true;
-            cell.piece.selected = true;
-            this._run.push(cell.piece);
-            this._playNote();
-            ex.Logger.getInstance().info("Run started", this._run);
+            if (!Config.EnableSingleTapClear) {
+                this.runInProgress = true;
+                cell.piece.selected = true;
+                this._run.push(cell.piece);
+                this._playNote();
+                ex.Logger.getInstance().info("Run started", this._run);
+            }
+            else {
+                this._run = grid.getAdjacentPieceGroup(cell.piece);
+                // notify
+                this.eventDispatcher.publish("match", new MatchEvent(_.clone(this._run)));
+                this._run.forEach(function (p) { return p.selected = false; });
+                this._run.length = 0;
+            }
         }
     };
     MatchManager.prototype._handlePointerMove = function (pe) {
@@ -522,31 +567,35 @@ var MatchManager = (function (_super) {
             var piece = cell.piece;
             if (!piece)
                 return;
-            var removePiece = -1;
-            var containsBounds = new ex.BoundingBox(piece.getBounds().left + Config.PieceContainsPadding, piece.getBounds().top + Config.PieceContainsPadding, piece.getBounds().right - Config.PieceContainsPadding, piece.getBounds().bottom - Config.PieceContainsPadding);
-            // if piece contains screen coords and we don't already have it in the run
-            if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
-                // if the two pieces aren't neighbors or aren't the same type, invalid move
-                if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) || piece.getType() !== this._run[this._run.length - 1].getType()))
-                    return;
-                // add to run
-                piece.selected = true;
-                this._run.push(piece);
-                this._playNote();
-                ex.Logger.getInstance().info("Run modified", this._run);
-                // notify
-                this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
+            if (!Config.EnableSingleTapClear) {
+                var removePiece = -1;
+                var containsBounds = new ex.BoundingBox(piece.getBounds().left + Config.PieceContainsPadding, piece.getBounds().top + Config.PieceContainsPadding, piece.getBounds().right - Config.PieceContainsPadding, piece.getBounds().bottom - Config.PieceContainsPadding);
+                // if piece contains screen coords and we don't already have it in the run
+                if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
+                    // if the two pieces aren't neighbors or aren't the same type, invalid move
+                    if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) || piece.getType() !== this._run[this._run.length - 1].getType()))
+                        return;
+                    // add to run
+                    piece.selected = true;
+                    this._run.push(piece);
+                    this._playNote();
+                    ex.Logger.getInstance().info("Run modified", this._run);
+                    // notify
+                    this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
+                }
+                // did user go backwards?
+                if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
+                    // mark for removal
+                    removePiece = this._run.indexOf(piece) + 1;
+                }
+                if (removePiece > -1) {
+                    // remove from run
+                    this._run[removePiece].selected = false;
+                    this._run.splice(removePiece, 1);
+                    ex.Logger.getInstance().info("Run modified", this._run);
+                }
             }
-            // did user go backwards?
-            if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
-                // mark for removal
-                removePiece = this._run.indexOf(piece) + 1;
-            }
-            if (removePiece > -1) {
-                // remove from run
-                this._run[removePiece].selected = false;
-                this._run.splice(removePiece, 1);
-                ex.Logger.getInstance().info("Run modified", this._run);
+            else {
             }
         }
     };
