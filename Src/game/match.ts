@@ -8,14 +8,15 @@
 
 class MatchManager extends ex.Class {
 
-   private _notes: ex.Sound[] = [Resources.Note1Sound,
-      Resources.Note2Sound,
-      Resources.Note3Sound,
-      Resources.Note4Sound,
-      Resources.Note5Sound,
-      Resources.Note6Sound,
-      Resources.Note7Sound,
-      Resources.Note8Sound]
+   private _notes: ex.Sound[] = [
+      Resources.ChallengeNote1Sound,
+      Resources.ChallengeNote2Sound,
+      Resources.ChallengeNote3Sound,
+      Resources.ChallengeNote4Sound,
+      Resources.ChallengeNote5Sound,
+      Resources.ChallengeNote6Sound
+      /*Resources.ChallengeNote7Sound,
+      Resources.ChallengeNote8Sound*/]
 
    private _run: Piece[] = [];   
 

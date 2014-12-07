@@ -96,6 +96,13 @@ var Resources = {
     Note6Sound: new ex.Sound('sounds/note6.mp3'),
     Note7Sound: new ex.Sound('sounds/note7.mp3'),
     Note8Sound: new ex.Sound('sounds/note8.mp3'),
+    ChallengeLoopSound: new ex.Sound('sounds/challengeloopfixed.mp3'),
+    ChallengeNote1Sound: new ex.Sound('sounds/challengenote1.mp3'),
+    ChallengeNote2Sound: new ex.Sound('sounds/challengenote2.mp3'),
+    ChallengeNote3Sound: new ex.Sound('sounds/challengenote3.mp3'),
+    ChallengeNote4Sound: new ex.Sound('sounds/challengenote4.mp3'),
+    ChallengeNote5Sound: new ex.Sound('sounds/challengenote5.mp3'),
+    ChallengeNote6Sound: new ex.Sound('sounds/challengenote6.mp3'),
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
@@ -468,7 +475,14 @@ var MatchManager = (function (_super) {
     function MatchManager() {
         var _this = this;
         _super.call(this);
-        this._notes = [Resources.Note1Sound, Resources.Note2Sound, Resources.Note3Sound, Resources.Note4Sound, Resources.Note5Sound, Resources.Note6Sound, Resources.Note7Sound, Resources.Note8Sound];
+        this._notes = [
+            Resources.ChallengeNote1Sound,
+            Resources.ChallengeNote2Sound,
+            Resources.ChallengeNote3Sound,
+            Resources.ChallengeNote4Sound,
+            Resources.ChallengeNote5Sound,
+            Resources.ChallengeNote6Sound
+        ];
         this._run = [];
         this.gameOver = false;
         this.dispose = function () {
@@ -1050,6 +1064,7 @@ function gameOver() {
 // TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {
     // play some sounds
-    Resources.LoopSound.setLoop(true);
-    Resources.LoopSound.play();
+    Resources.ChallengeLoopSound.setLoop(true);
+    Resources.ChallengeLoopSound.setVolume(.5);
+    Resources.ChallengeLoopSound.play();
 });

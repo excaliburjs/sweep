@@ -144,7 +144,10 @@ function gameOver() {
 game.start(loader).then(() => {
    
    // play some sounds
-   Resources.LoopSound.setLoop(true);
-   Resources.LoopSound.play();
+   Resources.ChallengeLoopSound.setLoop(true);
+   Resources.ChallengeLoopSound.setVolume(.5);
+   Resources.ChallengeLoopSound.play();
+
+   
 
 });
