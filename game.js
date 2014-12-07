@@ -58,6 +58,11 @@ var SaturateEffect = (function () {
     };
     return SaturateEffect;
 })();
+var GameMode;
+(function (GameMode) {
+    GameMode[GameMode["Standard"] = 0] = "Standard";
+    GameMode[GameMode["Timed"] = 1] = "Timed";
+})(GameMode || (GameMode = {}));
 var Config = (function () {
     function Config() {
     }
@@ -1197,6 +1202,8 @@ var UIWidget = (function (_super) {
 var _this = this;
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game");
 game.backgroundColor = Palette.GameBackgroundColor;
+var analytics = window.ga;
+var gameMode = 0 /* Standard */;
 var loader = new ex.Loader();
 // load up all resources in dictionary
 _.forIn(Resources, function (resource) {
@@ -1280,6 +1287,9 @@ var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
 function gameOver() {
+    if (analytics) {
+        analytics('send', 'event', 'ludum-30-stats', gameMode, 'total score', { 'nonInteraction': 1 });
+    }
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
     var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
