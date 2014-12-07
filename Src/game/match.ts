@@ -11,6 +11,11 @@ class MatchManager extends ex.Class {
    private _run: Piece[] = [];   
 
    public gameOver: boolean = false;
+   public dispose = function () {
+      game.input.pointers.primary.off("down", _.bind(this._handlePointerDown, this));
+      game.input.pointers.primary.off("up", _.bind(this._handlePointerUp, this));
+      game.input.pointers.primary.off("move", _.bind(this._handlePointerMove, this));
+   }
 
    constructor() {
       super();
@@ -44,7 +49,7 @@ class MatchManager extends ex.Class {
       if (!this.gameOver) {
          var cell = visualGrid.getCellByPos(pe.x, pe.y);
 
-         if (!cell || this.runInProgress) {
+         if (!cell || this.runInProgress || !cell.piece) {
             return;
          }
 
