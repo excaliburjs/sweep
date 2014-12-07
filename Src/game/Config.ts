@@ -17,6 +17,7 @@
    // game modes
    //
    static EnableTimer: boolean;
+   static EnableSingleTapClear: boolean;
    static TimerValue: number;
    static AdvanceRowsOnMatch: boolean;
 
@@ -44,6 +45,7 @@
       Config.AdvanceRowsOnMatch = true;
       Config.SweepThreshold = 15;
       Config.EnableSweepMeters = true;
+      Config.EnableSingleTapClear = false;
       Config.ClearSweepMetersAfterSingleUse = true;
 
       Config.EnableSweeper = false;
@@ -67,7 +69,8 @@
    static loadSurvival() {
       Config.EnableTimer = true;
       Config.AdvanceRowsOnMatch = false;
-      Config.TimerValue = 5000;
+      Config.TimerValue = 1000;
+      Config.EnableSingleTapClear = true;
       Config.EnableSweepMeters = false;      
       Config.EnableSweeper = true;
       Config.SweepMovesUp = false;
@@ -77,6 +80,7 @@
       Config.SweepAltThresholdDelta = 5;
       Config.SweepAltMinThreshold = 10;
       Config.SweepAltMaxThreshold = 50;
+      
 
       document.getElementById("instructions").innerHTML =
          "Battle against the clock and stop the tiles from reaching the top. <strong>Drag</strong> to chain tiles together to remove them. " +
@@ -87,7 +91,8 @@
    static loadSurvivalReverse() {
       Config.EnableTimer = true;
       Config.AdvanceRowsOnMatch = false;
-      Config.TimerValue = 3000;
+      Config.TimerValue = 1000;
+      Config.EnableSingleTapClear = true;
       Config.EnableSweepMeters = false;
       Config.EnableSweeper = true;
       Config.SweepMovesUp = true;
