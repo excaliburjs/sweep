@@ -38,6 +38,17 @@ class Config {
    static EnableSweepMeters: boolean;
    static ClearSweepMetersAfterSingleUse: boolean;
 
+   static SweepScoreMultiplier: number = 2;
+
+   static ChainThresholdSmall: number = 8;
+   static ChainThresholdMedium: number = 11;
+   static ChainThresholdLarge: number = 15;
+
+   static ChainBonusSmall: number = 5;
+   static ChainBonusMedium: number = 10;
+   static ChainBonusLarge: number = 25;
+   static ChainBonusSuper: number = 50;
+
    // alt sweep mechanic 1
    static EnableSweeper: boolean;
    static SweepMovesUp: boolean;
