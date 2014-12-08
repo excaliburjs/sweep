@@ -108,7 +108,7 @@ var Config = (function () {
     Config.loadSurvivalReverse = function () {
         Config.EnableTimer = true;
         Config.AdvanceRowsOnMatch = false;
-        Config.TimerValue = 1000;
+        Config.TimerValue = 1500;
         Config.EnableSingleTapClear = true;
         Config.EnableSweepMeters = false;
         Config.EnableSweeper = true;
@@ -433,7 +433,7 @@ var LogicalGrid = (function (_super) {
                     _this.setCell(i, row, piece, !smooth);
                 }
                 if (smooth) {
-                    piece.moveTo(cell.getCenter().x, cell.getCenter().y, 300).asPromise().then(function () {
+                    piece.easeTo(cell.getCenter().x, cell.getCenter().y, 300, ex.EasingFunctions.EaseInOutCubic).asPromise().then(function () {
                         piece.x = cell.getCenter().x;
                         piece.y = cell.getCenter().y;
                     });
@@ -465,7 +465,7 @@ var LogicalGrid = (function (_super) {
                 (function () {
                     var p = _this.getCell(i, from).piece;
                     var dest = _this.getCell(i, to).getCenter();
-                    promises.push(p.moveTo(dest.x, dest.y, 300).asPromise());
+                    promises.push(p.easeTo(dest.x, dest.y, 300, ex.EasingFunctions.EaseInOutCubic).asPromise());
                     _this.setCell(i, to, _this.getCell(i, from).piece, false);
                     _this.setCell(i, from, null);
                 })();
@@ -731,6 +731,7 @@ var TurnManager = (function () {
         this.logicalGrid = logicalGrid;
         this.matcher = matcher;
         this.turnMode = turnMode;
+        this.currentPromise = ex.Promise.wrap(true);
         matcher.on('match', _.bind(this._handleMatchEvent, this));
         this._timer = new ex.Timer(_.bind(this._tick, this), Config.TimerValue, true);
         game.add(this._timer);
@@ -741,43 +742,52 @@ var TurnManager = (function () {
     TurnManager.prototype.advanceTurn = function (isMatch) {
         var _this = this;
         if (isMatch === void 0) { isMatch = false; }
+        if (this.currentPromise && this.currentPromise.state() === 2 /* Pending */) {
+            this.currentPromise.resolve();
+        }
         transitionManager.evaluate().then(function () {
             if (isMatch && Config.AdvanceRowsOnMatch) {
-                _this.advanceRows();
+                _this.currentPromise = _this.advanceRows();
             }
             else if (!isMatch) {
-                _this.advanceRows();
+                _this.currentPromise = _this.advanceRows();
             }
             console.log("Done!");
         });
     };
     TurnManager.prototype.advanceRows = function () {
-        var _this = this;
         var promises = [];
         for (var i = 0; i < grid.rows; i++) {
             promises.push(this.logicalGrid.shift(i, i - 1));
         }
+        this.logicalGrid.fill(grid.rows - 1, true);
         // fill first row
         promises = _.filter(promises, function (p) {
             return p;
         });
-        ex.Promise.join.apply(null, promises).then(function () {
-            _this.logicalGrid.fill(grid.rows - 1, true);
+        return ex.Promise.join.apply(null, promises).then(function () {
+            //this.logicalGrid.fill(grid.rows - 1, true);
         }).error(function (e) {
             console.log(e);
         });
     };
     TurnManager.prototype._handleMatchEvent = function (evt) {
+        var _this = this;
         if (evt.run.length >= 3) {
-            stats.scorePieces(evt.run);
-            stats.scoreChain(evt.run);
-            evt.run.forEach(function (p) { return grid.clearPiece(p); });
-            this.advanceTurn(true);
+            this.currentPromise.then(function () {
+                stats.scorePieces(evt.run);
+                stats.scoreChain(evt.run);
+                evt.run.forEach(function (p) { return grid.clearPiece(p); });
+                _this.advanceTurn(true);
+            });
         }
     };
     TurnManager.prototype._tick = function () {
+        var _this = this;
         if (this.turnMode === 0 /* Timed */) {
-            this.advanceRows();
+            this.currentPromise.then(function () {
+                _this.advanceRows();
+            });
         }
         //ex.Logger.getInstance().info("Tick", new Date());
     };
@@ -816,7 +826,7 @@ var TransitionManager = (function () {
                     var piece = c.piece;
                     _this.logicalGrid.setCell(c.x, c.y, null);
                     _this.logicalGrid.setCell(landingCell.x, landingCell.y, piece, false);
-                    var promise = piece.moveTo(landingCell.getCenter().x, landingCell.getCenter().y, 300).asPromise();
+                    var promise = piece.easeTo(landingCell.getCenter().x, landingCell.getCenter().y, 300, ex.EasingFunctions.EaseInOutCubic).asPromise();
                     promises.push(promise);
                 }
             });

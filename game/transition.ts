@@ -34,7 +34,7 @@ class TransitionManager {
                var piece = c.piece;
                this.logicalGrid.setCell(c.x, c.y, null);
                this.logicalGrid.setCell(landingCell.x, landingCell.y, piece, false);
-               var promise = piece.moveTo(landingCell.getCenter().x, landingCell.getCenter().y, 300).asPromise();
+               var promise = piece.easeTo(landingCell.getCenter().x, landingCell.getCenter().y, 300, ex.EasingFunctions.EaseInOutCubic).asPromise();
                promises.push(promise);
             }
          });
