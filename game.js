@@ -1035,6 +1035,7 @@ var Stats = (function () {
         this._lastChainBonus = 0;
         this._totalChainBonus = 0;
         this._totalPiecesSwept = 0;
+        this._finalScore = 0;
         this._sweepMeterThreshold = Config.SweepAltThreshold;
         this._meterActors = new Array();
         this._meterLabels = new Array();
@@ -1109,6 +1110,21 @@ var Stats = (function () {
             modifiedScore = currentScore * Config.SweepScoreMultiplier;
         }
         return modifiedScore;
+    };
+    Stats.prototype.calculateEnduranceBonus = function () {
+        var enduranceMultiplier = 0;
+        if (gameMode == 0 /* Standard */) {
+            enduranceMultiplier = this._turnNumber * Config.StandardModeMultiplier;
+            this._finalScore = this.getTotalScore() + enduranceMultiplier;
+        }
+        else if (gameMode == 1 /* Timed */) {
+            enduranceMultiplier = Math.round(turnManager.getTime() / 1000 / 60) * Config.TimedModeMultiplier;
+            this._finalScore = this.getTotalScore() + enduranceMultiplier;
+        }
+        return enduranceMultiplier;
+    };
+    Stats.prototype.getFinalScore = function () {
+        return this._finalScore;
     };
     Stats.prototype.chainBonus = function (pieces) {
         var chain = pieces.length;
@@ -1777,7 +1793,7 @@ function playGameOver() {
     Resources.GameOverSound.play();
 }
 function gameOver() {
-    var totalScore = stats.getTotalScore();
+    var totalScore = stats.getFinalScore();
     var longestChain = stats.getLongestChain();
     var turnsTaken = stats.getTurnNumber();
     var timeElapsed = Math.round(turnManager.getTime() / 1000 / 60);
@@ -1798,8 +1814,10 @@ function gameOver() {
     document.getElementById("game-over").className = "show";
     document.getElementById("game-over-swept").innerHTML = stats.getTotalPiecesSwept().toString();
     document.getElementById("game-over-chain").innerHTML = stats.getTotalChainBonus().toString();
-    document.getElementById("game-over-multiplier").innerHTML = (stats.getTotalScore() - stats.getTotalChainBonus() - stats.getTotalPiecesSwept()).toString();
-    document.getElementById("game-over-total").innerHTML = stats.getTotalScore().toString();
+    var enduranceBonus = stats.calculateEnduranceBonus();
+    document.getElementById("game-over-multiplier").innerHTML = (stats.getFinalScore() - enduranceBonus - stats.getTotalChainBonus() - stats.getTotalPiecesSwept()).toString();
+    document.getElementById("game-over-time").innerHTML = enduranceBonus.toString();
+    document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
     //var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
     //var gameOverWidgetActor = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() - 800, 300, 300, color);
     //game.addChild(gameOverWidgetActor);

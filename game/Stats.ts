@@ -34,6 +34,7 @@
    private _lastChainBonus: number = 0;
    private _totalChainBonus: number = 0;
    private _totalPiecesSwept: number = 0;
+   private _finalScore: number = 0;
 
    constructor() {
       this._sweepMeterThreshold = Config.SweepAltThreshold;
@@ -125,6 +126,22 @@
          modifiedScore = currentScore * Config.SweepScoreMultiplier;
       }
       return modifiedScore;
+   }
+
+   public calculateEnduranceBonus(): number {
+      var enduranceMultiplier = 0;
+      if (gameMode == GameMode.Standard) {
+         enduranceMultiplier = this._turnNumber * Config.StandardModeMultiplier;
+         this._finalScore = this.getTotalScore() + enduranceMultiplier;
+      } else if (gameMode == GameMode.Timed) {
+         enduranceMultiplier = Math.round(turnManager.getTime() / 1000 / 60) * Config.TimedModeMultiplier;
+         this._finalScore = this.getTotalScore() + enduranceMultiplier;
+      }
+      return enduranceMultiplier;
+   }
+
+   public getFinalScore(): number {
+      return this._finalScore;
    }
 
    public chainBonus(pieces: Piece[]): number {
