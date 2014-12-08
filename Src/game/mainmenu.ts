@@ -15,7 +15,7 @@
    constructor() {
       super();
 
-      this.color = new ex.Color(0, 0, 0, 0.9);
+      this.color = new ex.Color(0, 0, 0, 0.9);                     
    }
 
    public onInitialize(engine: ex.Engine) {
@@ -79,7 +79,7 @@
 
    public hide() {
       this.visible = false;
-      this._logo.visible = false;      
+      this._logo.visible = false;
       this._standardButton.visible = false;
       this._standardButton.enableCapturePointer = false;
       this._challengeButton.visible = false;

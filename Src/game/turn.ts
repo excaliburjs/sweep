@@ -51,11 +51,13 @@ class TurnManager {
       // fill first row
       promises = _.filter(promises, (p) => { return p; });
       return ex.Promise.join.apply(null, promises).then(() => {
-         if (grid.getNumAvailablePieces() <= 0) {
-            //reset the board if there are no legal moves
-            sweeper.sweepAll(true);
+         if (gameMode == GameMode.Standard) {
+            if (grid.getNumAvailablePieces() <= 0) {
+               //reset the board if there are no legal moves
+               sweeper.sweepAll(true);
+            }
+            //this.logicalGrid.fill(grid.rows - 1, true);
          }
-         //this.logicalGrid.fill(grid.rows - 1, true);
       }).error((e) => {
          console.log(e);
       });
