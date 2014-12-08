@@ -35,7 +35,6 @@ class TurnManager {
          } else if (!isMatch) {
             this.currentPromise = this.advanceRows();
          }
-         console.log("Done!");
       });
    }
 
@@ -54,7 +53,16 @@ class TurnManager {
          if (gameMode == GameMode.Standard) {
             if (grid.getNumAvailablePieces() <= 0) {
                //reset the board if there are no legal moves
-               sweeper.sweepAll(true);
+               //debugger;
+               //sweeper.sweepAll(true);
+               
+               grid.getPieces().forEach(p => {
+                  effects.clearEffect(p);
+                  grid.clearPiece(p);
+               });
+               noMoves.play().then(() => {
+                  this.logicalGrid.seed(Config.NumStartingRows, true);
+               });
             }
             //this.logicalGrid.fill(grid.rows - 1, true);
          }

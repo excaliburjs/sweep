@@ -13,6 +13,8 @@ var Background = (function (_super) {
         this.addDrawing(texture);
     }
     Background.prototype.update = function (engine, delta) {
+        this.corner = engine.screenToWorldCoordinates(new ex.Point(0, 0));
+        this.x = this.corner.x - 20;
         _super.prototype.update.call(this, engine, delta);
         if (this.x < this.corner.x - this.texture.width || this.x > game.getWidth()) {
             this.x = this.corner.x;
@@ -106,25 +108,26 @@ var Config = (function () {
         Config.SweepAltMinThreshold = 10;
         Config.SweepAltMaxThreshold = 50;
     };
+    Config.gameWidth = 720;
+    Config.gameHeight = 720;
     Config.PieceContainsPadding = 5;
     Config.PieceWidth = 36;
     Config.PieceHeight = 36;
     Config.CellWidth = 45;
     Config.CellHeight = 45;
-    Config.GridY = -10;
-    Config.GridCellsHigh = 11;
+    Config.GridCellsHigh = 12;
     Config.GridCellsWide = 6;
     Config.NumStartingRows = 3;
     Config.ScoreXBuffer = 20;
-    Config.MeterWidth = 45;
-    Config.MeterHeight = 27;
-    Config.MeterMargin = 8;
+    Config.MeterWidth = 90;
+    Config.MeterHeight = 30;
     Config.EnableGridLines = false;
     Config.PolylineThickness = 5;
     Config.MainMenuButtonWidth = 185;
     Config.MainMenuButtonHeight = 62;
     Config.SweepShakeDuration = 400;
     Config.MegaSweepShakeDuration = 500;
+    Config.MegaSweepDelay = 600;
     return Config;
 })();
 var Effects = (function () {
@@ -261,11 +264,10 @@ var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
     GridBackgroundColor: new ex.Color(0, 20, 25, 0.9),
     // Beach
-    PieceColor1: ex.Color.fromHex("#174e5e"),
-    PieceColor2: ex.Color.fromHex("#43385a"),
-    PieceColor3: ex.Color.fromHex("#4c603a"),
-    PieceColor4: ex.Color.fromHex("#c17b55"),
-    MegaSweepColor: ex.Color.fromHex("#55c192"),
+    PieceColor1: ex.Color.fromHex("#DBB96D"),
+    PieceColor2: ex.Color.fromHex("#BF6D72"),
+    PieceColor3: ex.Color.fromHex("#5096F2"),
+    PieceColor4: ex.Color.fromHex("#9979E0"),
     PolylineColor: ex.Color.fromHex("#F48347"),
     PolylineBorderColor: new ex.Color(255, 255, 255, 0.7)
 };
@@ -278,7 +280,7 @@ var PieceType;
 })(PieceType || (PieceType = {}));
 var PieceTypes = [0 /* Circle */, 2 /* Square */, 1 /* Triangle */, 3 /* Star */];
 var PieceTypeToColor = [Palette.PieceColor1, Palette.PieceColor2, Palette.PieceColor3, Palette.PieceColor4];
-var PieceTypeToTexture = [Resources.TextureTile1, Resources.TextureTile2, Resources.TextureTile3, Resources.TextureTile4];
+var PieceTypeToTexture = [Resources.TextureTile2, Resources.TextureTile1, Resources.TextureTile3, Resources.TextureTile4];
 var PieceEvent = (function (_super) {
     __extends(PieceEvent, _super);
     function PieceEvent(cell) {
@@ -375,7 +377,7 @@ var Cell = (function () {
         return this.logicalGrid.getCell(this.x, this.y + 1);
     };
     Cell.prototype.getCenter = function () {
-        return new ex.Point(this.x * Config.CellWidth + (Config.CellWidth / 2) + visualGrid.x, this.y * Config.CellHeight + (Config.CellHeight / 2) + visualGrid.y);
+        return new ex.Point(this.x * Config.CellWidth + Config.CellWidth / 2, this.y * Config.CellHeight + Config.CellHeight / 2);
     };
     return Cell;
 })();
@@ -443,20 +445,6 @@ var LogicalGrid = (function (_super) {
             piece.kill();
         }
     };
-    /* private _getPieceGroupHelper(currentPiece: Piece, currentGroup: Piece[]) {
-        var unexploredNeighbors = currentPiece.cell.getNeighbors().filter(c => {
-           return c.piece && currentGroup.indexOf(c.piece) === -1 && c.piece.getType() === currentPiece.getType();
-        }).map(c => c.piece);
-        currentGroup = currentGroup.concat(unexploredNeighbors);
-        if (unexploredNeighbors.length === 0) {
-           return currentGroup;
-        } else {
-           for (var i = 0; i < unexploredNeighbors.length; i++) {
-              this._getPieceGroupHelper(unexploredNeighbors[i], currentGroup);
-           }
-           return currentGroup;
-        }
-     }*/
     LogicalGrid.prototype.getAdjacentPieceGroup = function (piece) {
         var currentGroup = [piece];
         function _getPieceGroupHelper(currentPiece) {
@@ -493,15 +481,19 @@ var LogicalGrid = (function (_super) {
         }
         return selectablePieces.length;
     };
-    LogicalGrid.prototype.fill = function (row, smooth) {
+    LogicalGrid.prototype.getPieces = function () {
+        return this.cells.filter(function (c) { return c.piece !== null; }).map(function (c) { return c.piece; });
+    };
+    LogicalGrid.prototype.fill = function (row, smooth, delay) {
         var _this = this;
         if (smooth === void 0) { smooth = false; }
+        if (delay === void 0) { delay = 0; }
         for (var i = 0; i < this.cols; i++) {
             (function () {
                 var piece = PieceFactory.getRandomPiece();
                 var cell = _this.getCell(i, row);
                 piece.x = cell.getCenter().x;
-                piece.y = visualGrid.y + visualGrid.getHeight() + Config.CellHeight;
+                piece.y = mask.y + Config.CellHeight;
                 var intendedCell = _this.setCell(i, row, piece, !smooth);
                 var hasSameType = intendedCell.getNeighbors().some(function (c) {
                     if (c && c.piece) {
@@ -513,16 +505,31 @@ var LogicalGrid = (function (_super) {
                     _this.clearPiece(piece);
                     piece = PieceFactory.getRandomPiece();
                     piece.x = cell.getCenter().x;
-                    piece.y = visualGrid.y + visualGrid.getHeight() + Config.CellHeight;
+                    piece.y = mask.y + Config.CellHeight;
                     _this.setCell(i, row, piece, !smooth);
                 }
                 if (smooth) {
-                    piece.easeTo(cell.getCenter().x, cell.getCenter().y, 300, ex.EasingFunctions.EaseInOutCubic).asPromise().then(function () {
+                    piece.delay(delay).easeTo(cell.getCenter().x, cell.getCenter().y, 300, ex.EasingFunctions.EaseInOutCubic).asPromise().then(function () {
                         piece.x = cell.getCenter().x;
                         piece.y = cell.getCenter().y;
                     });
                 }
             })();
+        }
+        mask.kill();
+        game.add(mask);
+    };
+    LogicalGrid.prototype.seed = function (rows, smooth, delay) {
+        var _this = this;
+        if (smooth === void 0) { smooth = false; }
+        if (delay === void 0) { delay = 0; }
+        for (var i = 0; i < rows; i++) {
+            grid.fill(grid.rows - (i + 1), smooth, delay);
+        }
+        if (this.getNumAvailablePieces() < 2) {
+            this.getPieces().forEach(function (p) { return _this.clearPiece(p); });
+            // DANGER WILL ROBINSON DANGER DANGER!
+            this.seed(rows, smooth, delay);
         }
     };
     LogicalGrid.prototype.shift = function (from, to) {
@@ -563,52 +570,13 @@ var LogicalGrid = (function (_super) {
     };
     LogicalGrid.prototype.areNeighbors = function (cell1, cell2) {
         return cell1.getNeighbors().indexOf(cell2) > -1;
-        /*
-        // find neighbors of cell1
-        var x = cell1.x,
-           y = cell1.y,
-           x2 = cell2.x,
-           y2 = cell2.y,
-           left = new ex.Point(x - 1, y),
-           topLeft = new ex.Point(x - 1, y - 1),
-           right = new ex.Point(x + 1, y),
-           bottomRight = new ex.Point(x + 1, y + 1),
-           top = new ex.Point(x, y - 1),
-           topRight = new ex.Point(x + 1, y - 1),
-           bottom = new ex.Point(x, y + 1),
-           bottomLeft = new ex.Point(x - 1, y + 1);
-  
-        ex.Logger.getInstance().debug("LogicalGrid.areNeighbors", {
-           cell1: cell1,
-           cell2: cell2,
-           forX: x,
-           forY: y,
-           otherX: x2,
-           otherY: y2,
-           left: left,
-           topLeft: topLeft,
-           right: right,
-           topRight: topRight,
-           bottom: bottom,
-           bottomLeft: bottomLeft,
-           bottomRight: bottomRight
-        });
-  
-        return (x2 === left.x && y2 === left.y) ||
-           (x2 === right.x && y2 === right.y) ||
-           (x2 === top.x && y2 === top.y) ||
-           (x2 === bottom.x && y2 === bottom.y) ||
-           (x2 === topLeft.x && y2 === topLeft.y) ||
-           (x2 === bottomRight.x && y2 === bottomRight.y) ||
-           (x2 === topRight.x && y2 === topRight.y) ||
-           (x2 === bottomLeft.x && y2 === bottomLeft.y);*/
     };
     return LogicalGrid;
 })(ex.Class);
 var VisualGrid = (function (_super) {
     __extends(VisualGrid, _super);
     function VisualGrid(logicalGrid) {
-        _super.call(this, 0, Config.GridY, Config.CellWidth * logicalGrid.cols, Config.CellHeight * logicalGrid.rows);
+        _super.call(this, 0, 0, Config.CellWidth * logicalGrid.cols, Config.CellHeight * logicalGrid.rows);
         this.logicalGrid = logicalGrid;
         this.anchor.setTo(0, 0);
     }
@@ -616,15 +584,14 @@ var VisualGrid = (function (_super) {
         _super.prototype.update.call(this, engine, delta);
     };
     VisualGrid.prototype.draw = function (ctx, delta) {
-        var _this = this;
         _super.prototype.draw.call(this, ctx, delta);
         this.logicalGrid.cells.forEach(function (c) {
             ctx.fillStyle = Palette.GridBackgroundColor.toString();
-            ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight + _this.y, Config.CellWidth, Config.CellHeight);
+            ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
             if (Config.EnableGridLines) {
                 ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
                 ctx.lineWidth = 1;
-                ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight + _this.y, Config.CellWidth, Config.CellHeight);
+                ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
             }
         });
     };
@@ -805,7 +772,7 @@ var MatchManager = (function (_super) {
                 cell.piece.scaleTo(1.3, 1.3, 1.8, 1.8).scaleTo(1, 1, 1.8, 1.8);
                 this._run.push(cell.piece);
                 this._playNote();
-                ex.Logger.getInstance().info("Run started", this._run);
+                ex.Logger.getInstance().debug("Run started", this._run);
             }
             else {
                 this._run = grid.getAdjacentPieceGroup(cell.piece);
@@ -841,7 +808,7 @@ var MatchManager = (function (_super) {
                     piece.selected = true;
                     this._run.push(piece);
                     this._playNote();
-                    ex.Logger.getInstance().info("Run modified", this._run);
+                    ex.Logger.getInstance().debug("Run modified", this._run);
                     // notify
                     this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
                     if (!piece.hover) {
@@ -865,7 +832,7 @@ var MatchManager = (function (_super) {
                     this._run[removePiece].selected = false;
                     this._run.splice(removePiece, 1);
                     Resources.UndoSound.play();
-                    ex.Logger.getInstance().info("Run modified", this._run);
+                    ex.Logger.getInstance().debug("Run modified", this._run);
                 }
             }
             else {
@@ -879,7 +846,7 @@ var MatchManager = (function (_super) {
             }
             // have a valid run?
             if (this._run.length > 0) {
-                ex.Logger.getInstance().info("Run ended", this._run);
+                ex.Logger.getInstance().debug("Run ended", this._run);
                 // notify
                 this.eventDispatcher.publish("match", new MatchEvent(_.clone(this._run)));
                 this._run.forEach(function (p) { return p.selected = false; });
@@ -992,10 +959,10 @@ var TurnManager = (function () {
             else if (!isMatch) {
                 _this.currentPromise = _this.advanceRows();
             }
-            console.log("Done!");
         });
     };
     TurnManager.prototype.advanceRows = function () {
+        var _this = this;
         var promises = [];
         for (var i = 0; i < grid.rows; i++) {
             promises.push(this.logicalGrid.shift(i, i - 1));
@@ -1010,7 +977,15 @@ var TurnManager = (function () {
             if (gameMode == 0 /* Standard */) {
                 if (grid.getNumAvailablePieces() <= 0) {
                     //reset the board if there are no legal moves
-                    sweeper.sweepAll(true);
+                    //debugger;
+                    //sweeper.sweepAll(true);
+                    grid.getPieces().forEach(function (p) {
+                        effects.clearEffect(p);
+                        grid.clearPiece(p);
+                    });
+                    noMoves.play().then(function () {
+                        _this.logicalGrid.seed(Config.NumStartingRows, true);
+                    });
                 }
             }
         }).error(function (e) {
@@ -1178,31 +1153,29 @@ var Stats = (function () {
         }
     };
     Stats.prototype.drawScores = function () {
+        var _this = this;
         var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
-        var meterXPos = visualGrid.x;
-        var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
-        this._totalScore(visualGrid.x, visualGrid.y - 5);
-        var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
-        var meterStartX = meterXPos += (visualGrid.getWidth() - totalMeterWidth) / 2;
+        this._totalScore("total ", scoreXPos, 330);
+        var yPos = 350;
         if (Config.EnableSweepMeters) {
-            this._addMeter(0, meterXPos, meterYPos);
-            this._addMeter(1, meterXPos += Config.MeterWidth + Config.MeterMargin, meterYPos);
-            this._addMeter(2, meterXPos += Config.MeterWidth + Config.MeterMargin, meterYPos);
-            this._addMeter(3, meterXPos += Config.MeterWidth + Config.MeterMargin, meterYPos);
-            this._addMegaSweep(meterStartX, meterYPos);
+            this._addMeter(0, scoreXPos, yPos);
+            this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
+            this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
+            this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
+            this._addMegaSweep(scoreXPos, 350);
         }
         if (Config.EnableSweeper) {
-            this._addSweepMeter(meterStartX, meterYPos);
+            this._addSweepMeter(scoreXPos, sweeper.y);
         }
-        //this._addScore("chain ", this._chains, 0, scoreXPos, yPos += Config.MeterHeight + 20);
-        //this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
-        //this._addScore("chain ", this._chains, 2, scoreXPos, yPos += 20);
-        //this._addScore("chain ", this._chains, 3, scoreXPos, yPos += 20);
-        //var lastChainLabel = new ex.Label("last chain " + this._lastChain, scoreXPos, yPos += 30);
-        //game.addEventListener('update', (data?: ex.UpdateEvent) => {
-        //   lastChainLabel.text = "last chain " + this._lastChain;
-        //});
-        //game.currentScene.addChild(lastChainLabel);
+        this._addScore("chain ", this._chains, 0, scoreXPos, yPos += Config.MeterHeight + 20);
+        this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
+        this._addScore("chain ", this._chains, 2, scoreXPos, yPos += 20);
+        this._addScore("chain ", this._chains, 3, scoreXPos, yPos += 20);
+        var lastChainLabel = new ex.Label("last chain " + this._lastChain, scoreXPos, yPos += 30);
+        game.addEventListener('update', function (data) {
+            lastChainLabel.text = "last chain " + _this._lastChain;
+        });
+        game.currentScene.addChild(lastChainLabel);
     };
     Stats.prototype._addScore = function (description, statArray, statIndex, xPos, yPos) {
         var square = new ex.Actor(xPos, yPos, 15, 15, PieceTypeToColor[statIndex]);
@@ -1216,28 +1189,26 @@ var Stats = (function () {
         game.add(label);
         game.add(square);
     };
-    Stats.prototype._totalScore = function (xPos, yPos) {
+    Stats.prototype._totalScore = function (description, xPos, yPos) {
         var _this = this;
         var totalScore = 0;
-        var label = new ex.Label(totalScore.toString(), xPos, yPos, "bold 18px Arial");
-        label.color = ex.Color.White;
+        var label = new ex.Label(description + totalScore.toString(), xPos, yPos);
+        label.color = ex.Color.Black;
         game.addEventListener('update', function (data) {
-            var totalScore = _this.getTotalScore();
-            label.text = totalScore.toString();
+            var totalScore = _this._scores[0] + _this._scores[1] + _this._scores[2] + _this._scores[3];
+            label.text = description + totalScore.toString();
         });
-        game.add(label);
+        game.currentScene.addChild(label);
     };
     Stats.prototype._addMegaSweep = function (x, y) {
         var _this = this;
-        // todo sprite animation
-        var meter = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, 1);
-        meter.score = 1;
+        var meter = new ex.Actor(x, y, Config.MeterWidth, Config.MeterHeight * 4, ex.Color.Orange);
         meter.enableCapturePointer = true;
         var label = new ex.Label("MEGA SWEEP", meter.getCenter().x, meter.getCenter().y);
-        var inputLabel = new ex.Label("PRESS S", meter.getCenter().x, meter.getCenter().y + 10);
+        var inputLabel = new ex.Label("PRESS S", meter.getCenter().x, meter.getCenter().y + 14);
         label.textAlign = inputLabel.textAlign = 2 /* Center */;
         label.color = inputLabel.color = ex.Color.White;
-        label.font = inputLabel.font = "16px";
+        label.font = inputLabel.font = "14px";
         meter.anchor.setTo(0, 0);
         meter.on("pointerup", function () {
             sweeper.sweepAll();
@@ -1257,11 +1228,11 @@ var Stats = (function () {
     };
     Stats.prototype._addMeter = function (piece, x, y) {
         var _this = this;
-        var meter = new Meter(x, y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold);
+        var meter = new Meter(x, y, PieceTypeToColor[piece], Config.SweepThreshold);
         meter.enableCapturePointer = true;
         var label = new ex.Label(null, meter.getCenter().x, meter.getCenter().y + 3);
         label.textAlign = 2 /* Center */;
-        label.color = ex.Color.White;
+        label.color = ex.Color.Black;
         meter.on("pointerup", function () {
             sweeper.sweep(piece);
         });
@@ -1274,10 +1245,10 @@ var Stats = (function () {
             else {
                 meter.visible = label.visible = true;
                 if (_this._meters[piece] === Config.SweepThreshold) {
-                    label.text = "SWEEP";
+                    label.text = "Press " + (piece + 1) + " to SWEEP";
                 }
                 else {
-                    label.text = "";
+                    label.text = _this._meters[piece].toString();
                 }
             }
         });
@@ -1286,7 +1257,7 @@ var Stats = (function () {
     };
     Stats.prototype._addSweepMeter = function (x, y) {
         var _this = this;
-        var square = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, this._sweepMeterThreshold);
+        var square = new Meter(x, y, ex.Color.Red, this._sweepMeterThreshold);
         square.enableCapturePointer = true;
         var label = new ex.Label(null, square.getCenter().x, y + 20);
         label.textAlign = 2 /* Center */;
@@ -1311,23 +1282,18 @@ var Stats = (function () {
 })();
 var Meter = (function (_super) {
     __extends(Meter, _super);
-    function Meter(x, y, width, height, color, threshold) {
-        _super.call(this, x, y, width, height, color);
+    function Meter(x, y, color, threshold) {
+        _super.call(this, x, y, Config.MeterWidth, Config.MeterHeight, color);
         this.threshold = threshold;
         this.anchor.setTo(0, 0);
     }
     Meter.prototype.draw = function (ctx, delta) {
         var x = this.getBounds().left;
         var y = this.getBounds().top;
-        // border
-        ctx.strokeStyle = Util.darken(this.color, 0.6).toString();
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = this.color.toString();
+        ctx.lineWidth = 2;
         ctx.strokeRect(x, y, this.getWidth(), this.getHeight());
-        // bg
-        ctx.fillStyle = new ex.Color(this.color.r, this.color.g, this.color.b, 0.3).toString();
-        ctx.fillRect(x, y, this.getWidth(), this.getHeight());
         var percentage = (this.score / this.threshold);
-        // fill
         ctx.fillStyle = this.color.toString();
         ctx.fillRect(x, y, (this.getWidth() * percentage), this.getHeight());
     };
@@ -1410,22 +1376,19 @@ var Sweeper = (function (_super) {
             return !!cell.piece;
         });
         // todo mega animation!
-        cells.forEach(function (cell) {
+        grid.getPieces().forEach(function (piece) {
             // todo adjust mega sweep scoring?
-            stats.scorePieces([cell.piece]);
+            stats.scorePieces([piece]);
             // clear
-            grid.clearPiece(cell.piece);
+            effects.clearEffect(piece);
+            grid.clearPiece(piece);
         });
         // reset meter
         stats.resetAllMeters();
         // add combo multiplier
         stats.increaseScoreMultiplier();
-        for (var i = 0; i < Config.NumStartingRows; i++) {
-            grid.fill(grid.rows - (i + 1));
-        }
-        if (grid.getNumAvailablePieces() <= 0) {
-            this.sweepAll(true);
-        }
+        // fill grid
+        grid.seed(Config.NumStartingRows, true, Config.MegaSweepDelay);
         Resources.MegaSweepSound.play();
     };
     Sweeper.prototype.sweep = function (type) {
@@ -1446,6 +1409,7 @@ var Sweeper = (function (_super) {
             });
             cells.forEach(function (cell) {
                 stats.scorePieces([cell.piece]);
+                effects.clearEffect(cell.piece);
                 grid.clearPiece(cell.piece);
             });
             // reset meter
@@ -1512,6 +1476,24 @@ var UIWidget = (function (_super) {
     };
     return UIWidget;
 })(ex.Class);
+var NoMoves = (function (_super) {
+    __extends(NoMoves, _super);
+    function NoMoves() {
+        _super.call(this, -200, game.getHeight() / 2, 200, 100);
+        this.color = ex.Color.Azure.clone();
+        this.anchor.setTo(.5, .5);
+    }
+    NoMoves.prototype.play = function () {
+        var _this = this;
+        var corner = this._engine.screenToWorldCoordinates(new ex.Point(0, 0));
+        this.x = corner.x - this.getWidth();
+        this.y = game.getHeight() / 2;
+        return this.easeTo(game.getWidth() / 2, game.getHeight() / 2, 500, ex.EasingFunctions.EaseInOutCubic).delay(200).easeTo(game.getWidth() + this.getWidth(), this.y, 500, ex.EasingFunctions.EaseInOutCubic).asPromise().then(function () {
+            _this.x = corner.x - _this.getWidth();
+        });
+    };
+    return NoMoves;
+})(ex.UIActor);
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
 /// <reference path="util.ts"/>
@@ -1529,8 +1511,9 @@ var UIWidget = (function (_super) {
 /// <reference path="UIWidget.ts"/>
 /// <reference path="background.ts"/>
 /// <reference path="Effects.ts"/>
+/// <reference path="nomoves.ts"/>
 var _this = this;
-var game = new ex.Engine(0, 0, "game", 0 /* FullScreen */);
+var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game", 0 /* FullScreen */);
 game.backgroundColor = ex.Color.Transparent;
 var gameMode = 0 /* Standard */;
 var loader = new ex.Loader();
@@ -1542,9 +1525,11 @@ _.forIn(Resources, function (resource) {
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var mainMenu = new MainMenu();
 var polyline = new PolyLine();
+var noMoves = new NoMoves();
 game.add(mainMenu);
 game.add(polyline);
-var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, background, effects;
+game.add(noMoves);
+var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, background, noMoves, effects;
 // game modes
 var loadConfig = function (config) {
     Config.resetDefault();
@@ -1577,14 +1562,14 @@ function InitSetup() {
     turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? 0 /* Timed */ : 1 /* Match */);
     transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
     sweeper = new Sweeper(Config.SweepMovesUp ? Config.SweepMaxRow : Config.SweepMinRow, visualGrid.logicalGrid.cols);
-    // mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, visualGrid.logicalGrid.cols * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
-    //mask.anchor.setTo(0, 0);
+    mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, visualGrid.logicalGrid.cols * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
+    mask.anchor.setTo(0, 0);
     stats.drawScores();
     game.add(visualGrid);
     game.add(sweeper);
-    for (i = 0; i < Config.NumStartingRows; i++) {
-        grid.fill(grid.rows - (i + 1));
-    }
+    game.add(mask);
+    //add pieces to initial rows
+    grid.seed(Config.NumStartingRows);
     playLoop();
 }
 game.input.keyboard.on('up', function (evt) {

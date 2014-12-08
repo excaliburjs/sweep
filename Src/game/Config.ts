@@ -47,6 +47,7 @@ class Config {
 
    static SweepShakeDuration: number = 400;
    static MegaSweepShakeDuration: number = 500;
+   static MegaSweepDelay: number = 600;
 
    //
    // cascade configs
