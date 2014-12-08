@@ -31,6 +31,8 @@
       <DependentUpon>app.css</DependentUpon>
     </Content>
     <Content Include="credits.html" />
+    <Content Include="css\font-awesome.css" />
+    <Content Include="fonts\fontawesome-webfont.svg" />
     <Content Include="images\bg2.jpg" />
     <Content Include="images\challenge.png" />
     <Content Include="images\logo.png" />
@@ -90,6 +92,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="web.config" />
+    <Content Include="fonts\fontawesome-webfont.eot" />
+    <Content Include="fonts\fontawesome-webfont.ttf" />
+    <Content Include="fonts\fontawesome-webfont.woff" />
+    <Content Include="fonts\FontAwesome.otf" />
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
     </None>
