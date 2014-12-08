@@ -7,6 +7,8 @@
    private _muteSoundButton: ex.UIActor;
    private _show = false;
    private _showing = false;
+   private _hide = false;
+   private _hiding = false;
 
    private static _StandardButtonPos = new ex.Point(42, 200);
    private static _ChallengeButtonPos = new ex.Point(42, 200 + Config.MainMenuButtonHeight + 20);
@@ -65,6 +67,10 @@
          this._logo.x = this.getCenter().x;
          this._logo.y = this.y + MainMenu._LogoPos.y;         
       }
+
+      if (this._hide) {
+         // todo transition
+      }
    }
 
    public show() {
@@ -75,6 +81,7 @@
       this._challengeButton.visible = true;
       this._challengeButton.enableCapturePointer = true;
       this._show = true;
+      this._hide = false;
    }
 
    public hide() {
@@ -85,22 +92,27 @@
       this._challengeButton.visible = false;
       this._challengeButton.enableCapturePointer = false;
       this._show = false;
+      this._hide = true;
    }
+
+   private onGameModeSwitch() {
+      mainMenu.hide();
+      
+      // todo tutorial
+   }
+
+   // todo move loadConfig logic to here so we can manage state better?
 
    public static LoadStandardMode() {
       ex.Logger.getInstance().info("Loading standard mode");
-      loadConfig(Config.loadCasual, true);
-      mainMenu.hide();
-
-      // todo tutorial
+      loadConfig(Config.loadCasual);
+      mainMenu.onGameModeSwitch();
    }
 
    public static LoadChallengeMode() {
       ex.Logger.getInstance().info("Loading challenge mode");
-      loadConfig(Config.loadSurvivalReverse, true);
-      mainMenu.hide();
-
-      // todo tutorial
+      loadConfig(Config.loadSurvivalReverse);
+      mainMenu.onGameModeSwitch();
    }
 }
 

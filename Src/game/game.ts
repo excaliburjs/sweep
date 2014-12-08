@@ -47,17 +47,13 @@ var visualGrid: VisualGrid,
    effects;
 
 // game modes
-var loadConfig = (config, fromMenu: boolean) => {
+var loadConfig = (config) => {
    Config.resetDefault();
    config.call(this);
    InitSetup();
 };
 
-document.getElementById("loadCasual").addEventListener("mouseup", () => loadConfig(Config.loadCasual, true));
-document.getElementById("loadSurvial").addEventListener("mouseup", () => loadConfig(Config.loadSurvival, true));
-document.getElementById("loadSurvivalReverse").addEventListener("mouseup", () => loadConfig(Config.loadSurvivalReverse, true));
-
-loadConfig(Config.loadCasual, false);
+loadConfig(Config.loadCasual);
 
 //reset the game with the given grid dimensions
 function InitSetup() {
