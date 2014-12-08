@@ -49,6 +49,10 @@ class Config {
    static ChainBonusLarge: number = 25;
    static ChainBonusSuper: number = 50;
 
+   // endurance score multiplier
+   static StandardModeMultiplier: number = 10;
+   static TimedModeMultiplier: number = 10;
+
    // alt sweep mechanic 1
    static EnableSweeper: boolean;
    static SweepMovesUp: boolean;
