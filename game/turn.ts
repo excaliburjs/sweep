@@ -69,7 +69,10 @@ class TurnManager {
          this.currentPromise.then(() => {
             stats.scorePieces(evt.run);
             stats.scoreChain(evt.run);
-            evt.run.forEach(p => grid.clearPiece(p));
+            evt.run.forEach(p => {
+               effects.clearEffect(p);
+               grid.clearPiece(p)
+            });
             Resources.MatchSound.play();
             this.advanceTurn(true);
          });

@@ -934,7 +934,10 @@ var TurnManager = (function () {
             this.currentPromise.then(function () {
                 stats.scorePieces(evt.run);
                 stats.scoreChain(evt.run);
-                evt.run.forEach(function (p) { return grid.clearPiece(p); });
+                evt.run.forEach(function (p) {
+                    effects.clearEffect(p);
+                    grid.clearPiece(p);
+                });
                 Resources.MatchSound.play();
                 _this.advanceTurn(true);
             });
@@ -1449,6 +1452,40 @@ var Background = (function (_super) {
     };
     return Background;
 })(ex.Actor);
+var Effects = (function () {
+    function Effects() {
+    }
+    Effects.prototype.clearEffect = function (piece) {
+        //TODO move emitter to Piece
+        var emitter = new ex.ParticleEmitter(piece.x, piece.y, 1, 1);
+        emitter.minVel = 30;
+        emitter.maxVel = 125;
+        emitter.minAngle = Math.PI / 4;
+        emitter.maxAngle = (Math.PI * 3) / 4;
+        emitter.isEmitting = false;
+        emitter.emitRate = 5;
+        emitter.opacity = 0.84;
+        emitter.fadeFlag = true;
+        emitter.particleLife = 1000;
+        emitter.maxSize = 0.4;
+        emitter.minSize = 0.2;
+        emitter.acceleration = new ex.Vector(0, -500);
+        emitter.beginColor = ex.Color.Red;
+        emitter.endColor = ex.Color.Yellow;
+        emitter.startSize = 0.5;
+        emitter.endSize = 0.01;
+        emitter.particleSprite = piece.currentDrawing.clone();
+        emitter.particleSprite.transformAboutPoint(new ex.Point(.5, .5));
+        emitter.particleRotationalVelocity = Math.PI / 10;
+        emitter.randomRotation = true;
+        emitter.fadeFlag = true;
+        emitter.focus = new ex.Vector(0, emitter.y - 1000); // relative to the emitter
+        emitter.focusAccel = 900;
+        game.addChild(emitter);
+        emitter.emit(5);
+    };
+    return Effects;
+})();
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
 /// <reference path="util.ts"/>
@@ -1465,6 +1502,7 @@ var Background = (function (_super) {
 /// <reference path="sweeper.ts"/>
 /// <reference path="UIWidget.ts"/>
 /// <reference path="background.ts"/>
+/// <reference path="Effects.ts"/>
 var _this = this;
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game", 0 /* FullScreen */);
 game.backgroundColor = ex.Color.Transparent;
@@ -1478,7 +1516,7 @@ _.forIn(Resources, function (resource) {
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 // var mainMenu = new MainMenu();
 //game.add(mainMenu);
-var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, polyline, background;
+var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, polyline, background, effects;
 // game modes
 var loadConfig = function (config) {
     Config.resetDefault();
@@ -1493,6 +1531,7 @@ InitSetup();
 //reset the game with the given grid dimensions
 function InitSetup() {
     visualGrid = new VisualGrid(grid);
+    effects = new Effects();
     var i;
     if (game.currentScene.children) {
         for (i = 0; i < game.currentScene.children.length; i++) {
