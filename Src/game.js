@@ -162,7 +162,7 @@ var Resources = {
     ChallengeNote6Sound: new ex.Sound('sounds/challengenote6.mp3'),
     GameOverSound: new ex.Sound('sounds/gameover.mp3'),
     KnockSound: new ex.Sound('sounds/knock.mp3'),
-    UndoSound: new ex.Sound('sounds/undo.mp3'),
+    UndoSound: new ex.Sound('sounds/undo2.mp3'),
     TapsSound: new ex.Sound('sounds/taps.mp3'),
     MatchSound: new ex.Sound('sounds/match.mp3'),
     SweepSound: new ex.Sound('sounds/sweep.mp3'),
@@ -807,6 +807,10 @@ var TurnManager = (function () {
         }
         this.logicalGrid.fill(grid.rows - 1, true);
         Resources.TapsSound.play();
+        if (grid.getNumAvailablePieces() <= 0) {
+            //reset the board if there are no legal moves
+            sweeper.sweepAll(true);
+        }
         // fill first row
         promises = _.filter(promises, function (p) {
             return p;
@@ -816,10 +820,6 @@ var TurnManager = (function () {
         }).error(function (e) {
             console.log(e);
         });
-        if (grid.getNumAvailablePieces() <= 0) {
-            //reset the board if there are no legal moves
-            sweeper.sweepAll(true);
-        }
     };
     TurnManager.prototype._handleMatchEvent = function (evt) {
         var _this = this;
@@ -1397,7 +1397,10 @@ function playLoop() {
     Resources.ChallengeLoopSound.stop();
     // play some sounds
     if (gameMode === 0 /* Standard */) {
+        Resources.KnockSound.setVolume(.5);
         Resources.TapsSound.setVolume(.2);
+        Resources.SweepSound.setVolume(.4);
+        Resources.MegaSweepSound.setVolume(.4);
         Resources.LoopSound.setLoop(true);
         Resources.LoopSound.play();
     }

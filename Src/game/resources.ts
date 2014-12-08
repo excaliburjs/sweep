@@ -21,7 +21,7 @@ var Resources = {
 
    GameOverSound: new ex.Sound('sounds/gameover.mp3'),
    KnockSound: new ex.Sound('sounds/knock.mp3'),
-   UndoSound: new ex.Sound('sounds/undo.mp3'),
+   UndoSound: new ex.Sound('sounds/undo2.mp3'),
    TapsSound: new ex.Sound('sounds/taps.mp3'),
    MatchSound: new ex.Sound('sounds/match.mp3'),
    SweepSound: new ex.Sound('sounds/sweep.mp3'),
