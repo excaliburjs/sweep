@@ -30,7 +30,10 @@ class Piece extends ex.Actor {
       super(x, y, Config.PieceWidth, Config.PieceHeight, color);
       this._id = id;
       this._type = type || PieceType.Circle;
-      this._originalColor = color;      
+      this._originalColor = color;
+      this._updateDrawings();
+      this.calculatedAnchor = new ex.Point(18, 18);
+
    }
    
    public getId(): number {
@@ -63,6 +66,7 @@ class Piece extends ex.Actor {
 
    public update(engine: ex.Engine, delta: number) {
       super.update(engine, delta);
+      //console.log("piece pos", this.x, this.y, this);
 
       if (matcher.runInProgress && (!this.selected && this.getType() !== matcher.getRunType())) {
          this.setDrawing("faded");
@@ -78,10 +82,11 @@ class Piece extends ex.Actor {
 
 class PieceFactory {
    private static _maxId: number = 0;
-   public static getRandomPiece(): Piece {
+   public static getRandomPiece(x: number = 0, y: number = 0): Piece {
       var index = Math.floor(Math.random() * PieceTypes.length);
-      var piece = new Piece(PieceFactory._maxId++, 0, 0, PieceTypeToColor[index].clone(), index);
+      var piece = new Piece(PieceFactory._maxId++, x, y, PieceTypeToColor[index].clone(), index);
 
+      
       game.add(piece);
 
       return piece;
