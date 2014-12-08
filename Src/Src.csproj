@@ -61,13 +61,13 @@
     <TypeScriptCompile Include="game\sweeper.ts" />
     <TypeScriptCompile Include="game\transition.ts" />
     <TypeScriptCompile Include="game\turn.ts" />
-    <TypeScriptCompile Include="game\UIWidget.ts" />
     <TypeScriptCompile Include="game\util.ts" />
-    <TypeScriptCompile Include="scripts\typings\cookie\cookie.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\Cookies.d.ts" />
     <TypeScriptCompile Include="scripts\typings\lodash\lodash.d.ts" />
     <TypeScriptCompile Include="scripts\typings\Spectra.d.ts" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="scripts\cookies.min.js" />
     <Content Include="scripts\lodash.js" />
     <Content Include="scripts\lodash.min.js" />
     <Content Include="scripts\spectra.min.js" />

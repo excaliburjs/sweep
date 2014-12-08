@@ -190,17 +190,6 @@ class MatchManager extends ex.Class {
          }
 
          this.runInProgress = false;
-      } else {
-         var point = new ex.Point(pe.x, pe.y);
-         if (gameOverWidget.getBounds(0).contains(point)) {
-            //TODO post your score
-            console.log("POSTED YOUR SCORE");
-         } else if (gameOverWidget.getBounds(1).contains(point)) {
-            //TODO play again
-            console.log("PLAY AGAIN");
-            grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-            InitSetup();
-         }
       }
    }
 

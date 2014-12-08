@@ -1,4 +1,6 @@
-﻿class MainMenu extends ex.UIActor {
+﻿/// <reference path="../scripts/typings/Cookies.d.ts"/>
+
+class MainMenu extends ex.UIActor {
    
    private _logo: ex.Actor;
    private _standardButton: ex.UIActor;   
@@ -10,8 +12,8 @@
    private _hide = false;
    private _hiding = false;
 
-   private static _StandardButtonPos = new ex.Point(42, 200);
-   private static _ChallengeButtonPos = new ex.Point(42, 200 + Config.MainMenuButtonHeight + 20);
+   private static _StandardButtonPos = new ex.Point(42, 170);
+   private static _ChallengeButtonPos = new ex.Point(42, 170 + Config.MainMenuButtonHeight + 20);
    private static _LogoPos = new ex.Point(0, 50);
 
    constructor() {
@@ -100,8 +102,28 @@
    private onGameModeSwitch() {
       mainMenu.hide();
       
-      // todo tutorial
+      if (gameMode === GameMode.Standard && !this._hasFinishedTutorial(GameMode.Standard)) {
+         // play normal tutorial
+
+         // demo drag actions
+
+         // demo sweep meters
+
+         // hint at mega sweep
+      } else if (gameMode === GameMode.Timed && !this._hasFinishedTutorial(GameMode.Timed)) {
+         
+      }
    }
+
+   private _hasFinishedTutorial(gameMode: GameMode): boolean {
+      var c = Cookies.get("tutorial-" + gameMode);
+
+      ex.Logger.getInstance().debug("Retrieved tutorial cookie: tutorial-" + gameMode, c);
+
+      return c && c === "1";
+   }
+
+   
 
    // todo move loadConfig logic to here so we can manage state better?
 
