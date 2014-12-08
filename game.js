@@ -1124,6 +1124,7 @@ var Sweeper = (function (_super) {
     };
     Sweeper.prototype.sweepAll = function (force) {
         if (force === void 0) { force = false; }
+        game.currentScene.camera.shake(4, 4, 500);
         if (matcher.gameOver)
             return;
         if (!stats.allMetersFull() && !force)
@@ -1151,6 +1152,7 @@ var Sweeper = (function (_super) {
     };
     Sweeper.prototype.sweep = function (type) {
         if (type === void 0) { type = null; }
+        game.currentScene.camera.shake(4, 4, 400);
         if (matcher.gameOver)
             return;
         if (type !== null) {
