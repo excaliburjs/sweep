@@ -31,9 +31,10 @@ _.forIn(Resources, (resource) => {
 
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-// var mainMenu = new MainMenu();
-
+//var mainMenu = new MainMenu();
+var polyline = new PolyLine();
 //game.add(mainMenu);
+game.add(polyline);
 
 var visualGrid: VisualGrid,
    turnManager: TurnManager,
@@ -42,24 +43,21 @@ var visualGrid: VisualGrid,
    sweeper: Sweeper,
    stats: Stats,
    mask: ex.Actor,
-   polyline: PolyLine,
    background: Background,
    effects;
 
 // game modes
-var loadConfig = (config) => {
+var loadConfig = (config, fromMenu: boolean) => {
    Config.resetDefault();
    config.call(this);
    InitSetup();
 };
 
-document.getElementById("loadCasual").addEventListener("mouseup", () => loadConfig(Config.loadCasual));
-document.getElementById("loadSurvial").addEventListener("mouseup", () => loadConfig(Config.loadSurvival));
-document.getElementById("loadSurvivalReverse").addEventListener("mouseup", () => loadConfig(Config.loadSurvivalReverse));
+document.getElementById("loadCasual").addEventListener("mouseup", () => loadConfig(Config.loadCasual, true));
+document.getElementById("loadSurvial").addEventListener("mouseup", () => loadConfig(Config.loadSurvival, true));
+document.getElementById("loadSurvivalReverse").addEventListener("mouseup", () => loadConfig(Config.loadSurvivalReverse, true));
 
-loadConfig(Config.loadCasual);
-
-InitSetup();
+loadConfig(Config.loadCasual, false);
 
 //reset the game with the given grid dimensions
 function InitSetup() {
@@ -86,7 +84,6 @@ function InitSetup() {
    if (matcher) matcher.dispose(); //unbind events
    if (turnManager) turnManager.dispose(); //cancel the timer
    matcher = new MatchManager();
-   polyline = new PolyLine();
    stats = new Stats();
    turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? TurnMode.Timed : TurnMode.Match);
    transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
@@ -99,9 +96,7 @@ function InitSetup() {
    stats.drawScores();
 
    game.add(visualGrid);
-   game.add(sweeper);
-   
-   game.add(polyline);
+   game.add(sweeper);   
    game.add(mask);
 
    //add pieces to initial rows

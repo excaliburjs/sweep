@@ -584,6 +584,11 @@ var MainMenu = (function (_super) {
         game.add(this._challengeButton);
         this.show();
     };
+    MainMenu.prototype.draw = function (ctx, delta) {
+        if (!this.visible)
+            return;
+        _super.prototype.draw.call(this, ctx, delta);
+    };
     MainMenu.prototype.update = function (engine, delta) {
         var _this = this;
         _super.prototype.update.call(this, engine, delta);
@@ -613,25 +618,22 @@ var MainMenu = (function (_super) {
         this.visible = true;
         this._logo.visible = true;
         this._standardButton.visible = true;
-        this._standardButton.enableCapturePointer = true;
         this._challengeButton.visible = true;
-        this._challengeButton.enableCapturePointer = true;
         this._show = true;
     };
     MainMenu.prototype.hide = function () {
         this.visible = false;
         this._logo.visible = false;
         this._standardButton.visible = false;
-        this._standardButton.enableCapturePointer = false;
         this._challengeButton.visible = false;
-        this._challengeButton.enableCapturePointer = false;
         this._show = false;
     };
     MainMenu.LoadStandardMode = function () {
-        loadConfig(Config.loadCasual);
+        loadConfig(Config.loadCasual, true);
+        mainMenu.hide();
     };
     MainMenu.LoadChallengeMode = function () {
-        loadConfig(Config.loadSurvivalReverse);
+        loadConfig(Config.loadSurvivalReverse, true);
     };
     MainMenu._StandardButtonPos = new ex.Point(25, 200);
     MainMenu._ChallengeButtonPos = new ex.Point(25, 200 + Config.MainMenuButtonHeight + 20);
@@ -643,11 +645,23 @@ var MenuButton = (function (_super) {
     function MenuButton(sprite, action, x, y) {
         _super.call(this, x, y, Config.MainMenuButtonWidth, Config.MainMenuButtonHeight);
         this.action = action;
-        this.pipeline.push(new ex.CapturePointerModule());
-        this.off("pointerup", action);
-        this.on("pointerup", action);
         this.addDrawing(sprite);
     }
+    MenuButton.prototype.onInitialize = function () {
+        var world = game.screenToWorldCoordinates(new ex.Point(this.x, this.y));
+        this._captureActor = new ex.Actor(world.x, world.y, Config.MainMenuButtonWidth, Config.MainMenuButtonHeight, ex.Color.Transparent);
+        this._captureActor.anchor.setTo(0, 0);
+        game.add(this._captureActor);
+        this._captureActor.off("pointerup", this.action);
+        this._captureActor.on("pointerup", this.action);
+    };
+    MenuButton.prototype.update = function (engine, delta) {
+        _super.prototype.update.call(this, engine, delta);
+        var world = game.screenToWorldCoordinates(new ex.Point(this.x, this.y));
+        this._captureActor.enableCapturePointer = this.visible;
+        this._captureActor.x = world.x;
+        this._captureActor.y = world.y;
+    };
     return MenuButton;
 })(ex.UIActor);
 var MatchEvent = (function (_super) {
@@ -1515,20 +1529,21 @@ _.forIn(Resources, function (resource) {
 });
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-// var mainMenu = new MainMenu();
+//var mainMenu = new MainMenu();
+var polyline = new PolyLine();
 //game.add(mainMenu);
-var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, polyline, background, effects;
+game.add(polyline);
+var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, background, effects;
 // game modes
-var loadConfig = function (config) {
+var loadConfig = function (config, fromMenu) {
     Config.resetDefault();
     config.call(_this);
     InitSetup();
 };
-document.getElementById("loadCasual").addEventListener("mouseup", function () { return loadConfig(Config.loadCasual); });
-document.getElementById("loadSurvial").addEventListener("mouseup", function () { return loadConfig(Config.loadSurvival); });
-document.getElementById("loadSurvivalReverse").addEventListener("mouseup", function () { return loadConfig(Config.loadSurvivalReverse); });
-loadConfig(Config.loadCasual);
-InitSetup();
+document.getElementById("loadCasual").addEventListener("mouseup", function () { return loadConfig(Config.loadCasual, true); });
+document.getElementById("loadSurvial").addEventListener("mouseup", function () { return loadConfig(Config.loadSurvival, true); });
+document.getElementById("loadSurvivalReverse").addEventListener("mouseup", function () { return loadConfig(Config.loadSurvivalReverse, true); });
+loadConfig(Config.loadCasual, false);
 //reset the game with the given grid dimensions
 function InitSetup() {
     visualGrid = new VisualGrid(grid);
@@ -1550,7 +1565,6 @@ function InitSetup() {
     if (turnManager)
         turnManager.dispose(); //cancel the timer
     matcher = new MatchManager();
-    polyline = new PolyLine();
     stats = new Stats();
     turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? 0 /* Timed */ : 1 /* Match */);
     transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
@@ -1560,7 +1574,6 @@ function InitSetup() {
     stats.drawScores();
     game.add(visualGrid);
     game.add(sweeper);
-    game.add(polyline);
     game.add(mask);
     for (i = 0; i < Config.NumStartingRows; i++) {
         grid.fill(grid.rows - (i + 1));
