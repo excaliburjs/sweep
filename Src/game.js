@@ -136,6 +136,9 @@ var Config = (function () {
     Config.ChainBonusMedium = 10;
     Config.ChainBonusLarge = 25;
     Config.ChainBonusSuper = 50;
+    // endurance score multiplier
+    Config.StandardModeMultiplier = 10;
+    Config.TimedModeMultiplier = 10;
     Config.SweepShakeDuration = 400;
     Config.MegaSweepShakeDuration = 500;
     Config.MegaSweepDelay = 600;
@@ -1827,7 +1830,7 @@ function gameOver() {
     var twitterScript = document.createElement('script');
     twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
     document.getElementById("game-over").appendChild(twitterScript);
-    var fbText = document.getElementById('fidget').href.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
+    var fbText = document.getElementById('fidget').href.replace("SOCIAL_SCORE", stats.getTotalScore().toString()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
     document.getElementById('fidget').href = fbText;
     //document.getElementById("fidget").attributes.href
     //var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);

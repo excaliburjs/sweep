@@ -259,7 +259,7 @@ function gameOver() {
    twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
    document.getElementById("game-over").appendChild(twitterScript);
 
-   var fbText = (<HTMLAnchorElement>document.getElementById('fidget')).href.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === GameMode.Timed ? "challenge mode" : "standard mode");
+   var fbText = (<HTMLAnchorElement>document.getElementById('fidget')).href.replace("SOCIAL_SCORE", stats.getTotalScore().toString()).replace("SOCIAL_MODE", gameMode === GameMode.Timed ? "challenge mode" : "standard mode");
    (<HTMLAnchorElement>document.getElementById('fidget')).href = fbText;
 
    //document.getElementById("fidget").attributes.href
