@@ -112,7 +112,6 @@ function InitSetup() {
    if (!muted) {
       playLoop();
    }
-   //turnManager.currentPromise = ex.Promise.wrap(true);
 }
 
 game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
@@ -129,24 +128,7 @@ game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
       grid.fill(grid.rows - 1);
    }
 
-   //if (evt.key === ex.Input.Keys.Up || evt.key == ex.Input.Keys.Down || evt.key === ex.Input.Keys.Left || evt.key === ex.Input.Keys.Right) {
-
-   //   var numCols = grid.cols || 0;
-   //   var numRows = grid.rows || 0;
-
-   //   if (evt.key === ex.Input.Keys.Up) {
-   //      numRows++;
-   //   } else if (evt.key === ex.Input.Keys.Down) {
-   //      numRows--;
-   //   } else if (evt.key === ex.Input.Keys.Left) {
-   //      numCols--;
-   //   } else if (evt.key === ex.Input.Keys.Right) {
-   //      numCols++;
-   //   }
-
-   //   grid = new LogicalGrid(numRows, numCols);
-   //   InitSetup();
-   //}   
+ 
 });
 
 var gameOverWidget = new UIWidget();

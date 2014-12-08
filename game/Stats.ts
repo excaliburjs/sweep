@@ -32,6 +32,7 @@
    private _chains = [this._longestCircleCombo, this._longestTriangleCombo, this._longestSquareCombo, this._longestStarCombo];
    private _lastChain: number = 0;
    private _lastChainBonus: number = 0;
+   private _totalChainBonus: number = 0;
 
    constructor() {
       this._sweepMeterThreshold = Config.SweepAltThreshold;
@@ -131,6 +132,7 @@
          }
       }
       this._lastChainBonus = bonus;
+      this._totalChainBonus += bonus;
       return bonus;
    }
 
@@ -308,6 +310,8 @@
       });
       game.add(square);
       game.add(label);
+      this._meterActors.push(square);
+      this._meterLabels.push(label);
    }
 }
 
