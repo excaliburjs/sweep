@@ -89,7 +89,7 @@
 
    public static LoadStandardMode() {
       loadConfig(Config.loadCasual, true);
-      mainMenu.hide();
+      //mainMenu.hide();
    }
 
    public static LoadChallengeMode() {
