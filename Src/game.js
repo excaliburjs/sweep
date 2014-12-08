@@ -209,13 +209,11 @@ var Piece = (function (_super) {
     __extends(Piece, _super);
     function Piece(id, x, y, color, type) {
         _super.call(this, x, y, Config.PieceWidth, Config.PieceHeight, color);
-        this._initialScale = Config.PieceWidth / 50;
         this.cell = null;
         this.selected = false;
         this._id = id;
         this._type = type || 0 /* Circle */;
         this._originalColor = color;
-        this.scale.setTo(1.2, 1.2);
     }
     Piece.prototype.getId = function () {
         return this._id;
@@ -228,19 +226,11 @@ var Piece = (function (_super) {
         this._updateDrawings();
     };
     Piece.prototype._updateDrawings = function () {
-        var tileSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
-        tileSprite.setScaleX(this._initialScale);
-        tileSprite.setScaleY(this._initialScale);
+        var tileSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, Config.PieceWidth, Config.PieceHeight);
         this.addDrawing("default", tileSprite);
-        var highlightSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
-        highlightSprite.setScaleX(this._initialScale);
-        highlightSprite.setScaleY(this._initialScale);
-        highlightSprite.addEffect(new SaturateEffect(0.5));
+        var highlightSprite = new ex.Sprite(PieceTypeToTexture[this._type], Config.PieceWidth, 0, Config.PieceWidth, Config.PieceHeight);
         this.addDrawing("highlight", highlightSprite);
-        var fadedSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
-        fadedSprite.setScaleX(this._initialScale);
-        fadedSprite.setScaleY(this._initialScale);
-        fadedSprite.addEffect(new ex.Effects.Opacity(0.3));
+        var fadedSprite = new ex.Sprite(PieceTypeToTexture[this._type], Config.PieceWidth * 2, 0, Config.PieceWidth, Config.PieceHeight);
         this.addDrawing("faded", fadedSprite);
     };
     Piece.prototype.onInitialize = function (engine) {
@@ -751,12 +741,16 @@ var TurnManager = (function () {
     TurnManager.prototype.dispose = function () {
         this._timer.cancel();
     };
+    TurnManager.prototype.getTime = function () {
+        return this._timer.getTimeRunning();
+    };
     TurnManager.prototype.advanceTurn = function (isMatch) {
         var _this = this;
         if (isMatch === void 0) { isMatch = false; }
         if (this.currentPromise && this.currentPromise.state() === 2 /* Pending */) {
             this.currentPromise.resolve();
         }
+        stats.incrementTurnNumber();
         transitionManager.evaluate().then(function () {
             if (isMatch && Config.AdvanceRowsOnMatch) {
                 _this.currentPromise = _this.advanceRows();
@@ -872,6 +866,7 @@ var Stats = (function () {
         this._longestTriangleCombo = 0;
         this._longestSquareCombo = 0;
         this._longestStarCombo = 0;
+        this._turnNumber = 0;
         this._types = [0 /* Circle */, 1 /* Triangle */, 2 /* Square */, 3 /* Star */];
         this._scores = [this._numCirclesDestroyed, this._numTrianglesDestroyed, this._numSquaresDestroyed, this._numStarsDestroyed];
         this._meters = [this._numCirclesDestroyedMeter, this._numTrianglesDestroyedMeter, this._numSquaresDestroyedMeter, this._numStarsDestroyedMeter];
@@ -887,6 +882,12 @@ var Stats = (function () {
     };
     Stats.prototype.getLongestChain = function () {
         return Math.max.apply(Math, this._chains);
+    };
+    Stats.prototype.getTurnNumber = function () {
+        return this._turnNumber;
+    };
+    Stats.prototype.incrementTurnNumber = function () {
+        this._turnNumber++;
     };
     Stats.prototype.getMeter = function (pieceType) {
         return this._meters[this._types.indexOf(pieceType)];
@@ -1301,10 +1302,10 @@ function InitSetup() {
     if (turnManager)
         turnManager.dispose(); //cancel the timer
     matcher = new MatchManager();
+    stats = new Stats();
     turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? 0 /* Timed */ : 1 /* Match */);
     transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
     sweeper = new Sweeper(Config.SweepMovesUp ? Config.SweepMaxRow : Config.SweepMinRow, visualGrid.logicalGrid.cols);
-    stats = new Stats();
     mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, visualGrid.logicalGrid.cols * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
     mask.anchor.setTo(0, 0);
     stats.drawScores();
@@ -1376,10 +1377,18 @@ function playGameOver() {
 function gameOver() {
     var totalScore = stats.getTotalScore();
     var longestChain = stats.getLongestChain();
+    var turnsTaken = stats.getTurnNumber();
+    var timeElapsed = turnManager.getTime() / 1000 / 60;
     var analytics = window.ga;
     if (analytics) {
         analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'total score', { 'eventValue': totalScore, 'nonInteraction': 1 });
         analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'longest chain', { 'eventValue': longestChain, 'nonInteraction': 1 });
+        if (gameMode == 0 /* Standard */) {
+            analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'turns taken', { 'eventValue': turnsTaken, 'nonInteraction': 1 });
+        }
+        else if (gameMode == 1 /* Timed */) {
+            analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'time elapsed', { 'eventValue': timeElapsed, 'nonInteraction': 1 });
+        }
     }
     playGameOver();
     if (turnManager)
