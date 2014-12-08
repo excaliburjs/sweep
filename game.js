@@ -215,6 +215,7 @@ var Piece = (function (_super) {
         _super.call(this, x, y, Config.PieceWidth, Config.PieceHeight, color);
         this.cell = null;
         this.selected = false;
+        this.hover = false;
         this._id = id;
         this._type = type || 0 /* Circle */;
         this._originalColor = color;
@@ -621,6 +622,8 @@ var MatchManager = (function (_super) {
             if (!Config.EnableSingleTapClear) {
                 this.runInProgress = true;
                 cell.piece.selected = true;
+                cell.piece.setCenterDrawing(true);
+                cell.piece.scaleTo(1.3, 1.3, 1.8, 1.8).scaleTo(1, 1, 1.8, 1.8);
                 this._run.push(cell.piece);
                 this._playNote();
                 ex.Logger.getInstance().info("Run started", this._run);
@@ -646,6 +649,7 @@ var MatchManager = (function (_super) {
             var piece = cell.piece;
             if (!piece)
                 return;
+            piece.setCenterDrawing(true);
             if (!Config.EnableSingleTapClear) {
                 var removePiece = -1;
                 var containsBounds = new ex.BoundingBox(piece.getBounds().left + Config.PieceContainsPadding, piece.getBounds().top + Config.PieceContainsPadding, piece.getBounds().right - Config.PieceContainsPadding, piece.getBounds().bottom - Config.PieceContainsPadding);
@@ -661,6 +665,16 @@ var MatchManager = (function (_super) {
                     ex.Logger.getInstance().info("Run modified", this._run);
                     // notify
                     this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
+                    if (!piece.hover) {
+                        piece.hover = true;
+                        piece.scaleTo(1.2, 1.2, 1.2, 1.8);
+                    }
+                }
+                else {
+                    if (piece.hover) {
+                        piece.hover = false;
+                        piece.scaleTo(1, 1, 1.8, 1.8);
+                    }
                 }
                 // did user go backwards?
                 if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
