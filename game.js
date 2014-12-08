@@ -1772,7 +1772,7 @@ function gameOver() {
     var totalScore = stats.getTotalScore();
     var longestChain = stats.getLongestChain();
     var turnsTaken = stats.getTurnNumber();
-    var timeElapsed = turnManager.getTime() / 1000 / 60;
+    var timeElapsed = Math.round(turnManager.getTime() / 1000 / 60);
     var analytics = window.ga;
     if (analytics) {
         analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'total score', { 'eventValue': totalScore, 'nonInteraction': 1 });
