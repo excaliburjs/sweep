@@ -1818,6 +1818,9 @@ function gameOver() {
     document.getElementById("game-over-multiplier").innerHTML = (stats.getFinalScore() - enduranceBonus - stats.getTotalChainBonus() - stats.getTotalPiecesSwept()).toString();
     document.getElementById("game-over-time").innerHTML = enduranceBonus.toString();
     document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
+    if (gameMode == 1 /* Timed */) {
+        document.getElementById("try-challenge").className = "hide";
+    }
     // I'm so sorry, I'm so very sorry...so tired
     var text = document.getElementById("twidget").dataset['text'];
     document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");

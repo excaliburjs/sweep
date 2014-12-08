@@ -234,6 +234,7 @@ function gameOver() {
 
    document.getElementById("game-over").className = "show";
 
+
    document.getElementById("game-over-swept").innerHTML = stats.getTotalPiecesSwept().toString();
 
    document.getElementById("game-over-chain").innerHTML = stats.getTotalChainBonus().toString();
@@ -245,6 +246,10 @@ function gameOver() {
    document.getElementById("game-over-time").innerHTML = enduranceBonus.toString();
 
    document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
+
+   if (gameMode == GameMode.Timed) {
+      document.getElementById("try-challenge").className = "hide";
+   }
 
 
    // I'm so sorry, I'm so very sorry...so tired

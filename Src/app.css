@@ -115,6 +115,9 @@ canvas {
   font-size: 1.3em;
   margin-top: 0;
 }
+#game-over-inner .hide {
+  display: none ;
+}
 #game-over-inner .scores {
   text-align: left;
   max-width: 200px;
