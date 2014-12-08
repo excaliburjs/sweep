@@ -191,7 +191,7 @@ class LogicalGrid extends ex.Class {
    }
 
    public shift(from: number, to: number): ex.Promise<any> {
-      if (to > this.rows) return;
+      if (to > this.rows) ex.Promise.wrap(true);
 
       var promises: ex.Promise<any>[] = [];
       for (var i = 0; i < this.cols; i++) {

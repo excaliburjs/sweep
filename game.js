@@ -460,7 +460,7 @@ var LogicalGrid = (function (_super) {
     LogicalGrid.prototype.shift = function (from, to) {
         var _this = this;
         if (to > this.rows)
-            return;
+            ex.Promise.wrap(true);
         var promises = [];
         for (var i = 0; i < this.cols; i++) {
             if (to < 0) {
@@ -1549,6 +1549,7 @@ var _this = this;
 var game = new ex.Engine(0, 0, "game", 0 /* FullScreen */);
 game.backgroundColor = ex.Color.Transparent;
 var gameMode = 0 /* Standard */;
+var muted = false;
 var loader = new ex.Loader();
 // load up all resources in dictionary
 _.forIn(Resources, function (resource) {
@@ -1607,7 +1608,9 @@ function InitSetup() {
     stats.drawScores();
     //add pieces to initial rows
     grid.seed(Config.NumStartingRows);
-    playLoop();
+    if (!muted) {
+        playLoop();
+    }
     //turnManager.currentPromise = ex.Promise.wrap(true);
 }
 game.input.keyboard.on('up', function (evt) {
@@ -1640,7 +1643,30 @@ game.input.keyboard.on('up', function (evt) {
 var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
+function hasClass(element, cls) {
+    return element.classList.contains(cls);
+}
+function replaceClass(element, search, replace) {
+    if (hasClass(element, search)) {
+        this.removeClass(element, search);
+        this.addClass(element, replace);
+    }
+}
+function addClass(element, cls) {
+    element.classList.add(cls);
+}
+function removeClass(element, cls) {
+    element.classList.remove(cls);
+}
+function setVolume(volume) {
+    for (var r in Resources) {
+        if (Resources[r] instanceof ex.Sound) {
+            Resources[r].setVolume(volume);
+        }
+    }
+}
 function playLoop() {
+    setVolume(1);
     Resources.LoopSound.stop();
     Resources.ChallengeLoopSound.stop();
     // play some sounds
@@ -1658,10 +1684,23 @@ function playLoop() {
         Resources.ChallengeLoopSound.play();
     }
 }
-function mute() {
+function muteAll() {
     Resources.LoopSound.stop();
     Resources.ChallengeLoopSound.stop();
+    setVolume(0);
 }
+document.getElementById("sound").addEventListener('click', function () {
+    if (hasClass(this, 'fa-volume-up')) {
+        replaceClass(this, 'fa-volume-up', 'fa-volume-off');
+        muted = true;
+        muteAll();
+    }
+    else {
+        replaceClass(this, 'fa-volume-off', 'fa-volume-up');
+        muted = false;
+        playLoop();
+    }
+});
 function playGameOver() {
     Resources.LoopSound.stop();
     Resources.ChallengeLoopSound.stop();
