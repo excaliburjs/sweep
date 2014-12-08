@@ -1275,6 +1275,8 @@ var Stats = (function () {
         });
         game.add(square);
         game.add(label);
+        this._meterActors.push(square);
+        this._meterLabels.push(label);
     };
     return Stats;
 })();
@@ -1683,7 +1685,6 @@ function InitSetup() {
     if (!muted) {
         playLoop();
     }
-    //turnManager.currentPromise = ex.Promise.wrap(true);
 }
 game.input.keyboard.on('up', function (evt) {
     if (evt.key === 68 /* D */) {
@@ -1696,21 +1697,6 @@ game.input.keyboard.on('up', function (evt) {
         // fill first row
         grid.fill(grid.rows - 1);
     }
-    //if (evt.key === ex.Input.Keys.Up || evt.key == ex.Input.Keys.Down || evt.key === ex.Input.Keys.Left || evt.key === ex.Input.Keys.Right) {
-    //   var numCols = grid.cols || 0;
-    //   var numRows = grid.rows || 0;
-    //   if (evt.key === ex.Input.Keys.Up) {
-    //      numRows++;
-    //   } else if (evt.key === ex.Input.Keys.Down) {
-    //      numRows--;
-    //   } else if (evt.key === ex.Input.Keys.Left) {
-    //      numCols--;
-    //   } else if (evt.key === ex.Input.Keys.Right) {
-    //      numCols++;
-    //   }
-    //   grid = new LogicalGrid(numRows, numCols);
-    //   InitSetup();
-    //}   
 });
 var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
