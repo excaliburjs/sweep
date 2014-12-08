@@ -85,7 +85,7 @@ canvas {
 #game-over-modal {
     position: absolute;
     left: 50%;
-    top: -100%;
+    top: -130%;
             
     -moz-transition: top ease-out .7s;
     -o-transition: top ease-out .7s;
@@ -94,6 +94,10 @@ canvas {
 
     #game-over.show & {
         top: 20%;
+
+        @media (max-height: 600px) {
+            top: 20px;
+        }
     }
 }
 
@@ -102,10 +106,12 @@ canvas {
     left: -50%;
     background: #80649A;
     padding: 20px 40px;
+    min-width: 280px;
 
     h1, h2, h3, h4 { color: white; text-align: center; }
     p { text-align: center; }
     h1 { font-size: 1.3em; margin-top: 0; }
+
     .scores {
         text-align: left;
         max-width: 200px;
@@ -142,6 +148,12 @@ canvas {
         color: white; 
         text-decoration: none;
         margin-right: 1em;
-        &:hover { color: #392950; }}
+        &:hover { color: #392950; }}   
     
+    @media (max-width: 480px) {
+        padding: 10px 20px;
+
+        .scores { max-width: 100%; }
+    } 
 }
+
