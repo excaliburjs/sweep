@@ -72,7 +72,7 @@ var Config = (function () {
     Config.resetDefault = function () {
         Config.EnableTimer = false;
         Config.AdvanceRowsOnMatch = true;
-        Config.SweepThreshold = 15;
+        Config.SweepThreshold = 4;
         Config.EnableSweepMeters = true;
         Config.EnableSingleTapClear = false;
         Config.ClearSweepMetersAfterSingleUse = true;
@@ -1136,12 +1136,16 @@ var Stats = (function () {
     Stats.prototype._addMegaSweep = function (x, y) {
         var _this = this;
         var meter = new ex.Actor(x, y, Config.MeterWidth, Config.MeterHeight * 4, ex.Color.Orange);
+        meter.enableCapturePointer = true;
         var label = new ex.Label("MEGA SWEEP", meter.getCenter().x, meter.getCenter().y);
         var inputLabel = new ex.Label("PRESS S", meter.getCenter().x, meter.getCenter().y + 14);
         label.textAlign = inputLabel.textAlign = 2 /* Center */;
         label.color = inputLabel.color = ex.Color.White;
         label.font = inputLabel.font = "14px";
         meter.anchor.setTo(0, 0);
+        meter.on("pointerup", function () {
+            sweeper.sweepAll();
+        });
         game.addEventListener('update', function (data) {
             // mega sweep
             if (_this.allMetersFull()) {
@@ -1158,9 +1162,13 @@ var Stats = (function () {
     Stats.prototype._addMeter = function (piece, x, y) {
         var _this = this;
         var meter = new Meter(x, y, PieceTypeToColor[piece], Config.SweepThreshold);
+        meter.enableCapturePointer = true;
         var label = new ex.Label(null, meter.getCenter().x, meter.getCenter().y + 3);
         label.textAlign = 2 /* Center */;
         label.color = ex.Color.Black;
+        meter.on("pointerup", function () {
+            sweeper.sweep(piece);
+        });
         game.addEventListener('update', function (data) {
             meter.score = _this._meters[piece];
             // mega sweep
@@ -1183,9 +1191,13 @@ var Stats = (function () {
     Stats.prototype._addSweepMeter = function (x, y) {
         var _this = this;
         var square = new Meter(x, y, ex.Color.Red, this._sweepMeterThreshold);
+        square.enableCapturePointer = true;
         var label = new ex.Label(null, square.getCenter().x, y + 20);
         label.textAlign = 2 /* Center */;
         label.color = ex.Color.Black;
+        square.on("pointerup", function () {
+            sweeper.sweep();
+        });
         game.addEventListener('update', function (data) {
             square.score = _this._sweepMeter;
             square.threshold = _this._sweepMeterThreshold;
@@ -1206,14 +1218,17 @@ var Meter = (function (_super) {
     function Meter(x, y, color, threshold) {
         _super.call(this, x, y, Config.MeterWidth, Config.MeterHeight, color);
         this.threshold = threshold;
+        this.anchor.setTo(0, 0);
     }
     Meter.prototype.draw = function (ctx, delta) {
+        var x = this.getBounds().left;
+        var y = this.getBounds().top;
         ctx.strokeStyle = this.color.toString();
         ctx.lineWidth = 2;
-        ctx.strokeRect(this.x, this.y, this.getWidth(), this.getHeight());
+        ctx.strokeRect(x, y, this.getWidth(), this.getHeight());
         var percentage = (this.score / this.threshold);
         ctx.fillStyle = this.color.toString();
-        ctx.fillRect(this.x, this.y, (this.getWidth() * percentage), this.getHeight());
+        ctx.fillRect(x, y, (this.getWidth() * percentage), this.getHeight());
     };
     return Meter;
 })(ex.Actor);
