@@ -30,7 +30,7 @@ class Piece extends ex.Actor {
       super(x, y, Config.PieceWidth, Config.PieceHeight, color);
       this._id = id;
       this._type = type || PieceType.Circle;
-      this._originalColor = color;
+      this._originalColor = color;      
    }
    
    public getId(): number {

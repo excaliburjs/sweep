@@ -151,7 +151,7 @@ class LogicalGrid extends ex.Class {
 
             var cell = this.getCell(i, row);
             piece.x = cell.getCenter().x;
-            piece.y = visualGrid.y + visualGrid.getHeight() + Config.CellHeight;
+            piece.y = visualGrid.y + visualGrid.getHeight() + (Config.CellHeight / 2);
             var intendedCell = this.setCell(i, row, piece, !smooth);
             var hasSameType = intendedCell.getNeighbors().some((c) => {
                if (c && c.piece) {
@@ -163,12 +163,13 @@ class LogicalGrid extends ex.Class {
                this.clearPiece(piece);
                piece = PieceFactory.getRandomPiece();
                piece.x = cell.getCenter().x;
-               piece.y = visualGrid.y + visualGrid.getHeight() + Config.CellHeight;
+               piece.y = visualGrid.y + visualGrid.getHeight() + (Config.CellHeight / 2);
                this.setCell(i, row, piece, !smooth);
             }
 
+
             if (smooth) {
-               piece.delay(delay).easeTo(cell.getCenter().x, cell.getCenter().y, 300, ex.EasingFunctions.EaseInOutCubic).asPromise().then(() => {
+               piece.delay(delay).easeTo(cell.getCenter().x, cell.getCenter().y, Config.PieceEasingFillDuration, ex.EasingFunctions.EaseInOutCubic).asPromise().then(() => {
                   piece.x = cell.getCenter().x;
                   piece.y = cell.getCenter().y;
                });
