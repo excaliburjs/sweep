@@ -25,6 +25,8 @@
    private _types = [PieceType.Circle, PieceType.Triangle, PieceType.Square, PieceType.Star];
    private _scores = [this._numCirclesDestroyed, this._numTrianglesDestroyed, this._numSquaresDestroyed, this._numStarsDestroyed];
    private _meters = [this._numCirclesDestroyedMeter, this._numTrianglesDestroyedMeter, this._numSquaresDestroyedMeter, this._numStarsDestroyedMeter];
+   private _meterActors: Array<ex.Actor>
+   private _meterLabels: Array<ex.Label>;
    private _sweepMeter = 0;
    private _sweepMeterThreshold = 0;
    private _chains = [this._longestCircleCombo, this._longestTriangleCombo, this._longestSquareCombo, this._longestStarCombo];
@@ -33,6 +35,8 @@
 
    constructor() {
       this._sweepMeterThreshold = Config.SweepAltThreshold;
+      this._meterActors = new Array<ex.Actor>();
+      this._meterLabels = new Array<ex.Label>();
    }
 
    public getTotalScore(): number {
@@ -265,6 +269,21 @@
       });
       game.add(meter);
       game.add(label);
+      this._meterActors.push(meter);
+      this._meterLabels.push(label);
+   }
+
+   public clearMeters() {
+      if (this._meterActors) {
+         for (var i = 0; i < this._meterActors.length; i++) {
+            game.remove(this._meterActors[i]);
+         }
+      }
+      if (this._meterLabels) {
+         for (var i = 0; i < this._meterLabels.length; i++) {
+            game.remove(this._meterLabels[i]);
+         }
+      }
    }
 
    private _addSweepMeter(x: number, y: number) {
