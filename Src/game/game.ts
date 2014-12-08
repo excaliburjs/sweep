@@ -211,7 +211,7 @@ function playGameOver() {
 }
 
 function gameOver() {
-   var totalScore = stats.getTotalScore();
+   var totalScore = stats.getFinalScore();
    var longestChain = stats.getLongestChain();
    var turnsTaken = stats.getTurnNumber();
    var timeElapsed = Math.round(turnManager.getTime()/1000/60);
@@ -232,13 +232,36 @@ function gameOver() {
 
    document.getElementById("game-over").className = "show";
 
+
    document.getElementById("game-over-swept").innerHTML = stats.getTotalPiecesSwept().toString();
 
    document.getElementById("game-over-chain").innerHTML = stats.getTotalChainBonus().toString();
 
-   document.getElementById("game-over-multiplier").innerHTML = (stats.getTotalScore() - stats.getTotalChainBonus() - stats.getTotalPiecesSwept()).toString();
+   var enduranceBonus = stats.calculateEnduranceBonus();
 
-   document.getElementById("game-over-total").innerHTML = stats.getTotalScore().toString();
+   document.getElementById("game-over-multiplier").innerHTML = (stats.getFinalScore() - enduranceBonus - stats.getTotalChainBonus() - stats.getTotalPiecesSwept()).toString();
+
+   document.getElementById("game-over-time").innerHTML = enduranceBonus.toString();
+
+   document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
+
+   if (gameMode == GameMode.Timed) {
+      document.getElementById("try-challenge").className = "hide";
+   }
+
+
+   // I'm so sorry, I'm so very sorry...so tired
+   var text = document.getElementById("twidget").dataset['text'];
+   document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === GameMode.Timed ? "challenge mode" : "standard mode");
+   var twitterScript = <HTMLScriptElement>document.createElement('script');
+   twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
+   document.getElementById("game-over").appendChild(twitterScript);
+
+   var fbText = (<HTMLAnchorElement>document.getElementById('fidget')).href.replace("SOCIAL_SCORE", stats.getTotalScore().toString()).replace("SOCIAL_MODE", gameMode === GameMode.Timed ? "challenge mode" : "standard mode");
+   (<HTMLAnchorElement>document.getElementById('fidget')).href = fbText;
+
+   //document.getElementById("fidget").attributes.href
+
 
    //var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
    //var gameOverWidgetActor = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() - 800, 300, 300, color);
