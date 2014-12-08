@@ -97,7 +97,7 @@ class Config {
    static loadSurvivalReverse() {
       Config.EnableTimer = true;
       Config.AdvanceRowsOnMatch = false;
-      Config.TimerValue = 1000;
+      Config.TimerValue = 1500;
       Config.EnableSingleTapClear = true;
       Config.EnableSweepMeters = false;
       Config.EnableSweeper = true;
