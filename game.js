@@ -1536,7 +1536,7 @@ var Effects = (function () {
         emitter.focusAccel = 900;
         game.addChild(emitter);
         emitter.emit(5);
-        //emitter.moveTo(emitter.x + 1, emitter.y + 1, 20);
+        emitter.moveTo(emitter.x + 3, emitter.y + 1, 1).die();
     };
     return Effects;
 })();
