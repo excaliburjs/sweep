@@ -19,6 +19,8 @@ class Config {
    static MeterHeight: number = 30;
    static EnableGridLines = false;
    static PolylineThickness = 5;
+   static MainMenuButtonWidth = 185;
+   static MainMenuButtonHeight = 62;
 
    //
    // game modes
