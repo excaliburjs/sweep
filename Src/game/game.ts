@@ -30,9 +30,9 @@ _.forIn(Resources, (resource) => {
 
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-var mainMenu = new MainMenu();
+// var mainMenu = new MainMenu();
 
-game.add(mainMenu);
+//game.add(mainMenu);
 
 var visualGrid: VisualGrid,
    turnManager: TurnManager,

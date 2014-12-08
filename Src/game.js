@@ -1461,8 +1461,8 @@ _.forIn(Resources, function (resource) {
 });
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-var mainMenu = new MainMenu();
-game.add(mainMenu);
+// var mainMenu = new MainMenu();
+//game.add(mainMenu);
 var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, polyline, background;
 // game modes
 var loadConfig = function (config) {
