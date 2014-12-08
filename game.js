@@ -150,6 +150,9 @@ var Config = (function () {
     Config.ChainBonusMedium = 10;
     Config.ChainBonusLarge = 25;
     Config.ChainBonusSuper = 50;
+    // endurance score multiplier
+    Config.StandardModeMultiplier = 10;
+    Config.TimedModeMultiplier = 10;
     Config.SweepShakeDuration = 400;
     Config.MegaSweepShakeDuration = 500;
     Config.MegaSweepDelay = 600;
