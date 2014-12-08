@@ -5,6 +5,7 @@
 /// <reference path="resources.ts"/>
 /// <reference path="Piece.ts"/>
 /// <reference path="grid.ts"/>
+/// <reference path="mainmenu.ts"/>
 /// <reference path="match.ts"/>
 /// <reference path="polyline.ts"/>
 /// <reference path="turn.ts"/>
@@ -28,8 +29,18 @@ _.forIn(Resources, (resource) => {
 
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
+var mainMenu = new MainMenu();
 
-var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, polyline;
+game.add(mainMenu);
+
+var visualGrid: VisualGrid,
+   turnManager: TurnManager,
+   matcher: MatchManager,
+   transitionManager: TransitionManager,
+   sweeper: Sweeper,
+   stats: Stats,
+   mask: ex.Actor,
+   polyline: PolyLine;
 
 // game modes
 var loadConfig = (config) => {

@@ -171,7 +171,8 @@ var Resources = {
     TextureTile1: new ex.Texture("images/Tile1.png"),
     TextureTile2: new ex.Texture("images/Tile2.png"),
     TextureTile3: new ex.Texture("images/Tile3.png"),
-    TextureTile4: new ex.Texture("images/Tile4.png")
+    TextureTile4: new ex.Texture("images/Tile4.png"),
+    TextureLogo: new ex.Texture("images/logo.png")
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
@@ -556,6 +557,59 @@ var VisualGrid = (function (_super) {
     };
     return VisualGrid;
 })(ex.Actor);
+var MainMenu = (function (_super) {
+    __extends(MainMenu, _super);
+    function MainMenu() {
+        _super.call(this);
+        this._show = false;
+        this._shown = false;
+        this._showing = false;
+        this.color = new ex.Color(0, 0, 0, 0.9);
+        this._logo = new ex.UIActor();
+        this._logo.addDrawing(Resources.TextureLogo.asSprite());
+        this._logo.currentDrawing.setScaleX(0.6);
+        this._logo.currentDrawing.setScaleY(0.6);
+        this._logo.currentDrawing.transformAboutPoint(new ex.Point(0.5, 0.5));
+        //this._logo.scale.setTo(0.5, 0.5);
+    }
+    MainMenu.prototype.onInitialize = function (engine) {
+        game.add(this._logo);
+        this.show();
+    };
+    MainMenu.prototype.update = function (engine, delta) {
+        var _this = this;
+        _super.prototype.update.call(this, engine, delta);
+        var vgp = game.worldToScreenCoordinates(new ex.Point(visualGrid.x, visualGrid.y));
+        this.x = vgp.x;
+        this.y = vgp.y;
+        this.setWidth(visualGrid.getWidth());
+        this.setHeight(visualGrid.getHeight());
+        if (this._show) {
+            this._show = false;
+            this._showing = true;
+            // ease out logo
+            this._logo.x = this.getCenter().x;
+            this._logo.y = -70;
+            this._logo.easeTo(this.getCenter().x, this.y + 50, 400, ex.EasingFunctions.EaseInOutCubic).callMethod(function () { return _this._shown = true; });
+        }
+    };
+    MainMenu.prototype.show = function () {
+        this.visible = true;
+        this._logo.visible = true;
+        this._show = true;
+    };
+    MainMenu.prototype.hide = function () {
+        this.visible = false;
+    };
+    return MainMenu;
+})(ex.UIActor);
+var MenuButton = (function (_super) {
+    __extends(MenuButton, _super);
+    function MenuButton(text, action, x, y) {
+        _super.call(this, x, y);
+    }
+    return MenuButton;
+})(ex.UIActor);
 var MatchEvent = (function (_super) {
     __extends(MatchEvent, _super);
     function MatchEvent(run) {
@@ -1296,6 +1350,7 @@ var UIWidget = (function (_super) {
 /// <reference path="resources.ts"/>
 /// <reference path="Piece.ts"/>
 /// <reference path="grid.ts"/>
+/// <reference path="mainmenu.ts"/>
 /// <reference path="match.ts"/>
 /// <reference path="polyline.ts"/>
 /// <reference path="turn.ts"/>
@@ -1314,6 +1369,8 @@ _.forIn(Resources, function (resource) {
 });
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
+var mainMenu = new MainMenu();
+game.add(mainMenu);
 var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, polyline;
 // game modes
 var loadConfig = function (config) {
