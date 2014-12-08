@@ -128,6 +128,14 @@ var Config = (function () {
     Config.MainMenuButtonHeight = 62;
     // easings
     Config.PieceEasingFillDuration = 300;
+    Config.SweepScoreMultiplier = 2;
+    Config.ChainThresholdSmall = 8;
+    Config.ChainThresholdMedium = 11;
+    Config.ChainThresholdLarge = 15;
+    Config.ChainBonusSmall = 5;
+    Config.ChainBonusMedium = 10;
+    Config.ChainBonusLarge = 25;
+    Config.ChainBonusSuper = 50;
     Config.SweepShakeDuration = 400;
     Config.MegaSweepShakeDuration = 500;
     Config.MegaSweepDelay = 600;
@@ -137,7 +145,7 @@ var Effects = (function () {
     function Effects() {
     }
     Effects.prototype.clearEffect = function (piece) {
-        //TODO move emitter to Grid
+        //TODO move emitter to Cell
         var emitter = new ex.ParticleEmitter(piece.x, piece.y, 1, 1);
         emitter.minVel = 30;
         emitter.maxVel = 125;
@@ -164,7 +172,7 @@ var Effects = (function () {
         emitter.focusAccel = 900;
         game.addChild(emitter);
         emitter.emit(5);
-        //emitter.moveTo(emitter.x + 1, emitter.y + 1, 20);
+        emitter.moveTo(emitter.x + 3, emitter.y + 1, 1).die();
     };
     return Effects;
 })();
@@ -303,6 +311,8 @@ var Piece = (function (_super) {
         this._id = id;
         this._type = type || 0 /* Circle */;
         this._originalColor = color;
+        this._updateDrawings();
+        this.calculatedAnchor = new ex.Point(18, 18);
     }
     Piece.prototype.getId = function () {
         return this._id;
@@ -327,6 +337,7 @@ var Piece = (function (_super) {
     };
     Piece.prototype.update = function (engine, delta) {
         _super.prototype.update.call(this, engine, delta);
+        //console.log("piece pos", this.x, this.y, this);
         if (matcher.runInProgress && (!this.selected && this.getType() !== matcher.getRunType())) {
             this.setDrawing("faded");
         }
@@ -342,9 +353,11 @@ var Piece = (function (_super) {
 var PieceFactory = (function () {
     function PieceFactory() {
     }
-    PieceFactory.getRandomPiece = function () {
+    PieceFactory.getRandomPiece = function (x, y) {
+        if (x === void 0) { x = 0; }
+        if (y === void 0) { y = 0; }
         var index = Math.floor(Math.random() * PieceTypes.length);
-        var piece = new Piece(PieceFactory._maxId++, 0, 0, PieceTypeToColor[index].clone(), index);
+        var piece = new Piece(PieceFactory._maxId++, x, y, PieceTypeToColor[index].clone(), index);
         game.add(piece);
         return piece;
     };
@@ -444,6 +457,7 @@ var LogicalGrid = (function (_super) {
     };
     LogicalGrid.prototype.clearPiece = function (piece) {
         if (piece && piece.cell) {
+            piece.visible = false;
             piece.cell.piece = null;
             piece.cell = null;
             piece.kill();
@@ -494,10 +508,9 @@ var LogicalGrid = (function (_super) {
         if (delay === void 0) { delay = 0; }
         for (var i = 0; i < this.cols; i++) {
             (function () {
-                var piece = PieceFactory.getRandomPiece();
                 var cell = _this.getCell(i, row);
-                piece.x = cell.getCenter().x;
-                piece.y = visualGrid.y + visualGrid.getHeight() + (Config.CellHeight / 2);
+                var piece = PieceFactory.getRandomPiece(cell.getCenter().x, visualGrid.y + visualGrid.getHeight() + (Config.CellHeight / 2));
+                //piece.y = visualGrid.y + visualGrid.getHeight() + (Config.CellHeight / 2);
                 var intendedCell = _this.setCell(i, row, piece, !smooth);
                 var hasSameType = intendedCell.getNeighbors().some(function (c) {
                     if (c && c.piece) {
@@ -1079,6 +1092,11 @@ var Stats = (function () {
         this._longestSquareCombo = 0;
         this._longestStarCombo = 0;
         this._turnNumber = 0;
+        this._circleMultiplier = 1;
+        this._triangleMultiplier = 1;
+        this._squareMultiplier = 1;
+        this._starMultiplier = 1;
+        this._multipliers = [this._circleMultiplier, this._triangleMultiplier, this._squareMultiplier, this._starMultiplier];
         this._types = [0 /* Circle */, 1 /* Triangle */, 2 /* Square */, 3 /* Star */];
         this._scores = [this._numCirclesDestroyed, this._numTrianglesDestroyed, this._numSquaresDestroyed, this._numStarsDestroyed];
         this._meters = [this._numCirclesDestroyedMeter, this._numTrianglesDestroyedMeter, this._numSquaresDestroyedMeter, this._numStarsDestroyedMeter];
@@ -1086,7 +1104,10 @@ var Stats = (function () {
         this._sweepMeterThreshold = 0;
         this._chains = [this._longestCircleCombo, this._longestTriangleCombo, this._longestSquareCombo, this._longestStarCombo];
         this._lastChain = 0;
+        this._lastChainBonus = 0;
         this._sweepMeterThreshold = Config.SweepAltThreshold;
+        this._meterActors = new Array();
+        this._meterLabels = new Array();
     }
     Stats.prototype.getTotalScore = function () {
         var totalScore = this._scores[0] + this._scores[1] + this._scores[2] + this._scores[3];
@@ -1126,6 +1147,9 @@ var Stats = (function () {
     };
     Stats.prototype.resetSweeperMeter = function () {
         this._sweepMeter = 0;
+        for (var i = 0; i < this._multipliers.length; i++) {
+            this._multipliers[i] = 1;
+        }
         // if moving upwards, decrease threshold
         if (Config.SweepMovesUp) {
             this._sweepMeterThreshold = Math.max(Config.SweepAltMinThreshold, this._sweepMeterThreshold - Config.SweepAltThresholdDelta);
@@ -1134,15 +1158,40 @@ var Stats = (function () {
             this._sweepMeterThreshold = Math.min(Config.SweepAltMaxThreshold, this._sweepMeterThreshold + Config.SweepAltThresholdDelta);
         }
     };
-    Stats.prototype.increaseScoreMultiplier = function () {
-        // todo
-    };
     Stats.prototype.scorePieces = function (pieces) {
         var type = this._types.indexOf(pieces[0].getType());
-        this._scores[type] += pieces.length;
+        this._scores[type] += this.scoreMultiplier(pieces.length + this.chainBonus(pieces), type);
         var newScore = this._meters[type] + pieces.length;
         this._meters[type] = Math.min(newScore, Config.SweepThreshold);
         this._sweepMeter = Math.min(this._sweepMeter + pieces.length, this._sweepMeterThreshold);
+    };
+    Stats.prototype.scoreMultiplier = function (currentScore, type) {
+        var modifiedScore = currentScore;
+        if (this._meters[type] == Config.SweepThreshold) {
+            this._multipliers[type] = Config.SweepScoreMultiplier;
+            modifiedScore = currentScore * Config.SweepScoreMultiplier;
+        }
+        return modifiedScore;
+    };
+    Stats.prototype.chainBonus = function (pieces) {
+        var chain = pieces.length;
+        var bonus = 0;
+        if (chain > 3) {
+            if (chain < Config.ChainThresholdSmall) {
+                return Config.ChainBonusSmall;
+            }
+            else if (chain < Config.ChainThresholdMedium) {
+                bonus = Config.ChainBonusMedium;
+            }
+            else if (chain < Config.ChainThresholdLarge) {
+                bonus = Config.ChainBonusLarge;
+            }
+            else {
+                bonus = Config.ChainBonusSuper;
+            }
+        }
+        this._lastChainBonus = bonus;
+        return bonus;
     };
     Stats.prototype.scoreChain = function (pieces) {
         var chainScore = this._chains[this._types.indexOf(pieces[0].getType())];
@@ -1150,6 +1199,9 @@ var Stats = (function () {
         if (chainScore < pieces.length) {
             this._chains[this._types.indexOf(pieces[0].getType())] = pieces.length;
         }
+    };
+    Stats.prototype.getMultipliers = function () {
+        return this._multipliers;
     };
     Stats.prototype.drawScores = function () {
         var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
@@ -1257,6 +1309,20 @@ var Stats = (function () {
         });
         game.add(meter);
         game.add(label);
+        this._meterActors.push(meter);
+        this._meterLabels.push(label);
+    };
+    Stats.prototype.clearMeters = function () {
+        if (this._meterActors) {
+            for (var i = 0; i < this._meterActors.length; i++) {
+                game.remove(this._meterActors[i]);
+            }
+        }
+        if (this._meterLabels) {
+            for (var i = 0; i < this._meterLabels.length; i++) {
+                game.remove(this._meterLabels[i]);
+            }
+        }
     };
     Stats.prototype._addSweepMeter = function (x, y) {
         var _this = this;
@@ -1401,7 +1467,7 @@ var Sweeper = (function (_super) {
         // reset meter
         stats.resetAllMeters();
         // add combo multiplier
-        stats.increaseScoreMultiplier();
+        //stats.increaseScoreMultiplier();
         // fill grid
         grid.seed(Config.NumStartingRows, true, Config.MegaSweepDelay);
         Resources.MegaSweepSound.play();
@@ -1598,6 +1664,9 @@ function InitSetup() {
     if (turnManager)
         turnManager.dispose(); //cancel the timer
     matcher = new MatchManager();
+    if (stats) {
+        stats.clearMeters();
+    }
     stats = new Stats();
     turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? 0 /* Timed */ : 1 /* Match */);
     transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
@@ -1612,7 +1681,6 @@ function InitSetup() {
     if (!muted) {
         playLoop();
     }
-    //turnManager.currentPromise = ex.Promise.wrap(true);
 }
 game.input.keyboard.on('up', function (evt) {
     if (evt.key === 68 /* D */) {
@@ -1625,21 +1693,6 @@ game.input.keyboard.on('up', function (evt) {
         // fill first row
         grid.fill(grid.rows - 1);
     }
-    //if (evt.key === ex.Input.Keys.Up || evt.key == ex.Input.Keys.Down || evt.key === ex.Input.Keys.Left || evt.key === ex.Input.Keys.Right) {
-    //   var numCols = grid.cols || 0;
-    //   var numRows = grid.rows || 0;
-    //   if (evt.key === ex.Input.Keys.Up) {
-    //      numRows++;
-    //   } else if (evt.key === ex.Input.Keys.Down) {
-    //      numRows--;
-    //   } else if (evt.key === ex.Input.Keys.Left) {
-    //      numCols--;
-    //   } else if (evt.key === ex.Input.Keys.Right) {
-    //      numCols++;
-    //   }
-    //   grid = new LogicalGrid(numRows, numCols);
-    //   InitSetup();
-    //}   
 });
 var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);

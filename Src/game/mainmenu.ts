@@ -74,6 +74,7 @@
    }
 
    public show() {
+      matcher.inMainMenu = true;
       this.visible = true;
       this._logo.visible = true;
       this._standardButton.visible = true;
@@ -85,6 +86,7 @@
    }
 
    public hide() {
+      matcher.inMainMenu = false;
       this.visible = false;
       this._logo.visible = false;
       this._standardButton.visible = false;

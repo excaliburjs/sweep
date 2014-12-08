@@ -92,6 +92,7 @@ class LogicalGrid extends ex.Class {
    public clearPiece(piece: Piece) {
 
       if (piece && piece.cell) {
+         piece.visible = false;
          piece.cell.piece = null;
          piece.cell = null;
          piece.kill();
@@ -147,11 +148,11 @@ class LogicalGrid extends ex.Class {
 
       for (var i = 0; i < this.cols; i++) {
          (() => {
-            var piece = PieceFactory.getRandomPiece();
-
             var cell = this.getCell(i, row);
-            piece.x = cell.getCenter().x;
-            piece.y = visualGrid.y + visualGrid.getHeight() + (Config.CellHeight / 2);
+            var piece = PieceFactory.getRandomPiece(cell.getCenter().x, visualGrid.y + visualGrid.getHeight() + (Config.CellHeight / 2));
+            
+
+            //piece.y = visualGrid.y + visualGrid.getHeight() + (Config.CellHeight / 2);
             var intendedCell = this.setCell(i, row, piece, !smooth);
             var hasSameType = intendedCell.getNeighbors().some((c) => {
                if (c && c.piece) {

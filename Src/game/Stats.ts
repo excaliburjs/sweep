@@ -16,16 +16,28 @@
 
    private _turnNumber: number = 0;
 
+   private _circleMultiplier: number = 1;
+   private _triangleMultiplier: number = 1;
+   private _squareMultiplier: number = 1;
+   private _starMultiplier: number = 1;
+   private _multipliers = [this._circleMultiplier, this._triangleMultiplier, this._squareMultiplier, this._starMultiplier];
+
    private _types = [PieceType.Circle, PieceType.Triangle, PieceType.Square, PieceType.Star];
    private _scores = [this._numCirclesDestroyed, this._numTrianglesDestroyed, this._numSquaresDestroyed, this._numStarsDestroyed];
    private _meters = [this._numCirclesDestroyedMeter, this._numTrianglesDestroyedMeter, this._numSquaresDestroyedMeter, this._numStarsDestroyedMeter];
+   private _meterActors: Array<ex.Actor>
+   private _meterLabels: Array<ex.Label>;
    private _sweepMeter = 0;
    private _sweepMeterThreshold = 0;
    private _chains = [this._longestCircleCombo, this._longestTriangleCombo, this._longestSquareCombo, this._longestStarCombo];
    private _lastChain: number = 0;
+   private _lastChainBonus: number = 0;
+   private _totalChainBonus: number = 0;
 
    constructor() {
       this._sweepMeterThreshold = Config.SweepAltThreshold;
+      this._meterActors = new Array<ex.Actor>();
+      this._meterLabels = new Array<ex.Label>();
    }
 
    public getTotalScore(): number {
@@ -73,6 +85,9 @@
 
    public resetSweeperMeter() {
       this._sweepMeter = 0;
+      for (var i = 0; i < this._multipliers.length; i++) {
+         this._multipliers[i] = 1;
+      }
 
       // if moving upwards, decrease threshold
 
@@ -83,18 +98,42 @@
       }
    }
 
-   public increaseScoreMultiplier() {
-      // todo
-   }
-
    public scorePieces(pieces: Piece[]) {
       var type = this._types.indexOf(pieces[0].getType());
 
-      this._scores[type] += pieces.length;
+      this._scores[type] += this.scoreMultiplier(pieces.length + this.chainBonus(pieces), type);
       var newScore = this._meters[type] + pieces.length;
 
       this._meters[type] = Math.min(newScore, Config.SweepThreshold);
       this._sweepMeter = Math.min(this._sweepMeter + pieces.length, this._sweepMeterThreshold);
+   }
+
+   public scoreMultiplier(currentScore: number, type: PieceType): number {
+      var modifiedScore = currentScore;
+      if (this._meters[type] == Config.SweepThreshold) {
+         this._multipliers[type] = Config.SweepScoreMultiplier;
+         modifiedScore = currentScore * Config.SweepScoreMultiplier;
+      }
+      return modifiedScore;
+   }
+
+   public chainBonus(pieces: Piece[]): number {
+      var chain = pieces.length;
+      var bonus = 0;
+      if (chain > 3) {
+         if (chain < Config.ChainThresholdSmall) {
+            return Config.ChainBonusSmall;
+         } else if (chain < Config.ChainThresholdMedium) {
+            bonus = Config.ChainBonusMedium
+         } else if (chain < Config.ChainThresholdLarge) {
+            bonus = Config.ChainBonusLarge;
+         } else {
+            bonus = Config.ChainBonusSuper;
+         }
+      }
+      this._lastChainBonus = bonus;
+      this._totalChainBonus += bonus;
+      return bonus;
    }
 
    public scoreChain(pieces: Piece[]) {
@@ -105,6 +144,10 @@
       if (chainScore < pieces.length) {
          this._chains[this._types.indexOf(pieces[0].getType())] = pieces.length;
       }
+   }
+
+   public getMultipliers(): Array<number> {
+      return this._multipliers;
    }
 
    public drawScores() {
@@ -228,6 +271,21 @@
       });
       game.add(meter);
       game.add(label);
+      this._meterActors.push(meter);
+      this._meterLabels.push(label);
+   }
+
+   public clearMeters() {
+      if (this._meterActors) {
+         for (var i = 0; i < this._meterActors.length; i++) {
+            game.remove(this._meterActors[i]);
+         }
+      }
+      if (this._meterLabels) {
+         for (var i = 0; i < this._meterLabels.length; i++) {
+            game.remove(this._meterLabels[i]);
+         }
+      }
    }
 
    private _addSweepMeter(x: number, y: number) {
@@ -252,6 +310,8 @@
       });
       game.add(square);
       game.add(label);
+      this._meterActors.push(square);
+      this._meterLabels.push(label);
    }
 }
 
