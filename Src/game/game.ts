@@ -6,6 +6,7 @@
 /// <reference path="Piece.ts"/>
 /// <reference path="grid.ts"/>
 /// <reference path="match.ts"/>
+/// <reference path="polyline.ts"/>
 /// <reference path="turn.ts"/>
 /// <reference path="transition.ts"/>
 /// <reference path="Stats.ts"/>
@@ -28,7 +29,7 @@ _.forIn(Resources, (resource) => {
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 
-var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask;
+var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, polyline;
 
 // game modes
 var loadConfig = (config) => {
@@ -62,6 +63,7 @@ function InitSetup() {
    if (matcher) matcher.dispose(); //unbind events
    if (turnManager) turnManager.dispose(); //cancel the timer
    matcher = new MatchManager();
+   polyline = new PolyLine();
    stats = new Stats();
    turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? TurnMode.Timed : TurnMode.Match);
    transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
@@ -75,6 +77,7 @@ function InitSetup() {
 
    game.add(visualGrid);
    game.add(sweeper);
+   game.add(polyline);
    game.add(mask);
 
    //add pieces to initial rows
