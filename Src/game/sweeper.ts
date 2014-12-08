@@ -73,7 +73,7 @@ class Sweeper extends ex.Actor {
 
    public sweepAll(force: boolean = false): void {
 
-      game.currentScene.camera.shake(4, 4, 500);
+      game.currentScene.camera.shake(4, 4, Config.MegaSweepShakeDuration);
 
       if (matcher.gameOver) return;
 
@@ -112,7 +112,7 @@ class Sweeper extends ex.Actor {
 
    public sweep(type: PieceType = null): void {
 
-      game.currentScene.camera.shake(4, 4, 400);
+      game.currentScene.camera.shake(4, 4, Config.SweepShakeDuration);
 
       if (matcher.gameOver) return; 
 

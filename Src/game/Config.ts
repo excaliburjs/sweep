@@ -42,6 +42,9 @@ class Config {
    static SweepAltMinThreshold: number;
    static SweepAltMaxThreshold: number;
 
+   static SweepShakeDuration: number = 400;
+   static MegaSweepShakeDuration: number = 500;
+
    //
    // cascade configs
    //
