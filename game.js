@@ -595,6 +595,7 @@ var MainMenu = (function (_super) {
         }
     };
     MainMenu.prototype.show = function () {
+        matcher.inMainMenu = true;
         this.visible = true;
         this._logo.visible = true;
         this._standardButton.visible = true;
@@ -605,6 +606,7 @@ var MainMenu = (function (_super) {
         this._hide = false;
     };
     MainMenu.prototype.hide = function () {
+        matcher.inMainMenu = false;
         this.visible = false;
         this._logo.visible = false;
         this._standardButton.visible = false;
@@ -668,6 +670,7 @@ var MatchManager = (function (_super) {
         ];
         this._run = [];
         this.gameOver = false;
+        this.inMainMenu = true;
         this.dispose = function () {
             game.input.pointers.primary.off("down");
             game.input.pointers.primary.off("up");
@@ -698,7 +701,7 @@ var MatchManager = (function (_super) {
         this._notes[index].play();
     };
     MatchManager.prototype._handlePointerDown = function (pe) {
-        if (!this.gameOver) {
+        if (!this.gameOver && !this.inMainMenu) {
             var cell = visualGrid.getCellByPos(pe.x, pe.y);
             if (!cell || this.runInProgress || !cell.piece) {
                 return;
@@ -725,7 +728,7 @@ var MatchManager = (function (_super) {
         }
     };
     MatchManager.prototype._handlePointerMove = function (pe) {
-        if (!this.gameOver) {
+        if (!this.gameOver && !this.inMainMenu) {
             // add piece to run if valid
             // draw line?
             if (!this.runInProgress)
@@ -781,7 +784,7 @@ var MatchManager = (function (_super) {
         }
     };
     MatchManager.prototype._handlePointerUp = function (pe) {
-        if (!this.gameOver) {
+        if (!this.gameOver && !this.inMainMenu) {
             if (pe.pointerType === 1 /* Mouse */ && pe.button !== 0 /* Left */) {
                 return;
             }
@@ -810,7 +813,7 @@ var MatchManager = (function (_super) {
         }
     };
     MatchManager.prototype._handleCancelRun = function () {
-        if (!this.gameOver) {
+        if (!this.gameOver && !this.inMainMenu) {
             Resources.UndoSound.play();
             this._run.forEach(function (p) { return p.selected = false; });
             this._run.length = 0;

@@ -21,6 +21,7 @@ class MatchManager extends ex.Class {
    private _run: Piece[] = [];   
 
    public gameOver: boolean = false;
+   public inMainMenu: boolean = true;
    public dispose = function () {
       game.input.pointers.primary.off("down");
       game.input.pointers.primary.off("up");
@@ -61,7 +62,7 @@ class MatchManager extends ex.Class {
    }
 
    private _handlePointerDown(pe: PointerEvent) {
-      if (!this.gameOver) {
+      if (!this.gameOver && !this.inMainMenu) {
          var cell = visualGrid.getCellByPos(pe.x, pe.y);
 
          if (!cell || this.runInProgress || !cell.piece) {
@@ -95,7 +96,7 @@ class MatchManager extends ex.Class {
    }
 
    private _handlePointerMove(pe: PointerEvent) {
-      if (!this.gameOver) {
+      if (!this.gameOver && !this.inMainMenu) {
          // add piece to run if valid
          // draw line?
 
@@ -171,7 +172,7 @@ class MatchManager extends ex.Class {
    }
 
    private _handlePointerUp(pe: ex.Input.PointerEvent) {
-      if (!this.gameOver) {
+      if (!this.gameOver && !this.inMainMenu) {
 
          if (pe.pointerType === ex.Input.PointerType.Mouse && pe.button !== ex.Input.PointerButton.Left) {
             return;
@@ -204,7 +205,7 @@ class MatchManager extends ex.Class {
    }
 
    private _handleCancelRun() {
-      if (!this.gameOver) {
+      if (!this.gameOver && !this.inMainMenu) {
          Resources.UndoSound.play();
          this._run.forEach(p => p.selected = false);
          this._run.length = 0;
