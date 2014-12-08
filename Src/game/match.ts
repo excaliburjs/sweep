@@ -145,7 +145,7 @@ class MatchManager extends ex.Class {
                // remove from run
                this._run[removePiece].selected = false;
                this._run.splice(removePiece, 1);
-
+               Resources.UndoSound.play();
                ex.Logger.getInstance().info("Run modified", this._run);
             }
          } else {

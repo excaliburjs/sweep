@@ -24,7 +24,7 @@ class TurnManager {
          this.currentPromise.resolve();
       }
       transitionManager.evaluate().then(() => {
-
+         
          if (isMatch && Config.AdvanceRowsOnMatch) {
             this.currentPromise = this.advanceRows();
          } else if (!isMatch) {
@@ -42,6 +42,7 @@ class TurnManager {
          promises.push(this.logicalGrid.shift(i, i - 1));
       }
       this.logicalGrid.fill(grid.rows - 1, true);
+      Resources.TapsSound.play();
       // fill first row
       promises = _.filter(promises, (p) => { return p; });
       return ex.Promise.join.apply(null, promises).then(() => {
@@ -57,7 +58,7 @@ class TurnManager {
             stats.scorePieces(evt.run);
             stats.scoreChain(evt.run);
             evt.run.forEach(p => grid.clearPiece(p));
-
+            Resources.MatchSound.play();
             this.advanceTurn(true);
          });
       }

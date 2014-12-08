@@ -100,6 +100,8 @@ class Sweeper extends ex.Actor {
       for (var i = 0; i < Config.NumStartingRows; i++) {
          grid.fill(grid.rows - (i + 1));
       }
+
+      Resources.MegaSweepSound.play();
    }
 
    public sweep(type: PieceType = null): void {
@@ -164,6 +166,7 @@ class Sweeper extends ex.Actor {
 
          turnManager.advanceTurn();
       }
+      Resources.MegaSweepSound.play();
       
    }
 }

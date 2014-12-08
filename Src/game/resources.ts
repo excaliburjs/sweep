@@ -19,6 +19,15 @@ var Resources = {
    ChallengeNote5Sound: new ex.Sound('sounds/challengenote5.mp3'),
    ChallengeNote6Sound: new ex.Sound('sounds/challengenote6.mp3'),
 
+   GameOverSound: new ex.Sound('sounds/gameover.mp3'),
+   KnockSound: new ex.Sound('sounds/knock.mp3'),
+   UndoSound: new ex.Sound('sounds/undo.mp3'),
+   TapsSound: new ex.Sound('sounds/taps.mp3'),
+   MatchSound: new ex.Sound('sounds/match.mp3'),
+   SweepSound: new ex.Sound('sounds/sweep.mp3'),
+   MegaSweepSound: new ex.Sound('sounds/megasweep.mp3'),
+
+
    // Textures
    TextureTile1: new ex.Texture("images/Tile1.png"),
    TextureTile2: new ex.Texture("images/Tile2.png"),
