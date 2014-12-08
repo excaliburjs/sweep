@@ -768,6 +768,10 @@ var TurnManager = (function () {
         }
         this.logicalGrid.fill(grid.rows - 1, true);
         Resources.TapsSound.play();
+        if (grid.getNumAvailablePieces() <= 0) {
+            //reset the board if there are no legal moves
+            sweeper.sweepAll(true);
+        }
         // fill first row
         promises = _.filter(promises, function (p) {
             return p;
@@ -777,10 +781,6 @@ var TurnManager = (function () {
         }).error(function (e) {
             console.log(e);
         });
-        if (grid.getNumAvailablePieces() <= 0) {
-            //reset the board if there are no legal moves
-            sweeper.sweepAll(true);
-        }
     };
     TurnManager.prototype._handleMatchEvent = function (evt) {
         var _this = this;
