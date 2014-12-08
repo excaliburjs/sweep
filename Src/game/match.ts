@@ -75,6 +75,8 @@ class MatchManager extends ex.Class {
          if (!Config.EnableSingleTapClear) {
             this.runInProgress = true;
             cell.piece.selected = true;
+            cell.piece.setCenterDrawing(true);
+            cell.piece.scaleTo(1.3, 1.3, 1.8, 1.8).scaleTo(1,1,1.8,1.8);
             this._run.push(cell.piece);
             this._playNote();
             ex.Logger.getInstance().info("Run started", this._run);
@@ -106,7 +108,8 @@ class MatchManager extends ex.Class {
          var piece = cell.piece;
 
          if (!piece) return;
-
+         piece.setCenterDrawing(true);
+         
          if (!Config.EnableSingleTapClear) {
             var removePiece = -1;
             var containsBounds = new ex.BoundingBox(
@@ -131,6 +134,18 @@ class MatchManager extends ex.Class {
 
                // notify
                this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
+
+               if (!piece.hover) {
+                  piece.hover = true;
+                  piece.scaleTo(1.2, 1.2, 1.2, 1.8);
+               }
+
+
+            } else {
+               if (piece.hover) {
+                  piece.hover = false;
+                  piece.scaleTo(1, 1, 1.8, 1.8);
+               }
             }
 
             // did user go backwards?
@@ -138,6 +153,7 @@ class MatchManager extends ex.Class {
                this._run.length > 1 &&
                this._run.indexOf(piece) === this._run.length - 2) {
                // mark for removal
+              
                removePiece = this._run.indexOf(piece) + 1;
             }
 

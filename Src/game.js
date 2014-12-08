@@ -26,13 +26,13 @@ var Background = (function (_super) {
     };
     Background.prototype.draw = function (ctx, delta) {
         for (var i = 0; i < Math.ceil(game.getWidth() / this.texture.width) + 5; i++) {
-            if (this.dx < 0) {
+            if (this.dx <= 0) {
                 this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y);
             }
             else {
                 this.currentDrawing.draw(ctx, this.x - i * this.texture.width, this.y);
             }
-            if (this.dy < 0) {
+            if (this.dy <= 0) {
                 this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y + this.texture.height);
             }
             else {
@@ -258,6 +258,7 @@ var Piece = (function (_super) {
         _super.call(this, x, y, Config.PieceWidth, Config.PieceHeight, color);
         this.cell = null;
         this.selected = false;
+        this.hover = false;
         this._id = id;
         this._type = type || 0 /* Circle */;
         this._originalColor = color;
@@ -751,6 +752,8 @@ var MatchManager = (function (_super) {
             if (!Config.EnableSingleTapClear) {
                 this.runInProgress = true;
                 cell.piece.selected = true;
+                cell.piece.setCenterDrawing(true);
+                cell.piece.scaleTo(1.3, 1.3, 1.8, 1.8).scaleTo(1, 1, 1.8, 1.8);
                 this._run.push(cell.piece);
                 this._playNote();
                 ex.Logger.getInstance().info("Run started", this._run);
@@ -776,6 +779,7 @@ var MatchManager = (function (_super) {
             var piece = cell.piece;
             if (!piece)
                 return;
+            piece.setCenterDrawing(true);
             if (!Config.EnableSingleTapClear) {
                 var removePiece = -1;
                 var containsBounds = new ex.BoundingBox(piece.getBounds().left + Config.PieceContainsPadding, piece.getBounds().top + Config.PieceContainsPadding, piece.getBounds().right - Config.PieceContainsPadding, piece.getBounds().bottom - Config.PieceContainsPadding);
@@ -791,6 +795,16 @@ var MatchManager = (function (_super) {
                     ex.Logger.getInstance().info("Run modified", this._run);
                     // notify
                     this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
+                    if (!piece.hover) {
+                        piece.hover = true;
+                        piece.scaleTo(1.2, 1.2, 1.2, 1.8);
+                    }
+                }
+                else {
+                    if (piece.hover) {
+                        piece.hover = false;
+                        piece.scaleTo(1, 1, 1.8, 1.8);
+                    }
                 }
                 // did user go backwards?
                 if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
@@ -938,15 +952,15 @@ var TurnManager = (function () {
         }
         this.logicalGrid.fill(grid.rows - 1, true);
         Resources.TapsSound.play();
-        if (grid.getNumAvailablePieces() <= 0) {
-            //reset the board if there are no legal moves
-            sweeper.sweepAll(true);
-        }
         // fill first row
         promises = _.filter(promises, function (p) {
             return p;
         });
         return ex.Promise.join.apply(null, promises).then(function () {
+            if (grid.getNumAvailablePieces() <= 0) {
+                //reset the board if there are no legal moves
+                sweeper.sweepAll(true);
+            }
             //this.logicalGrid.fill(grid.rows - 1, true);
         }).error(function (e) {
             console.log(e);

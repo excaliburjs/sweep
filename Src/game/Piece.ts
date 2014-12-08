@@ -23,6 +23,8 @@ class Piece extends ex.Actor {
 
    public cell: Cell = null;
    public selected: boolean = false;
+
+   public hover: boolean = false;
    
    constructor(id: number, x?: number, y?: number, color?: ex.Color, type?: PieceType) {
       super(x, y, Config.PieceWidth, Config.PieceHeight, color);
@@ -69,6 +71,8 @@ class Piece extends ex.Actor {
       } else {
          this.setDrawing("default");
       }
+
+      
    }
 }
 
