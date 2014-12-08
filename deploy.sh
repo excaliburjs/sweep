@@ -20,6 +20,9 @@ cp -r ./Src/* out
 cd out
 rm Src.csproj
 
+echo "Setting commit number ${CURRENT_COMMIT}"
+sed -i "s/COMMIT_NUMBER/${CURRENT_COMMIT}/g" ./index.html
+
 echo "Committing and pushing to GH"
 
 git config user.name "Travis-CI"

@@ -13,6 +13,7 @@
 /// <reference path="Stats.ts"/>
 /// <reference path="sweeper.ts"/>
 /// <reference path="UIWidget.ts"/>
+/// <reference path="background.ts"/>
 
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game", ex.DisplayMode.FullScreen);
 game.backgroundColor = ex.Color.Transparent;
@@ -40,7 +41,8 @@ var visualGrid: VisualGrid,
    sweeper: Sweeper,
    stats: Stats,
    mask: ex.Actor,
-   polyline: PolyLine;
+   polyline: PolyLine,
+   background: Background;
 
 // game modes
 var loadConfig = (config) => {
@@ -70,6 +72,12 @@ function InitSetup() {
    }
 
    game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
+
+   var leftCorner = game.screenToWorldCoordinates(new ex.Point(0,0));
+   background = new Background(leftCorner, Resources.BackgroundTexture);
+   background.dx = -10;
+   game.add(background);
+
    //initialize game objects
    if (matcher) matcher.dispose(); //unbind events
    if (turnManager) turnManager.dispose(); //cancel the timer
@@ -88,6 +96,7 @@ function InitSetup() {
 
    game.add(visualGrid);
    game.add(sweeper);
+   
    game.add(polyline);
    game.add(mask);
 
@@ -153,6 +162,11 @@ function playLoop() {
       Resources.ChallengeLoopSound.setVolume(.5);
       Resources.ChallengeLoopSound.play();
    }
+}
+
+function mute() {
+   Resources.LoopSound.stop();
+   Resources.ChallengeLoopSound.stop();
 }
 
 function playGameOver() {
