@@ -209,13 +209,11 @@ var Piece = (function (_super) {
     __extends(Piece, _super);
     function Piece(id, x, y, color, type) {
         _super.call(this, x, y, Config.PieceWidth, Config.PieceHeight, color);
-        this._initialScale = Config.PieceWidth / 50;
         this.cell = null;
         this.selected = false;
         this._id = id;
         this._type = type || 0 /* Circle */;
         this._originalColor = color;
-        this.scale.setTo(1.2, 1.2);
     }
     Piece.prototype.getId = function () {
         return this._id;
@@ -228,19 +226,11 @@ var Piece = (function (_super) {
         this._updateDrawings();
     };
     Piece.prototype._updateDrawings = function () {
-        var tileSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
-        tileSprite.setScaleX(this._initialScale);
-        tileSprite.setScaleY(this._initialScale);
+        var tileSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, Config.PieceWidth, Config.PieceHeight);
         this.addDrawing("default", tileSprite);
-        var highlightSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
-        highlightSprite.setScaleX(this._initialScale);
-        highlightSprite.setScaleY(this._initialScale);
-        highlightSprite.addEffect(new SaturateEffect(0.5));
+        var highlightSprite = new ex.Sprite(PieceTypeToTexture[this._type], Config.PieceWidth, 0, Config.PieceWidth, Config.PieceHeight);
         this.addDrawing("highlight", highlightSprite);
-        var fadedSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
-        fadedSprite.setScaleX(this._initialScale);
-        fadedSprite.setScaleY(this._initialScale);
-        fadedSprite.addEffect(new ex.Effects.Opacity(0.3));
+        var fadedSprite = new ex.Sprite(PieceTypeToTexture[this._type], Config.PieceWidth * 2, 0, Config.PieceWidth, Config.PieceHeight);
         this.addDrawing("faded", fadedSprite);
     };
     Piece.prototype.onInitialize = function (engine) {
