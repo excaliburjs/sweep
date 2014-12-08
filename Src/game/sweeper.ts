@@ -71,10 +71,10 @@ class Sweeper extends ex.Actor {
       this._emitter.y = this.y;
    }
 
-   public sweepAll(): void {
+   public sweepAll(force: boolean = false): void {
       if (matcher.gameOver) return;
 
-      if (!stats.allMetersFull()) return;
+      if (!stats.allMetersFull() && !force) return;
 
       var cells = grid.cells.filter(cell => {
          return !!cell.piece;
@@ -100,9 +100,14 @@ class Sweeper extends ex.Actor {
       for (var i = 0; i < Config.NumStartingRows; i++) {
          grid.fill(grid.rows - (i + 1));
       }
+
+      if (grid.getNumAvailablePieces() <= 0) {
+         this.sweepAll(true);
+      }
+
    }
 
-   public sweep(type: PieceType = null): void {
+   public sweep(type: PieceType = null ): void {
 
       if (matcher.gameOver) return; 
 
