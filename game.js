@@ -1314,7 +1314,7 @@ var gameOverWidget = new UIWidget();
 //gameOverWidget.addButton(postYourScore);
 function gameOver() {
     var totalScore = stats.getTotalScore();
-    var longestChain = stats.getLongestChains();
+    var longestChain = stats.getLongestChain();
     var analytics = window.ga;
     if (analytics) {
         analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'total score', { 'eventValue': totalScore, 'nonInteraction': 1 });
