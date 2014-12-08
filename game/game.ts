@@ -234,6 +234,7 @@ function gameOver() {
 
    document.getElementById("game-over").className = "show";
 
+
    document.getElementById("game-over-swept").innerHTML = stats.getTotalPiecesSwept().toString();
 
    document.getElementById("game-over-chain").innerHTML = stats.getTotalChainBonus().toString();
@@ -245,6 +246,10 @@ function gameOver() {
    document.getElementById("game-over-time").innerHTML = enduranceBonus.toString();
 
    document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
+
+   if (gameMode == GameMode.Timed) {
+      document.getElementById("try-challenge").className = "hide";
+   }
 
    //var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
    //var gameOverWidgetActor = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() - 800, 300, 300, color);
