@@ -213,10 +213,10 @@ function playGameOver() {
 }
 
 function gameOver() {
-   var totalScore = stats.getTotalScore();
+   var totalScore = stats.getFinalScore();
    var longestChain = stats.getLongestChain();
    var turnsTaken = stats.getTurnNumber();
-   var timeElapsed = turnManager.getTime()/1000/60;
+   var timeElapsed = Math.round(turnManager.getTime()/1000/60);
    var analytics = (<any>window).ga;
    if (analytics) {
       analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'total score', { 'eventValue': totalScore, 'nonInteraction': 1 });
@@ -233,6 +233,18 @@ function gameOver() {
    if (turnManager) turnManager.dispose(); // stop game over from happening infinitely in time attack
 
    document.getElementById("game-over").className = "show";
+
+   document.getElementById("game-over-swept").innerHTML = stats.getTotalPiecesSwept().toString();
+
+   document.getElementById("game-over-chain").innerHTML = stats.getTotalChainBonus().toString();
+
+   var enduranceBonus = stats.calculateEnduranceBonus();
+
+   document.getElementById("game-over-multiplier").innerHTML = (stats.getFinalScore() - enduranceBonus - stats.getTotalChainBonus() - stats.getTotalPiecesSwept()).toString();
+
+   document.getElementById("game-over-time").innerHTML = enduranceBonus.toString();
+
+   document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
 
 
    // I'm so sorry, I'm so very sorry...so tired

@@ -1109,6 +1109,8 @@ var Stats = (function () {
         this._lastChain = 0;
         this._lastChainBonus = 0;
         this._totalChainBonus = 0;
+        this._totalPiecesSwept = 0;
+        this._finalScore = 0;
         this._sweepMeterThreshold = Config.SweepAltThreshold;
         this._meterActors = new Array();
         this._meterLabels = new Array();
@@ -1116,6 +1118,12 @@ var Stats = (function () {
     Stats.prototype.getTotalScore = function () {
         var totalScore = this._scores[0] + this._scores[1] + this._scores[2] + this._scores[3];
         return totalScore;
+    };
+    Stats.prototype.getTotalPiecesSwept = function () {
+        return this._totalPiecesSwept;
+    };
+    Stats.prototype.getTotalChainBonus = function () {
+        return this._totalChainBonus;
     };
     Stats.prototype.getLongestChain = function () {
         return Math.max.apply(Math, this._chains);
@@ -1164,6 +1172,7 @@ var Stats = (function () {
     };
     Stats.prototype.scorePieces = function (pieces) {
         var type = this._types.indexOf(pieces[0].getType());
+        this._totalPiecesSwept += pieces.length;
         this._scores[type] += this.scoreMultiplier(pieces.length + this.chainBonus(pieces), type);
         var newScore = this._meters[type] + pieces.length;
         this._meters[type] = Math.min(newScore, Config.SweepThreshold);
@@ -1177,12 +1186,27 @@ var Stats = (function () {
         }
         return modifiedScore;
     };
+    Stats.prototype.calculateEnduranceBonus = function () {
+        var enduranceMultiplier = 0;
+        if (gameMode == 0 /* Standard */) {
+            enduranceMultiplier = this._turnNumber * Config.StandardModeMultiplier;
+            this._finalScore = this.getTotalScore() + enduranceMultiplier;
+        }
+        else if (gameMode == 1 /* Timed */) {
+            enduranceMultiplier = Math.round(turnManager.getTime() / 1000 / 60) * Config.TimedModeMultiplier;
+            this._finalScore = this.getTotalScore() + enduranceMultiplier;
+        }
+        return enduranceMultiplier;
+    };
+    Stats.prototype.getFinalScore = function () {
+        return this._finalScore;
+    };
     Stats.prototype.chainBonus = function (pieces) {
         var chain = pieces.length;
         var bonus = 0;
         if (chain > 3) {
             if (chain < Config.ChainThresholdSmall) {
-                return Config.ChainBonusSmall;
+                bonus = Config.ChainBonusSmall;
             }
             else if (chain < Config.ChainThresholdMedium) {
                 bonus = Config.ChainBonusMedium;
@@ -1769,10 +1793,10 @@ function playGameOver() {
     Resources.GameOverSound.play();
 }
 function gameOver() {
-    var totalScore = stats.getTotalScore();
+    var totalScore = stats.getFinalScore();
     var longestChain = stats.getLongestChain();
     var turnsTaken = stats.getTurnNumber();
-    var timeElapsed = turnManager.getTime() / 1000 / 60;
+    var timeElapsed = Math.round(turnManager.getTime() / 1000 / 60);
     var analytics = window.ga;
     if (analytics) {
         analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'total score', { 'eventValue': totalScore, 'nonInteraction': 1 });
@@ -1788,6 +1812,12 @@ function gameOver() {
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
     document.getElementById("game-over").className = "show";
+    document.getElementById("game-over-swept").innerHTML = stats.getTotalPiecesSwept().toString();
+    document.getElementById("game-over-chain").innerHTML = stats.getTotalChainBonus().toString();
+    var enduranceBonus = stats.calculateEnduranceBonus();
+    document.getElementById("game-over-multiplier").innerHTML = (stats.getFinalScore() - enduranceBonus - stats.getTotalChainBonus() - stats.getTotalPiecesSwept()).toString();
+    document.getElementById("game-over-time").innerHTML = enduranceBonus.toString();
+    document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
     // I'm so sorry, I'm so very sorry...so tired
     var text = document.getElementById("twidget").dataset['text'];
     document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
