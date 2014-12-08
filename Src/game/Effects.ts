@@ -2,7 +2,7 @@
 
    public clearEffect(piece: Piece) {
 
-      //TODO move emitter to Piece
+      //TODO move emitter to Grid
       var emitter = new ex.ParticleEmitter(piece.x, piece.y, 1, 1);
       emitter.minVel = 30;
       emitter.maxVel = 125;
@@ -31,5 +31,6 @@
       game.addChild(emitter);
 
       emitter.emit(5);
+      //emitter.moveTo(emitter.x + 1, emitter.y + 1, 20);
    }
 }
