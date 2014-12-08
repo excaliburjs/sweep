@@ -22,6 +22,9 @@ class Config {
    static MainMenuButtonWidth = 185;
    static MainMenuButtonHeight = 62;
 
+   // easings
+   static PieceEasingFillDuration = 300;
+
    //
    // game modes
    //

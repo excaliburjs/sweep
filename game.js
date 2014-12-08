@@ -140,6 +140,8 @@ var Config = (function () {
     Config.PolylineThickness = 5;
     Config.MainMenuButtonWidth = 185;
     Config.MainMenuButtonHeight = 62;
+    // easings
+    Config.PieceEasingFillDuration = 300;
     Config.SweepShakeDuration = 400;
     Config.MegaSweepShakeDuration = 500;
     Config.MegaSweepDelay = 600;
@@ -420,7 +422,7 @@ var LogicalGrid = (function (_super) {
                 var piece = PieceFactory.getRandomPiece();
                 var cell = _this.getCell(i, row);
                 piece.x = cell.getCenter().x;
-                piece.y = visualGrid.y + visualGrid.getHeight() + Config.CellHeight;
+                piece.y = visualGrid.y + visualGrid.getHeight() + (Config.CellHeight / 2);
                 var intendedCell = _this.setCell(i, row, piece, !smooth);
                 var hasSameType = intendedCell.getNeighbors().some(function (c) {
                     if (c && c.piece) {
@@ -432,11 +434,11 @@ var LogicalGrid = (function (_super) {
                     _this.clearPiece(piece);
                     piece = PieceFactory.getRandomPiece();
                     piece.x = cell.getCenter().x;
-                    piece.y = visualGrid.y + visualGrid.getHeight() + Config.CellHeight;
+                    piece.y = visualGrid.y + visualGrid.getHeight() + (Config.CellHeight / 2);
                     _this.setCell(i, row, piece, !smooth);
                 }
                 if (smooth) {
-                    piece.delay(delay).easeTo(cell.getCenter().x, cell.getCenter().y, 300, ex.EasingFunctions.EaseInOutCubic).asPromise().then(function () {
+                    piece.delay(delay).easeTo(cell.getCenter().x, cell.getCenter().y, Config.PieceEasingFillDuration, ex.EasingFunctions.EaseInOutCubic).asPromise().then(function () {
                         piece.x = cell.getCenter().x;
                         piece.y = cell.getCenter().y;
                     });
@@ -1517,6 +1519,7 @@ var Mask = (function (_super) {
         _super.call(this, 0, 0, 0, Config.CellHeight);
         this.anchor.setTo(0, 0);
         this.color = Util.darken(new ex.Color(Palette.GridBackgroundColor.r, Palette.GridBackgroundColor.g, Palette.GridBackgroundColor.b), 0.3);
+        //this.color = ex.Color.Transparent;
     }
     Mask.prototype.update = function (engine, delta) {
         var vgWorldPos = game.worldToScreenCoordinates(new ex.Point(visualGrid.x, visualGrid.getBottom()));
