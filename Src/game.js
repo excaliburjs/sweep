@@ -762,6 +762,7 @@ var MatchManager = (function (_super) {
     };
     MatchManager.prototype._handleCancelRun = function () {
         if (!this.gameOver) {
+            Resources.UndoSound.play();
             this._run.forEach(function (p) { return p.selected = false; });
             this._run.length = 0;
             this.runInProgress = false;

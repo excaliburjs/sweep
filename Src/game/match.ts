@@ -205,6 +205,7 @@ class MatchManager extends ex.Class {
 
    private _handleCancelRun() {
       if (!this.gameOver) {
+         Resources.UndoSound.play();
          this._run.forEach(p => p.selected = false);
          this._run.length = 0;
          this.runInProgress = false;
