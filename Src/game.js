@@ -26,6 +26,7 @@ var Config = (function () {
         Config.SweepAltMaxThreshold = 50;
     };
     Config.loadCasual = function () {
+        gameMode = 0 /* Standard */;
         // same as default, for now
         document.getElementById("instructions").innerHTML = "Take your time and prevent the tiles from reaching the top. <strong>Drag</strong> to chain tiles together to remove them. " + "If things get hairy, <strong>press 1-4</strong> to choose a color to SWEEP and remove them from the board. Be careful, though, all other " + "meters will be depleted after each use.";
     };
@@ -46,6 +47,7 @@ var Config = (function () {
         document.getElementById("instructions").innerHTML = "Battle against the clock and stop the tiles from reaching the top. <strong>Drag</strong> to chain tiles together to remove them. " + "If things get hairy, press <strong>S</strong> to SWEEP everything above the sweeper line! Each time the sweeper will move " + "down. As time goes on, it'll cost less to earn a SWEEP so play wisely.";
     };
     Config.loadSurvivalReverse = function () {
+        gameMode = 1 /* Timed */;
         Config.EnableTimer = true;
         Config.AdvanceRowsOnMatch = false;
         Config.TimerValue = 1500;
@@ -75,6 +77,8 @@ var Config = (function () {
     Config.MeterWidth = 90;
     Config.MeterHeight = 30;
     Config.EnableGridLines = false;
+    Config.SweepShakeDuration = 400;
+    Config.MegaSweepShakeDuration = 500;
     return Config;
 })();
 var Util = (function () {
@@ -198,13 +202,11 @@ var Piece = (function (_super) {
     __extends(Piece, _super);
     function Piece(id, x, y, color, type) {
         _super.call(this, x, y, Config.PieceWidth, Config.PieceHeight, color);
-        this._initialScale = Config.PieceWidth / 50;
         this.cell = null;
         this.selected = false;
         this._id = id;
         this._type = type || 0 /* Circle */;
         this._originalColor = color;
-        this.scale.setTo(1.2, 1.2);
     }
     Piece.prototype.getId = function () {
         return this._id;
@@ -217,19 +219,11 @@ var Piece = (function (_super) {
         this._updateDrawings();
     };
     Piece.prototype._updateDrawings = function () {
-        var tileSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
-        tileSprite.setScaleX(this._initialScale);
-        tileSprite.setScaleY(this._initialScale);
+        var tileSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, Config.PieceWidth, Config.PieceHeight);
         this.addDrawing("default", tileSprite);
-        var highlightSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
-        highlightSprite.setScaleX(this._initialScale);
-        highlightSprite.setScaleY(this._initialScale);
-        highlightSprite.addEffect(new SaturateEffect(0.5));
+        var highlightSprite = new ex.Sprite(PieceTypeToTexture[this._type], Config.PieceWidth, 0, Config.PieceWidth, Config.PieceHeight);
         this.addDrawing("highlight", highlightSprite);
-        var fadedSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, 60, 60);
-        fadedSprite.setScaleX(this._initialScale);
-        fadedSprite.setScaleY(this._initialScale);
-        fadedSprite.addEffect(new ex.Effects.Opacity(0.3));
+        var fadedSprite = new ex.Sprite(PieceTypeToTexture[this._type], Config.PieceWidth * 2, 0, Config.PieceWidth, Config.PieceHeight);
         this.addDrawing("faded", fadedSprite);
     };
     Piece.prototype.onInitialize = function (engine) {
@@ -391,6 +385,23 @@ var LogicalGrid = (function (_super) {
         }
         _getPieceGroupHelper(piece);
         return currentGroup;
+    };
+    LogicalGrid.prototype.getNumAvailablePieces = function () {
+        var selectablePieces = [];
+        for (var i = 0; i < this.cells.length; i++) {
+            if (this.cells[i].piece) {
+                if (selectablePieces.indexOf(this.cells[i].piece) !== -1) {
+                    continue;
+                }
+                else {
+                    var additions = this.getAdjacentPieceGroup(this.cells[i].piece);
+                    if (additions.length >= 3) {
+                        selectablePieces = selectablePieces.concat(additions);
+                    }
+                }
+            }
+        }
+        return selectablePieces.length;
     };
     LogicalGrid.prototype.fill = function (row, smooth) {
         var _this = this;
@@ -1107,6 +1118,7 @@ var Sweeper = (function (_super) {
     };
     Sweeper.prototype.sweepAll = function (force) {
         if (force === void 0) { force = false; }
+        game.currentScene.camera.shake(4, 4, Config.MegaSweepShakeDuration);
         if (matcher.gameOver)
             return;
         if (!stats.allMetersFull() && !force)
@@ -1134,6 +1146,7 @@ var Sweeper = (function (_super) {
     };
     Sweeper.prototype.sweep = function (type) {
         if (type === void 0) { type = null; }
+        game.currentScene.camera.shake(4, 4, Config.SweepShakeDuration);
         if (matcher.gameOver)
             return;
         if (type !== null) {
@@ -1314,10 +1327,12 @@ var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
 function gameOver() {
+    var totalScore = stats.getTotalScore();
+    var longestChain = stats.getLongestChain();
     var analytics = window.ga;
     if (analytics) {
-        analytics('send', 'event', 'ludum-30-stats', gameMode.toString(), 'total score', { 'eventValue': stats.getTotalScore(), 'nonInteraction': 1 });
-        analytics('send', 'event', 'ludum-30-stats', gameMode.toString(), 'longest chain', { 'eventValue': stats.getLongestChain(), 'nonInteraction': 1 });
+        analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'total score', { 'eventValue': totalScore, 'nonInteraction': 1 });
+        analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'longest chain', { 'eventValue': longestChain, 'nonInteraction': 1 });
     }
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
