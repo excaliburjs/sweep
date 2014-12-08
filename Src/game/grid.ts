@@ -201,11 +201,7 @@ class LogicalGrid extends ex.Class {
             var piece = this.getCell(i, from).piece;
             if (piece) {
                this.clearPiece(piece);
-               //TODO add game over logic here
-               //TODO disable input (on board), add score card with play again button
                matcher.gameOver = true;
-               var gameOverLabel = new ex.Label("GAME OVER", visualGrid.x + visualGrid.getWidth() + 30, visualGrid.y + visualGrid.getHeight() / 2);
-               game.currentScene.addChild(gameOverLabel);
                gameOver();
             }
          } else if (this.getCell(i, from).piece) {
