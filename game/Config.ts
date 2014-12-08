@@ -4,19 +4,19 @@
 }
 
 class Config {
-   static gameWidth: number = 720;
-   static gameHeight: number = 720;
    static PieceContainsPadding: number = 5;
    static PieceWidth: number = 36;
    static PieceHeight: number = 36;
    static CellWidth: number = 45;
    static CellHeight: number = 45;
-   static GridCellsHigh: number = 12;
+   static GridY: number = -10;
+   static GridCellsHigh: number = 11;
    static GridCellsWide: number = 6;
    static NumStartingRows: number = 3;
    static ScoreXBuffer: number = 20;
-   static MeterWidth: number = 90;
-   static MeterHeight: number = 30;
+   static MeterWidth: number = 45;
+   static MeterHeight: number = 27;
+   static MeterMargin: number = 8;
    static EnableGridLines = false;
    static PolylineThickness = 5;
    static MainMenuButtonWidth = 185;
@@ -56,8 +56,8 @@ class Config {
    static resetDefault() {
       Config.EnableTimer = false;
       Config.AdvanceRowsOnMatch = true;
-      Config.SweepThreshold = 4;
-      Config.EnableSweepMeters = true;
+      Config.SweepThreshold = 20;
+      Config.EnableSweepMeters = false;
       Config.EnableSingleTapClear = false;
       Config.ClearSweepMetersAfterSingleUse = true;
 
@@ -73,6 +73,8 @@ class Config {
 
    static loadCasual() {
       gameMode = GameMode.Standard;
+
+      Config.EnableSweepMeters = true;
    }
 
    /**

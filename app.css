@@ -17,6 +17,11 @@ div#commit a {
 div#commit a:hover {
   color: red;
 }
+@media (max-width: 480px) {
+  div#commit {
+    display: none;
+  }
+}
 div#background {
   position: absolute;
   top: 0;
