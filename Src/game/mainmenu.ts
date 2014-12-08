@@ -1,7 +1,7 @@
 ﻿class MainMenu extends ex.UIActor {
    
    private _logo: ex.Actor;
-   private _standardButton: ex.UIActor;
+   private _standardButton: ex.UIActor;   
    private _challengeButton: ex.UIActor;
    private _muteMusicButton: ex.UIActor;
    private _muteSoundButton: ex.UIActor;
@@ -15,8 +15,7 @@
    constructor() {
       super();
 
-      this.color = new ex.Color(0, 0, 0, 0.9);
-                     
+      this.color = new ex.Color(0, 0, 0, 0.9);                     
    }
 
    public onInitialize(engine: ex.Engine) {
@@ -34,6 +33,12 @@
       game.add(this._challengeButton);
 
       this.show();
+   }
+
+   public draw(ctx: CanvasRenderingContext2D, delta: number) {
+      if (!this.visible) return;
+
+      super.draw(ctx, delta);
    }
 
    public update(engine: ex.Engine, delta: number) {
@@ -70,9 +75,7 @@
       this.visible = true;
       this._logo.visible = true;
       this._standardButton.visible = true;
-      this._standardButton.enableCapturePointer = true;
       this._challengeButton.visible = true;
-      this._challengeButton.enableCapturePointer = true;
       this._show = true;
    }
 
@@ -80,32 +83,46 @@
       this.visible = false;
       this._logo.visible = false;
       this._standardButton.visible = false;
-      this._standardButton.enableCapturePointer = false;
       this._challengeButton.visible = false;
-      this._challengeButton.enableCapturePointer = false;
       this._show = false;
    }
 
    public static LoadStandardMode() {
-      loadConfig(Config.loadCasual);
+      loadConfig(Config.loadCasual, true);
+      mainMenu.hide();
    }
 
    public static LoadChallengeMode() {
-      loadConfig(Config.loadSurvivalReverse);
+      loadConfig(Config.loadSurvivalReverse, true);
    }
 }
 
 class MenuButton extends ex.UIActor {
    
+   private _captureActor: ex.Actor;
+
    constructor(sprite: ex.Sprite, public action: () => void, x: number, y: number) {
       super(x, y, Config.MainMenuButtonWidth, Config.MainMenuButtonHeight);
-
-      this.pipeline.push(new ex.CapturePointerModule());
-
-      this.off("pointerup", action);
-      this.on("pointerup", action);
 
       this.addDrawing(sprite);
    }
 
+   public onInitialize() {
+      var world = game.screenToWorldCoordinates(new ex.Point(this.x, this.y));
+      this._captureActor = new ex.Actor(world.x, world.y, Config.MainMenuButtonWidth, Config.MainMenuButtonHeight, ex.Color.Transparent);
+      this._captureActor.anchor.setTo(0, 0);
+
+      game.add(this._captureActor);
+      this._captureActor.off("pointerup", this.action);
+      this._captureActor.on("pointerup", this.action);
+   }
+
+   public update(engine: ex.Engine, delta: number) {
+      super.update(engine, delta);
+
+      var world = game.screenToWorldCoordinates(new ex.Point(this.x, this.y));
+      this._captureActor.enableCapturePointer = this.visible;
+      this._captureActor.x = world.x;
+      this._captureActor.y = world.y;
+   }
 }
