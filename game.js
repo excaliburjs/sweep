@@ -159,6 +159,13 @@ var Resources = {
     ChallengeNote4Sound: new ex.Sound('sounds/challengenote4.mp3'),
     ChallengeNote5Sound: new ex.Sound('sounds/challengenote5.mp3'),
     ChallengeNote6Sound: new ex.Sound('sounds/challengenote6.mp3'),
+    GameOverSound: new ex.Sound('sounds/gameover.mp3'),
+    KnockSound: new ex.Sound('sounds/knock.mp3'),
+    UndoSound: new ex.Sound('sounds/undo.mp3'),
+    TapsSound: new ex.Sound('sounds/taps.mp3'),
+    MatchSound: new ex.Sound('sounds/match.mp3'),
+    SweepSound: new ex.Sound('sounds/sweep.mp3'),
+    MegaSweepSound: new ex.Sound('sounds/megasweep.mp3'),
     // Textures
     TextureTile1: new ex.Texture("images/Tile1.png"),
     TextureTile2: new ex.Texture("images/Tile2.png"),
@@ -670,6 +677,7 @@ var MatchManager = (function (_super) {
                     // remove from run
                     this._run[removePiece].selected = false;
                     this._run.splice(removePiece, 1);
+                    Resources.UndoSound.play();
                     ex.Logger.getInstance().info("Run modified", this._run);
                 }
             }
@@ -765,6 +773,7 @@ var TurnManager = (function () {
             promises.push(this.logicalGrid.shift(i, i - 1));
         }
         this.logicalGrid.fill(grid.rows - 1, true);
+        Resources.TapsSound.play();
         // fill first row
         promises = _.filter(promises, function (p) {
             return p;
@@ -786,6 +795,7 @@ var TurnManager = (function () {
                 stats.scorePieces(evt.run);
                 stats.scoreChain(evt.run);
                 evt.run.forEach(function (p) { return grid.clearPiece(p); });
+                Resources.MatchSound.play();
                 _this.advanceTurn(true);
             });
         }
@@ -1153,6 +1163,7 @@ var Sweeper = (function (_super) {
         if (grid.getNumAvailablePieces() <= 0) {
             this.sweepAll(true);
         }
+        Resources.MegaSweepSound.play();
     };
     Sweeper.prototype.sweep = function (type) {
         if (type === void 0) { type = null; }
@@ -1209,6 +1220,7 @@ var Sweeper = (function (_super) {
             }
             turnManager.advanceTurn();
         }
+        Resources.MegaSweepSound.play();
     };
     return Sweeper;
 })(ex.Actor);
@@ -1302,6 +1314,7 @@ function InitSetup() {
     for (i = 0; i < Config.NumStartingRows; i++) {
         grid.fill(grid.rows - (i + 1));
     }
+    playLoop();
 }
 game.input.keyboard.on('up', function (evt) {
     if (evt.key === 68 /* D */) {
@@ -1336,6 +1349,27 @@ game.input.keyboard.on('up', function (evt) {
 var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
+function playLoop() {
+    Resources.LoopSound.stop();
+    Resources.ChallengeLoopSound.stop();
+    // play some sounds
+    if (gameMode === 0 /* Standard */) {
+        Resources.TapsSound.setVolume(.2);
+        Resources.LoopSound.setLoop(true);
+        Resources.LoopSound.play();
+    }
+    else {
+        Resources.ChallengeLoopSound.setLoop(true);
+        Resources.ChallengeLoopSound.setVolume(.5);
+        Resources.ChallengeLoopSound.play();
+    }
+}
+function playGameOver() {
+    Resources.LoopSound.stop();
+    Resources.ChallengeLoopSound.stop();
+    Resources.GameOverSound.setVolume(.4);
+    Resources.GameOverSound.play();
+}
 function gameOver() {
     var totalScore = stats.getTotalScore();
     var longestChain = stats.getLongestChain();
@@ -1344,6 +1378,7 @@ function gameOver() {
         analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'total score', { 'eventValue': totalScore, 'nonInteraction': 1 });
         analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'longest chain', { 'eventValue': longestChain, 'nonInteraction': 1 });
     }
+    playGameOver();
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
     var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
@@ -1361,9 +1396,6 @@ function gameOver() {
 }
 // TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {
-    // play some sounds
-    Resources.ChallengeLoopSound.setLoop(true);
-    Resources.ChallengeLoopSound.setVolume(.5);
-    Resources.ChallengeLoopSound.play();
+    playLoop();
 });
 //# sourceMappingURL=game.js.map

@@ -81,6 +81,7 @@ function InitSetup() {
    for (i = 0; i < Config.NumStartingRows; i++) {
       grid.fill(grid.rows - (i + 1));
    }
+   playLoop();
 }
 
 game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
@@ -121,6 +122,29 @@ var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
 
+function playLoop() {
+   Resources.LoopSound.stop();
+   Resources.ChallengeLoopSound.stop();
+   // play some sounds
+   if (gameMode === GameMode.Standard) {
+      Resources.TapsSound.setVolume(.2);
+      Resources.LoopSound.setLoop(true);
+      Resources.LoopSound.play();
+   } else {
+
+      Resources.ChallengeLoopSound.setLoop(true);
+      Resources.ChallengeLoopSound.setVolume(.5);
+      Resources.ChallengeLoopSound.play();
+   }
+}
+
+function playGameOver() {
+   Resources.LoopSound.stop();
+   Resources.ChallengeLoopSound.stop();
+   Resources.GameOverSound.setVolume(.4);
+   Resources.GameOverSound.play();
+}
+
 function gameOver() {
    var totalScore = stats.getTotalScore();
    var longestChain = stats.getLongestChain();
@@ -130,6 +154,8 @@ function gameOver() {
       analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'longest chain', { 'eventValue': longestChain, 'nonInteraction': 1 });
       //turnManager
    }
+
+   playGameOver();
 
    if (turnManager) turnManager.dispose(); // stop game over from happening infinitely in time attack
    var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3)
@@ -147,17 +173,12 @@ function gameOver() {
 
    var playAgainButton = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2 + 50, 250, 50, ex.Color.Green);
    gameOverWidget.addButton(playAgainButton);
+
+
 }
 
 // TODO clean up pieces that are not in play anymore after update loop
 
 game.start(loader).then(() => {
-   
-   // play some sounds
-   Resources.ChallengeLoopSound.setLoop(true);
-   Resources.ChallengeLoopSound.setVolume(.5);
-   Resources.ChallengeLoopSound.play();
-
-   
-
+   playLoop();
 });
