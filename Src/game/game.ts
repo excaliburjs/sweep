@@ -127,7 +127,10 @@ function playLoop() {
    Resources.ChallengeLoopSound.stop();
    // play some sounds
    if (gameMode === GameMode.Standard) {
+      Resources.KnockSound.setVolume(.5);
       Resources.TapsSound.setVolume(.2);
+      Resources.SweepSound.setVolume(.4);
+      Resources.MegaSweepSound.setVolume(.4);
       Resources.LoopSound.setLoop(true);
       Resources.LoopSound.play();
    } else {
