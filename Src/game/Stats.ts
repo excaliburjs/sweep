@@ -163,12 +163,17 @@
 
    private _addMegaSweep(x: number, y: number) {
       var meter = new ex.Actor(x, y, Config.MeterWidth, Config.MeterHeight * 4, ex.Color.Orange);
+      meter.enableCapturePointer = true;
       var label = new ex.Label("MEGA SWEEP", meter.getCenter().x, meter.getCenter().y);
       var inputLabel = new ex.Label("PRESS S", meter.getCenter().x, meter.getCenter().y + 14);
       label.textAlign = inputLabel.textAlign = ex.TextAlign.Center;
       label.color = inputLabel.color = ex.Color.White;
       label.font = inputLabel.font = "14px";
       meter.anchor.setTo(0, 0);
+
+      meter.on("pointerup", () => {
+         sweeper.sweepAll();
+      });
 
       game.addEventListener('update', (data?: ex.UpdateEvent) => {
 
@@ -190,9 +195,14 @@
 
    private _addMeter(piece: PieceType, x: number, y: number) {
       var meter = new Meter(x, y, PieceTypeToColor[piece], Config.SweepThreshold);
+      meter.enableCapturePointer = true;
       var label = new ex.Label(null, meter.getCenter().x, meter.getCenter().y + 3);
       label.textAlign = ex.TextAlign.Center;
       label.color = ex.Color.Black;
+
+      meter.on("pointerup", () => {
+         sweeper.sweep(piece);
+      });
       game.addEventListener('update', (data?: ex.UpdateEvent) => {
          meter.score = this._meters[piece];
 
@@ -216,10 +226,14 @@
 
    private _addSweepMeter(x: number, y: number) {
       var square = new Meter(x, y, ex.Color.Red, this._sweepMeterThreshold);
+      square.enableCapturePointer = true;
       var label = new ex.Label(null, square.getCenter().x, y + 20);
       label.textAlign = ex.TextAlign.Center;
       label.color = ex.Color.Black;
 
+      square.on("pointerup", () => {
+         sweeper.sweep();
+      });
       game.addEventListener('update', (data?: ex.UpdateEvent) => {
          square.score = this._sweepMeter;
          square.threshold = this._sweepMeterThreshold;
@@ -240,17 +254,22 @@ class Meter extends ex.Actor {
 
    constructor(x: number, y: number, color: ex.Color, public threshold: number) {
       super(x, y, Config.MeterWidth, Config.MeterHeight, color);
+
+      this.anchor.setTo(0, 0);
    }
 
    public draw(ctx: CanvasRenderingContext2D, delta: number) {
 
+      var x = this.getBounds().left;
+      var y = this.getBounds().top;
+
       ctx.strokeStyle = this.color.toString();
       ctx.lineWidth = 2;
-      ctx.strokeRect(this.x, this.y, this.getWidth(), this.getHeight());
+      ctx.strokeRect(x, y, this.getWidth(), this.getHeight());
 
       var percentage = (this.score / this.threshold);
 
       ctx.fillStyle = this.color.toString();
-      ctx.fillRect(this.x, this.y, (this.getWidth() * percentage), this.getHeight());
+      ctx.fillRect(x, y, (this.getWidth() * percentage), this.getHeight());
    }
 }
