@@ -630,7 +630,7 @@ var MainMenu = (function (_super) {
     };
     MainMenu.LoadStandardMode = function () {
         loadConfig(Config.loadCasual, true);
-        mainMenu.hide();
+        //mainMenu.hide();
     };
     MainMenu.LoadChallengeMode = function () {
         loadConfig(Config.loadSurvivalReverse, true);
