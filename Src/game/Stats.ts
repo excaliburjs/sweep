@@ -110,31 +110,35 @@
    public drawScores() {
 
       var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
+      var meterXPos = visualGrid.x;
+      var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
 
-      this._totalScore("total ", scoreXPos, 330);
+      this._totalScore(visualGrid.x, visualGrid.y - 5);
 
-      var yPos = 350;
+      var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
+      var meterStartX = meterXPos += (visualGrid.getWidth() - totalMeterWidth) / 2;
+
       if (Config.EnableSweepMeters) {
-         this._addMeter(0, scoreXPos, yPos);
-         this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
-         this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
-         this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
-         this._addMegaSweep(scoreXPos, 350);
+         this._addMeter(0, meterXPos, meterYPos);
+         this._addMeter(1, meterXPos += Config.MeterWidth + Config.MeterMargin, meterYPos);
+         this._addMeter(2, meterXPos += Config.MeterWidth + Config.MeterMargin, meterYPos);
+         this._addMeter(3, meterXPos += Config.MeterWidth + Config.MeterMargin, meterYPos);
+         this._addMegaSweep(meterStartX, meterYPos);
       }
       if (Config.EnableSweeper) {
-         this._addSweepMeter(scoreXPos, sweeper.y);
+         this._addSweepMeter(meterStartX, meterYPos);
       }
 
-      this._addScore("chain ", this._chains, 0, scoreXPos, yPos += Config.MeterHeight + 20);
-      this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
-      this._addScore("chain ", this._chains, 2, scoreXPos, yPos += 20);
-      this._addScore("chain ", this._chains, 3, scoreXPos, yPos += 20);
+      //this._addScore("chain ", this._chains, 0, scoreXPos, yPos += Config.MeterHeight + 20);
+      //this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
+      //this._addScore("chain ", this._chains, 2, scoreXPos, yPos += 20);
+      //this._addScore("chain ", this._chains, 3, scoreXPos, yPos += 20);
 
-      var lastChainLabel = new ex.Label("last chain " + this._lastChain, scoreXPos, yPos += 30);
-      game.addEventListener('update', (data?: ex.UpdateEvent) => {
-         lastChainLabel.text = "last chain " + this._lastChain;
-      });
-      game.currentScene.addChild(lastChainLabel);
+      //var lastChainLabel = new ex.Label("last chain " + this._lastChain, scoreXPos, yPos += 30);
+      //game.addEventListener('update', (data?: ex.UpdateEvent) => {
+      //   lastChainLabel.text = "last chain " + this._lastChain;
+      //});
+      //game.currentScene.addChild(lastChainLabel);
    }
 
    private _addScore(description: String, statArray: Array<any>, statIndex: number, xPos: number, yPos: number) {
@@ -150,25 +154,27 @@
       game.add(square);
    }
 
-   private _totalScore(description: String, xPos: number, yPos: number) {
+   private _totalScore(xPos: number, yPos: number) {
       var totalScore = 0;
-      var label = new ex.Label(description + totalScore.toString(), xPos, yPos);
-      label.color = ex.Color.Black;
+      var label = new ex.Label(totalScore.toString(), xPos, yPos, "bold 18px Arial");
+      label.color = ex.Color.White;
       game.addEventListener('update', (data?: ex.UpdateEvent) => {
-         var totalScore = this._scores[0] + this._scores[1] + this._scores[2] + this._scores[3];
-         label.text = description + totalScore.toString();
+         var totalScore = this.getTotalScore();
+         label.text = totalScore.toString();
       });
-      game.currentScene.addChild(label);
+      game.add(label);
    }
 
    private _addMegaSweep(x: number, y: number) {
-      var meter = new ex.Actor(x, y, Config.MeterWidth, Config.MeterHeight * 4, ex.Color.Orange);
+      // todo sprite animation
+      var meter = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, 1);
+      meter.score = 1;
       meter.enableCapturePointer = true;
       var label = new ex.Label("MEGA SWEEP", meter.getCenter().x, meter.getCenter().y);
-      var inputLabel = new ex.Label("PRESS S", meter.getCenter().x, meter.getCenter().y + 14);
+      var inputLabel = new ex.Label("PRESS S", meter.getCenter().x, meter.getCenter().y + 10);
       label.textAlign = inputLabel.textAlign = ex.TextAlign.Center;
       label.color = inputLabel.color = ex.Color.White;
-      label.font = inputLabel.font = "14px";
+      label.font = inputLabel.font = "16px";
       meter.anchor.setTo(0, 0);
 
       meter.on("pointerup", () => {
@@ -194,11 +200,11 @@
    }
 
    private _addMeter(piece: PieceType, x: number, y: number) {
-      var meter = new Meter(x, y, PieceTypeToColor[piece], Config.SweepThreshold);
+      var meter = new Meter(x, y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold);
       meter.enableCapturePointer = true;
       var label = new ex.Label(null, meter.getCenter().x, meter.getCenter().y + 3);
       label.textAlign = ex.TextAlign.Center;
-      label.color = ex.Color.Black;
+      label.color = ex.Color.White;
 
       meter.on("pointerup", () => {
          sweeper.sweep(piece);
@@ -213,9 +219,9 @@
             meter.visible = label.visible = true;
 
             if (this._meters[piece] === Config.SweepThreshold) {
-               label.text = "Press " + (piece + 1) + " to SWEEP";
+               label.text = "SWEEP";
             } else {
-               label.text = this._meters[piece].toString();
+               label.text = "";
             }
          }
 
@@ -225,7 +231,7 @@
    }
 
    private _addSweepMeter(x: number, y: number) {
-      var square = new Meter(x, y, ex.Color.Red, this._sweepMeterThreshold);
+      var square = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, this._sweepMeterThreshold);
       square.enableCapturePointer = true;
       var label = new ex.Label(null, square.getCenter().x, y + 20);
       label.textAlign = ex.TextAlign.Center;
@@ -252,8 +258,8 @@
 class Meter extends ex.Actor {
    public score: number;
 
-   constructor(x: number, y: number, color: ex.Color, public threshold: number) {
-      super(x, y, Config.MeterWidth, Config.MeterHeight, color);
+   constructor(x: number, y: number, width: number, height: number, color: ex.Color, public threshold: number) {
+      super(x, y, width, height, color);
 
       this.anchor.setTo(0, 0);
    }
@@ -263,12 +269,18 @@ class Meter extends ex.Actor {
       var x = this.getBounds().left;
       var y = this.getBounds().top;
 
-      ctx.strokeStyle = this.color.toString();
-      ctx.lineWidth = 2;
+      // border
+      ctx.strokeStyle = Util.darken(this.color, 0.6).toString();
+      ctx.lineWidth = 1;
       ctx.strokeRect(x, y, this.getWidth(), this.getHeight());
+
+      // bg
+      ctx.fillStyle = new ex.Color(this.color.r, this.color.g, this.color.b, 0.3).toString();
+      ctx.fillRect(x, y, this.getWidth(), this.getHeight());
 
       var percentage = (this.score / this.threshold);
 
+      // fill
       ctx.fillStyle = this.color.toString();
       ctx.fillRect(x, y, (this.getWidth() * percentage), this.getHeight());
    }

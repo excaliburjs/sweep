@@ -16,7 +16,7 @@
 /// <reference path="background.ts"/>
 /// <reference path="Effects.ts"/>
 
-var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game", ex.DisplayMode.FullScreen);
+var game = new ex.Engine(0, 0, "game", ex.DisplayMode.FullScreen);
 game.backgroundColor = ex.Color.Transparent;
 
 
@@ -42,7 +42,6 @@ var visualGrid: VisualGrid,
    transitionManager: TransitionManager,
    sweeper: Sweeper,
    stats: Stats,
-   mask: ex.Actor,
    background: Background,
    effects;
 
@@ -84,16 +83,15 @@ function InitSetup() {
    turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? TurnMode.Timed : TurnMode.Match);
    transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
    sweeper = new Sweeper(Config.SweepMovesUp ? Config.SweepMaxRow : Config.SweepMinRow, visualGrid.logicalGrid.cols);
-   mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, visualGrid.logicalGrid.cols * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
-
-
-   mask.anchor.setTo(0, 0);
+   // mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, visualGrid.logicalGrid.cols * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
+   
+   //mask.anchor.setTo(0, 0);
  
    stats.drawScores();
 
    game.add(visualGrid);
    game.add(sweeper);   
-   game.add(mask);
+   //game.add(mask);
 
    //add pieces to initial rows
    for (i = 0; i < Config.NumStartingRows; i++) {
