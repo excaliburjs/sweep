@@ -135,6 +135,8 @@ var Config = (function () {
     Config.MeterWidth = 90;
     Config.MeterHeight = 30;
     Config.EnableGridLines = false;
+    Config.SweepShakeDuration = 400;
+    Config.MegaSweepShakeDuration = 500;
     return Config;
 })();
 /// <reference path="util.ts"/>
@@ -1124,7 +1126,7 @@ var Sweeper = (function (_super) {
     };
     Sweeper.prototype.sweepAll = function (force) {
         if (force === void 0) { force = false; }
-        game.currentScene.camera.shake(4, 4, 500);
+        game.currentScene.camera.shake(4, 4, Config.MegaSweepShakeDuration);
         if (matcher.gameOver)
             return;
         if (!stats.allMetersFull() && !force)
@@ -1152,7 +1154,7 @@ var Sweeper = (function (_super) {
     };
     Sweeper.prototype.sweep = function (type) {
         if (type === void 0) { type = null; }
-        game.currentScene.camera.shake(4, 4, 400);
+        game.currentScene.camera.shake(4, 4, Config.SweepShakeDuration);
         if (matcher.gameOver)
             return;
         if (type !== null) {
