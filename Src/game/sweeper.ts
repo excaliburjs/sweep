@@ -72,6 +72,9 @@ class Sweeper extends ex.Actor {
    }
 
    public sweepAll(force: boolean = false): void {
+
+      game.currentScene.camera.shake(4, 4, 500);
+
       if (matcher.gameOver) return;
 
       if (!stats.allMetersFull() && !force) return;
@@ -107,7 +110,9 @@ class Sweeper extends ex.Actor {
 
    }
 
-   public sweep(type: PieceType = null ): void {
+   public sweep(type: PieceType = null): void {
+
+      game.currentScene.camera.shake(4, 4, 400);
 
       if (matcher.gameOver) return; 
 
