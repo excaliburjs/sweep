@@ -1,3 +1,47 @@
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
+var Background = (function (_super) {
+    __extends(Background, _super);
+    function Background(corner, texture) {
+        _super.call(this, corner.x, corner.y, game.getWidth() + texture.width, game.getHeight() + texture.height);
+        this.corner = corner;
+        this.texture = texture;
+        this.addDrawing(texture);
+    }
+    Background.prototype.update = function (engine, delta) {
+        _super.prototype.update.call(this, engine, delta);
+        if (this.x < this.corner.x - this.texture.width || this.x > game.getWidth()) {
+            this.x = this.corner.x;
+            this.y = this.corner.y;
+        }
+        ;
+        if (this.y < this.corner.y - this.texture.height || this.y > game.getHeight()) {
+            this.x = this.corner.x;
+            this.y = this.corner.y;
+        }
+    };
+    Background.prototype.draw = function (ctx, delta) {
+        for (var i = 0; i < Math.ceil(game.getWidth() / this.texture.width) + 5; i++) {
+            if (this.dx < 0) {
+                this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y);
+            }
+            else {
+                this.currentDrawing.draw(ctx, this.x - i * this.texture.width, this.y);
+            }
+            if (this.dy < 0) {
+                this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y + this.texture.height);
+            }
+            else {
+                this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y - this.texture.height);
+            }
+        }
+    };
+    return Background;
+})(ex.Actor);
 var GameMode;
 (function (GameMode) {
     GameMode[GameMode["Standard"] = 0] = "Standard";
@@ -171,7 +215,8 @@ var Resources = {
     TextureTile1: new ex.Texture("images/Tile1.png"),
     TextureTile2: new ex.Texture("images/Tile2.png"),
     TextureTile3: new ex.Texture("images/Tile3.png"),
-    TextureTile4: new ex.Texture("images/Tile4.png")
+    TextureTile4: new ex.Texture("images/Tile4.png"),
+    BackgroundTexture: new ex.Texture('images/bg2.png')
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
@@ -183,12 +228,6 @@ var Palette = {
     PieceColor4: ex.Color.fromHex("#9979E0"),
     PolylineColor: ex.Color.fromHex("#F48347"),
     PolylineBorderColor: new ex.Color(255, 255, 255, 0.7)
-};
-var __extends = this.__extends || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
 };
 var PieceType;
 (function (PieceType) {
@@ -1303,6 +1342,7 @@ var UIWidget = (function (_super) {
 /// <reference path="Stats.ts"/>
 /// <reference path="sweeper.ts"/>
 /// <reference path="UIWidget.ts"/>
+/// <reference path="background.ts"/>
 var _this = this;
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game", 0 /* FullScreen */);
 game.backgroundColor = ex.Color.Transparent;
@@ -1314,7 +1354,7 @@ _.forIn(Resources, function (resource) {
 });
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, polyline;
+var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, polyline, background;
 // game modes
 var loadConfig = function (config) {
     Config.resetDefault();
@@ -1336,6 +1376,10 @@ function InitSetup() {
         }
     }
     game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
+    var leftCorner = game.screenToWorldCoordinates(new ex.Point(0, 0));
+    background = new Background(leftCorner, Resources.BackgroundTexture);
+    background.dx = -10;
+    game.add(background);
     //initialize game objects
     if (matcher)
         matcher.dispose(); //unbind events
@@ -1409,6 +1453,10 @@ function playLoop() {
         Resources.ChallengeLoopSound.setVolume(.5);
         Resources.ChallengeLoopSound.play();
     }
+}
+function mute() {
+    Resources.LoopSound.stop();
+    Resources.ChallengeLoopSound.stop();
 }
 function playGameOver() {
     Resources.LoopSound.stop();

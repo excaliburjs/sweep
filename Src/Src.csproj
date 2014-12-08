@@ -38,6 +38,7 @@
     <Content Include="index.html" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="game\background.ts" />
     <TypeScriptCompile Include="game\Config.ts" />
     <TypeScriptCompile Include="game\game.ts" />
     <TypeScriptCompile Include="game\grid.ts" />
