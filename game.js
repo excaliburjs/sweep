@@ -1034,6 +1034,7 @@ var Stats = (function () {
         this._lastChain = 0;
         this._lastChainBonus = 0;
         this._totalChainBonus = 0;
+        this._totalPiecesSwept = 0;
         this._sweepMeterThreshold = Config.SweepAltThreshold;
         this._meterActors = new Array();
         this._meterLabels = new Array();
@@ -1041,6 +1042,12 @@ var Stats = (function () {
     Stats.prototype.getTotalScore = function () {
         var totalScore = this._scores[0] + this._scores[1] + this._scores[2] + this._scores[3];
         return totalScore;
+    };
+    Stats.prototype.getTotalPiecesSwept = function () {
+        return this._totalPiecesSwept;
+    };
+    Stats.prototype.getTotalChainBonus = function () {
+        return this._totalChainBonus;
     };
     Stats.prototype.getLongestChain = function () {
         return Math.max.apply(Math, this._chains);
@@ -1089,6 +1096,7 @@ var Stats = (function () {
     };
     Stats.prototype.scorePieces = function (pieces) {
         var type = this._types.indexOf(pieces[0].getType());
+        this._totalPiecesSwept += pieces.length;
         this._scores[type] += this.scoreMultiplier(pieces.length + this.chainBonus(pieces), type);
         var newScore = this._meters[type] + pieces.length;
         this._meters[type] = Math.min(newScore, Config.SweepThreshold);
@@ -1107,7 +1115,7 @@ var Stats = (function () {
         var bonus = 0;
         if (chain > 3) {
             if (chain < Config.ChainThresholdSmall) {
-                return Config.ChainBonusSmall;
+                bonus = Config.ChainBonusSmall;
             }
             else if (chain < Config.ChainThresholdMedium) {
                 bonus = Config.ChainBonusMedium;
@@ -1788,6 +1796,10 @@ function gameOver() {
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
     document.getElementById("game-over").className = "show";
+    document.getElementById("game-over-swept").innerHTML = stats.getTotalPiecesSwept().toString();
+    document.getElementById("game-over-chain").innerHTML = stats.getTotalChainBonus().toString();
+    document.getElementById("game-over-multiplier").innerHTML = (stats.getTotalScore() - stats.getTotalChainBonus() - stats.getTotalPiecesSwept()).toString();
+    document.getElementById("game-over-total").innerHTML = stats.getTotalScore().toString();
     //var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
     //var gameOverWidgetActor = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() - 800, 300, 300, color);
     //game.addChild(gameOverWidgetActor);
