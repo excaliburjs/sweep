@@ -162,7 +162,7 @@ class LogicalGrid extends ex.Class {
             }
 
             if (smooth) {
-               piece.moveTo(cell.getCenter().x, cell.getCenter().y, 300).asPromise().then(() => {
+               piece.easeTo(cell.getCenter().x, cell.getCenter().y, 300, ex.EasingFunctions.EaseInOutCubic).asPromise().then(() => {
                   piece.x = cell.getCenter().x;
                   piece.y = cell.getCenter().y;
                });
@@ -193,7 +193,7 @@ class LogicalGrid extends ex.Class {
             (() => {
                var p = this.getCell(i, from).piece;
                var dest = this.getCell(i, to).getCenter();
-               promises.push(p.moveTo(dest.x, dest.y, 300).asPromise());
+               promises.push(p.easeTo(dest.x, dest.y, 300, ex.EasingFunctions.EaseInOutCubic).asPromise());
                this.setCell(i, to, this.getCell(i, from).piece, false);
                this.setCell(i, from, null);
             })();
