@@ -87,9 +87,10 @@ var Config = (function () {
     };
     Config.loadCasual = function () {
         gameMode = 0 /* Standard */;
-        // same as default, for now
-        document.getElementById("instructions").innerHTML = "Take your time and prevent the tiles from reaching the top. <strong>Drag</strong> to chain tiles together to remove them. " + "If things get hairy, <strong>press 1-4</strong> to choose a color to SWEEP and remove them from the board. Be careful, though, all other " + "meters will be depleted after each use.";
     };
+    /**
+     * @obsolete
+     */
     Config.loadSurvival = function () {
         Config.EnableTimer = true;
         Config.AdvanceRowsOnMatch = false;
@@ -104,7 +105,6 @@ var Config = (function () {
         Config.SweepAltThresholdDelta = 5;
         Config.SweepAltMinThreshold = 10;
         Config.SweepAltMaxThreshold = 50;
-        document.getElementById("instructions").innerHTML = "Battle against the clock and stop the tiles from reaching the top. <strong>Drag</strong> to chain tiles together to remove them. " + "If things get hairy, press <strong>S</strong> to SWEEP everything above the sweeper line! Each time the sweeper will move " + "down. As time goes on, it'll cost less to earn a SWEEP so play wisely.";
     };
     Config.loadSurvivalReverse = function () {
         gameMode = 1 /* Timed */;
@@ -121,7 +121,6 @@ var Config = (function () {
         Config.SweepAltThresholdDelta = 5;
         Config.SweepAltMinThreshold = 10;
         Config.SweepAltMaxThreshold = 50;
-        document.getElementById("instructions").innerHTML = "Battle against the clock and stop the tiles from reaching the top. <strong>Drag</strong> to chain tiles together to remove them. " + "If things get hairy, press <strong>S</strong> to SWEEP everything above the sweeper line! Each time the sweeper will move up. " + "As time goes on, it'll cost more to earn a SWEEP so play wisely.";
     };
     Config.gameWidth = 720;
     Config.gameHeight = 720;
@@ -569,9 +568,12 @@ var MainMenu = (function (_super) {
         _super.call(this);
         this._show = false;
         this._showing = false;
+        this._hide = false;
+        this._hiding = false;
         this.color = new ex.Color(0, 0, 0, 0.9);
     }
     MainMenu.prototype.onInitialize = function (engine) {
+        _super.prototype.onInitialize.call(this, engine);
         this._logo = new ex.UIActor();
         this._logo.addDrawing(Resources.TextureLogo.asSprite());
         this._logo.currentDrawing.setScaleX(0.7);
@@ -583,11 +585,6 @@ var MainMenu = (function (_super) {
         game.add(this._standardButton);
         game.add(this._challengeButton);
         this.show();
-    };
-    MainMenu.prototype.draw = function (ctx, delta) {
-        if (!this.visible)
-            return;
-        _super.prototype.draw.call(this, ctx, delta);
     };
     MainMenu.prototype.update = function (engine, delta) {
         var _this = this;
@@ -613,30 +610,46 @@ var MainMenu = (function (_super) {
             this._logo.x = this.getCenter().x;
             this._logo.y = this.y + MainMenu._LogoPos.y;
         }
+        if (this._hide) {
+        }
     };
     MainMenu.prototype.show = function () {
         this.visible = true;
         this._logo.visible = true;
         this._standardButton.visible = true;
+        this._standardButton.enableCapturePointer = true;
         this._challengeButton.visible = true;
+        this._challengeButton.enableCapturePointer = true;
         this._show = true;
+        this._hide = false;
     };
     MainMenu.prototype.hide = function () {
         this.visible = false;
         this._logo.visible = false;
         this._standardButton.visible = false;
+        this._standardButton.enableCapturePointer = false;
         this._challengeButton.visible = false;
+        this._challengeButton.enableCapturePointer = false;
         this._show = false;
+        this._hide = true;
     };
+    MainMenu.prototype.onGameModeSwitch = function () {
+        mainMenu.hide();
+        // todo tutorial
+    };
+    // todo move loadConfig logic to here so we can manage state better?
     MainMenu.LoadStandardMode = function () {
-        loadConfig(Config.loadCasual, true);
-        //mainMenu.hide();
+        ex.Logger.getInstance().info("Loading standard mode");
+        loadConfig(Config.loadCasual);
+        mainMenu.onGameModeSwitch();
     };
     MainMenu.LoadChallengeMode = function () {
-        loadConfig(Config.loadSurvivalReverse, true);
+        ex.Logger.getInstance().info("Loading challenge mode");
+        loadConfig(Config.loadSurvivalReverse);
+        mainMenu.onGameModeSwitch();
     };
-    MainMenu._StandardButtonPos = new ex.Point(25, 200);
-    MainMenu._ChallengeButtonPos = new ex.Point(25, 200 + Config.MainMenuButtonHeight + 20);
+    MainMenu._StandardButtonPos = new ex.Point(42, 200);
+    MainMenu._ChallengeButtonPos = new ex.Point(42, 200 + Config.MainMenuButtonHeight + 20);
     MainMenu._LogoPos = new ex.Point(0, 50);
     return MainMenu;
 })(ex.UIActor);
@@ -646,22 +659,9 @@ var MenuButton = (function (_super) {
         _super.call(this, x, y, Config.MainMenuButtonWidth, Config.MainMenuButtonHeight);
         this.action = action;
         this.addDrawing(sprite);
+        this.off("pointerup", this.action);
+        this.on("pointerup", this.action);
     }
-    MenuButton.prototype.onInitialize = function () {
-        var world = game.screenToWorldCoordinates(new ex.Point(this.x, this.y));
-        this._captureActor = new ex.Actor(world.x, world.y, Config.MainMenuButtonWidth, Config.MainMenuButtonHeight, ex.Color.Transparent);
-        this._captureActor.anchor.setTo(0, 0);
-        game.add(this._captureActor);
-        this._captureActor.off("pointerup", this.action);
-        this._captureActor.on("pointerup", this.action);
-    };
-    MenuButton.prototype.update = function (engine, delta) {
-        _super.prototype.update.call(this, engine, delta);
-        var world = game.screenToWorldCoordinates(new ex.Point(this.x, this.y));
-        this._captureActor.enableCapturePointer = this.visible;
-        this._captureActor.x = world.x;
-        this._captureActor.y = world.y;
-    };
     return MenuButton;
 })(ex.UIActor);
 var MatchEvent = (function (_super) {
@@ -1531,21 +1531,18 @@ _.forIn(Resources, function (resource) {
 });
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-//var mainMenu = new MainMenu();
+var mainMenu = new MainMenu();
 var polyline = new PolyLine();
-//game.add(mainMenu);
+game.add(mainMenu);
 game.add(polyline);
 var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, background, effects;
 // game modes
-var loadConfig = function (config, fromMenu) {
+var loadConfig = function (config) {
     Config.resetDefault();
     config.call(_this);
     InitSetup();
 };
-document.getElementById("loadCasual").addEventListener("mouseup", function () { return loadConfig(Config.loadCasual, true); });
-document.getElementById("loadSurvial").addEventListener("mouseup", function () { return loadConfig(Config.loadSurvival, true); });
-document.getElementById("loadSurvivalReverse").addEventListener("mouseup", function () { return loadConfig(Config.loadSurvivalReverse, true); });
-loadConfig(Config.loadCasual, false);
+loadConfig(Config.loadCasual);
 //reset the game with the given grid dimensions
 function InitSetup() {
     visualGrid = new VisualGrid(grid);
