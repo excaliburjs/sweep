@@ -98,7 +98,7 @@ class Sweeper extends ex.Actor {
       stats.resetAllMeters();
 
       // add combo multiplier
-      stats.increaseScoreMultiplier();
+      //stats.increaseScoreMultiplier();
 
       // fill grid
       grid.seed(Config.NumStartingRows, true, Config.MegaSweepDelay);

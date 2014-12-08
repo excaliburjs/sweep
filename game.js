@@ -236,6 +236,8 @@ var Piece = (function (_super) {
         this._id = id;
         this._type = type || 0 /* Circle */;
         this._originalColor = color;
+        this._updateDrawings();
+        this.calculatedAnchor = new ex.Point(18, 18);
     }
     Piece.prototype.getId = function () {
         return this._id;
@@ -260,6 +262,7 @@ var Piece = (function (_super) {
     };
     Piece.prototype.update = function (engine, delta) {
         _super.prototype.update.call(this, engine, delta);
+        //console.log("piece pos", this.x, this.y, this);
         if (matcher.runInProgress && (!this.selected && this.getType() !== matcher.getRunType())) {
             this.setDrawing("faded");
         }
@@ -275,9 +278,11 @@ var Piece = (function (_super) {
 var PieceFactory = (function () {
     function PieceFactory() {
     }
-    PieceFactory.getRandomPiece = function () {
+    PieceFactory.getRandomPiece = function (x, y) {
+        if (x === void 0) { x = 0; }
+        if (y === void 0) { y = 0; }
         var index = Math.floor(Math.random() * PieceTypes.length);
-        var piece = new Piece(PieceFactory._maxId++, 0, 0, PieceTypeToColor[index].clone(), index);
+        var piece = new Piece(PieceFactory._maxId++, x, y, PieceTypeToColor[index].clone(), index);
         game.add(piece);
         return piece;
     };
@@ -377,6 +382,7 @@ var LogicalGrid = (function (_super) {
     };
     LogicalGrid.prototype.clearPiece = function (piece) {
         if (piece && piece.cell) {
+            piece.visible = false;
             piece.cell.piece = null;
             piece.cell = null;
             piece.kill();
@@ -427,10 +433,9 @@ var LogicalGrid = (function (_super) {
         if (delay === void 0) { delay = 0; }
         for (var i = 0; i < this.cols; i++) {
             (function () {
-                var piece = PieceFactory.getRandomPiece();
                 var cell = _this.getCell(i, row);
-                piece.x = cell.getCenter().x;
-                piece.y = visualGrid.y + visualGrid.getHeight() + (Config.CellHeight / 2);
+                var piece = PieceFactory.getRandomPiece(cell.getCenter().x, visualGrid.y + visualGrid.getHeight() + (Config.CellHeight / 2));
+                //piece.y = visualGrid.y + visualGrid.getHeight() + (Config.CellHeight / 2);
                 var intendedCell = _this.setCell(i, row, piece, !smooth);
                 var hasSameType = intendedCell.getNeighbors().some(function (c) {
                     if (c && c.piece) {
@@ -1375,7 +1380,7 @@ var Sweeper = (function (_super) {
         // reset meter
         stats.resetAllMeters();
         // add combo multiplier
-        stats.increaseScoreMultiplier();
+        //stats.increaseScoreMultiplier();
         // fill grid
         grid.seed(Config.NumStartingRows, true, Config.MegaSweepDelay);
         Resources.MegaSweepSound.play();
