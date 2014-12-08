@@ -1,63 +1,49 @@
-var Util = (function () {
-    function Util() {
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
+var Background = (function (_super) {
+    __extends(Background, _super);
+    function Background(corner, texture) {
+        _super.call(this, corner.x, corner.y, game.getWidth() + texture.width, game.getHeight() + texture.height);
+        this.corner = corner;
+        this.texture = texture;
+        this.addDrawing(texture);
     }
-    Util.darken = function (color, amount) {
-        var r = Math.floor(color.r - (color.r * amount));
-        var g = Math.floor(color.g - (color.g * amount));
-        var b = Math.floor(color.b - (color.b * amount));
-        return new ex.Color(r, g, b, color.a);
+    Background.prototype.update = function (engine, delta) {
+        this.corner = engine.screenToWorldCoordinates(new ex.Point(0, 0));
+        this.x = this.corner.x - 20;
+        _super.prototype.update.call(this, engine, delta);
+        if (this.x < this.corner.x - this.texture.width || this.x > game.getWidth()) {
+            this.x = this.corner.x;
+            this.y = this.corner.y;
+        }
+        ;
+        if (this.y < this.corner.y - this.texture.height || this.y > game.getHeight()) {
+            this.x = this.corner.x;
+            this.y = this.corner.y;
+        }
     };
-    Util.lighten = function (color, amount) {
-        if (color.a <= 0)
-            return color;
-        var c = Spectra({ r: color.r, g: color.g, b: color.b, a: color.a });
-        var newColor = c.lighten(amount * 100);
-        return new ex.Color(newColor.red(), newColor.green(), newColor.blue(), newColor.alpha());
+    Background.prototype.draw = function (ctx, delta) {
+        for (var i = 0; i < Math.ceil(game.getWidth() / this.texture.width) + 5; i++) {
+            if (this.dx <= 0) {
+                this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y);
+            }
+            else {
+                this.currentDrawing.draw(ctx, this.x - i * this.texture.width, this.y);
+            }
+            if (this.dy <= 0) {
+                this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y + this.texture.height);
+            }
+            else {
+                this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y - this.texture.height);
+            }
+        }
     };
-    Util.saturate = function (color, amount) {
-        if (color.a <= 0)
-            return color;
-        var c = Spectra({ r: color.r, g: color.g, b: color.b, a: color.a });
-        var newColor = c.saturate(amount * 100);
-        return new ex.Color(newColor.red(), newColor.green(), newColor.blue(), newColor.alpha());
-    };
-    Util.getColorOfPixel = function (imageData, x, y) {
-        var firstPixel = (x + y * imageData.width) * 4;
-        var pixels = imageData.data;
-        return new ex.Color(pixels[firstPixel + 0], pixels[firstPixel + 1], pixels[firstPixel + 2], pixels[firstPixel + 3]);
-    };
-    Util.setPixelToColor = function (imageData, x, y, color) {
-        var firstPixel = (x + y * imageData.width) * 4;
-        var pixel = imageData.data;
-        pixel[firstPixel + 0] = color.r;
-        pixel[firstPixel + 1] = color.g;
-        pixel[firstPixel + 2] = color.b;
-        pixel[firstPixel + 3] = ex.Util.clamp(Math.floor(color.a * 255), 0, 255);
-    };
-    return Util;
-})();
-var LightenEffect = (function () {
-    function LightenEffect(amount) {
-        this.amount = amount;
-    }
-    LightenEffect.prototype.updatePixel = function (x, y, imageData) {
-        var pixelColor = Util.getColorOfPixel(imageData, x, y);
-        var lightenedColor = Util.lighten(pixelColor, this.amount);
-        Util.setPixelToColor(imageData, x, y, lightenedColor);
-    };
-    return LightenEffect;
-})();
-var SaturateEffect = (function () {
-    function SaturateEffect(amount) {
-        this.amount = amount;
-    }
-    SaturateEffect.prototype.updatePixel = function (x, y, imageData) {
-        var pixelColor = Util.getColorOfPixel(imageData, x, y);
-        var lightenedColor = Util.saturate(pixelColor, this.amount);
-        Util.setPixelToColor(imageData, x, y, lightenedColor);
-    };
-    return SaturateEffect;
-})();
+    return Background;
+})(ex.Actor);
 var GameMode;
 (function (GameMode) {
     GameMode[GameMode["Standard"] = 0] = "Standard";
@@ -141,7 +127,103 @@ var Config = (function () {
     Config.MainMenuButtonHeight = 62;
     Config.SweepShakeDuration = 400;
     Config.MegaSweepShakeDuration = 500;
+    Config.MegaSweepDelay = 600;
     return Config;
+})();
+var Effects = (function () {
+    function Effects() {
+    }
+    Effects.prototype.clearEffect = function (piece) {
+        //TODO move emitter to Grid
+        var emitter = new ex.ParticleEmitter(piece.x, piece.y, 1, 1);
+        emitter.minVel = 30;
+        emitter.maxVel = 125;
+        emitter.minAngle = Math.PI / 4;
+        emitter.maxAngle = (Math.PI * 3) / 4;
+        emitter.isEmitting = false;
+        emitter.emitRate = 5;
+        emitter.opacity = 0.84;
+        emitter.fadeFlag = true;
+        emitter.particleLife = 1000;
+        emitter.maxSize = 0.4;
+        emitter.minSize = 0.2;
+        emitter.acceleration = new ex.Vector(0, -500);
+        emitter.beginColor = ex.Color.Red;
+        emitter.endColor = ex.Color.Yellow;
+        emitter.startSize = 0.5;
+        emitter.endSize = 0.01;
+        emitter.particleSprite = piece.currentDrawing.clone();
+        emitter.particleSprite.transformAboutPoint(new ex.Point(.5, .5));
+        emitter.particleRotationalVelocity = Math.PI / 10;
+        emitter.randomRotation = true;
+        emitter.fadeFlag = true;
+        emitter.focus = new ex.Vector(0, emitter.y - 1000); // relative to the emitter
+        emitter.focusAccel = 900;
+        game.addChild(emitter);
+        emitter.emit(5);
+        //emitter.moveTo(emitter.x + 1, emitter.y + 1, 20);
+    };
+    return Effects;
+})();
+var Util = (function () {
+    function Util() {
+    }
+    Util.darken = function (color, amount) {
+        var r = Math.floor(color.r - (color.r * amount));
+        var g = Math.floor(color.g - (color.g * amount));
+        var b = Math.floor(color.b - (color.b * amount));
+        return new ex.Color(r, g, b, color.a);
+    };
+    Util.lighten = function (color, amount) {
+        if (color.a <= 0)
+            return color;
+        var c = Spectra({ r: color.r, g: color.g, b: color.b, a: color.a });
+        var newColor = c.lighten(amount * 100);
+        return new ex.Color(newColor.red(), newColor.green(), newColor.blue(), newColor.alpha());
+    };
+    Util.saturate = function (color, amount) {
+        if (color.a <= 0)
+            return color;
+        var c = Spectra({ r: color.r, g: color.g, b: color.b, a: color.a });
+        var newColor = c.saturate(amount * 100);
+        return new ex.Color(newColor.red(), newColor.green(), newColor.blue(), newColor.alpha());
+    };
+    Util.getColorOfPixel = function (imageData, x, y) {
+        var firstPixel = (x + y * imageData.width) * 4;
+        var pixels = imageData.data;
+        return new ex.Color(pixels[firstPixel + 0], pixels[firstPixel + 1], pixels[firstPixel + 2], pixels[firstPixel + 3]);
+    };
+    Util.setPixelToColor = function (imageData, x, y, color) {
+        var firstPixel = (x + y * imageData.width) * 4;
+        var pixel = imageData.data;
+        pixel[firstPixel + 0] = color.r;
+        pixel[firstPixel + 1] = color.g;
+        pixel[firstPixel + 2] = color.b;
+        pixel[firstPixel + 3] = ex.Util.clamp(Math.floor(color.a * 255), 0, 255);
+    };
+    return Util;
+})();
+var LightenEffect = (function () {
+    function LightenEffect(amount) {
+        this.amount = amount;
+    }
+    LightenEffect.prototype.updatePixel = function (x, y, imageData) {
+        var pixelColor = Util.getColorOfPixel(imageData, x, y);
+        var lightenedColor = Util.lighten(pixelColor, this.amount);
+        Util.setPixelToColor(imageData, x, y, lightenedColor);
+    };
+    return LightenEffect;
+})();
+var SaturateEffect = (function () {
+    function SaturateEffect(amount) {
+        this.amount = amount;
+    }
+    SaturateEffect.prototype.updatePixel = function (x, y, imageData) {
+        var pixelColor = Util.getColorOfPixel(imageData, x, y);
+        var lightenedColor = Util.saturate(pixelColor, this.amount);
+        Util.setPixelToColor(imageData, x, y, lightenedColor);
+    };
+    return SaturateEffect;
 })();
 /// <reference path="util.ts"/>
 var Resources = {
@@ -176,7 +258,7 @@ var Resources = {
     BackgroundTexture: new ex.Texture('images/bg2.png'),
     TextureLogo: new ex.Texture("images/logo.png"),
     TextureStandardBtn: new ex.Texture("images/standard.png"),
-    TextureChallengeBtn: new ex.Texture("images/challenge.png")
+    TextureChallengeBtn: new ex.Texture("images/challenge.png"),
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
@@ -188,12 +270,6 @@ var Palette = {
     PieceColor4: ex.Color.fromHex("#9979E0"),
     PolylineColor: ex.Color.fromHex("#F48347"),
     PolylineBorderColor: new ex.Color(255, 255, 255, 0.7)
-};
-var __extends = this.__extends || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
 };
 var PieceType;
 (function (PieceType) {
@@ -369,20 +445,6 @@ var LogicalGrid = (function (_super) {
             piece.kill();
         }
     };
-    /* private _getPieceGroupHelper(currentPiece: Piece, currentGroup: Piece[]) {
-        var unexploredNeighbors = currentPiece.cell.getNeighbors().filter(c => {
-           return c.piece && currentGroup.indexOf(c.piece) === -1 && c.piece.getType() === currentPiece.getType();
-        }).map(c => c.piece);
-        currentGroup = currentGroup.concat(unexploredNeighbors);
-        if (unexploredNeighbors.length === 0) {
-           return currentGroup;
-        } else {
-           for (var i = 0; i < unexploredNeighbors.length; i++) {
-              this._getPieceGroupHelper(unexploredNeighbors[i], currentGroup);
-           }
-           return currentGroup;
-        }
-     }*/
     LogicalGrid.prototype.getAdjacentPieceGroup = function (piece) {
         var currentGroup = [piece];
         function _getPieceGroupHelper(currentPiece) {
@@ -419,9 +481,13 @@ var LogicalGrid = (function (_super) {
         }
         return selectablePieces.length;
     };
-    LogicalGrid.prototype.fill = function (row, smooth) {
+    LogicalGrid.prototype.getPieces = function () {
+        return this.cells.filter(function (c) { return c.piece !== null; }).map(function (c) { return c.piece; });
+    };
+    LogicalGrid.prototype.fill = function (row, smooth, delay) {
         var _this = this;
         if (smooth === void 0) { smooth = false; }
+        if (delay === void 0) { delay = 0; }
         for (var i = 0; i < this.cols; i++) {
             (function () {
                 var piece = PieceFactory.getRandomPiece();
@@ -443,7 +509,7 @@ var LogicalGrid = (function (_super) {
                     _this.setCell(i, row, piece, !smooth);
                 }
                 if (smooth) {
-                    piece.easeTo(cell.getCenter().x, cell.getCenter().y, 300, ex.EasingFunctions.EaseInOutCubic).asPromise().then(function () {
+                    piece.delay(delay).easeTo(cell.getCenter().x, cell.getCenter().y, 300, ex.EasingFunctions.EaseInOutCubic).asPromise().then(function () {
                         piece.x = cell.getCenter().x;
                         piece.y = cell.getCenter().y;
                     });
@@ -452,6 +518,19 @@ var LogicalGrid = (function (_super) {
         }
         mask.kill();
         game.add(mask);
+    };
+    LogicalGrid.prototype.seed = function (rows, smooth, delay) {
+        var _this = this;
+        if (smooth === void 0) { smooth = false; }
+        if (delay === void 0) { delay = 0; }
+        for (var i = 0; i < rows; i++) {
+            grid.fill(grid.rows - (i + 1), smooth, delay);
+        }
+        if (this.getNumAvailablePieces() < 2) {
+            this.getPieces().forEach(function (p) { return _this.clearPiece(p); });
+            // DANGER WILL ROBINSON DANGER DANGER!
+            this.seed(rows, smooth, delay);
+        }
     };
     LogicalGrid.prototype.shift = function (from, to) {
         var _this = this;
@@ -491,45 +570,6 @@ var LogicalGrid = (function (_super) {
     };
     LogicalGrid.prototype.areNeighbors = function (cell1, cell2) {
         return cell1.getNeighbors().indexOf(cell2) > -1;
-        /*
-        // find neighbors of cell1
-        var x = cell1.x,
-           y = cell1.y,
-           x2 = cell2.x,
-           y2 = cell2.y,
-           left = new ex.Point(x - 1, y),
-           topLeft = new ex.Point(x - 1, y - 1),
-           right = new ex.Point(x + 1, y),
-           bottomRight = new ex.Point(x + 1, y + 1),
-           top = new ex.Point(x, y - 1),
-           topRight = new ex.Point(x + 1, y - 1),
-           bottom = new ex.Point(x, y + 1),
-           bottomLeft = new ex.Point(x - 1, y + 1);
-  
-        ex.Logger.getInstance().debug("LogicalGrid.areNeighbors", {
-           cell1: cell1,
-           cell2: cell2,
-           forX: x,
-           forY: y,
-           otherX: x2,
-           otherY: y2,
-           left: left,
-           topLeft: topLeft,
-           right: right,
-           topRight: topRight,
-           bottom: bottom,
-           bottomLeft: bottomLeft,
-           bottomRight: bottomRight
-        });
-  
-        return (x2 === left.x && y2 === left.y) ||
-           (x2 === right.x && y2 === right.y) ||
-           (x2 === top.x && y2 === top.y) ||
-           (x2 === bottom.x && y2 === bottom.y) ||
-           (x2 === topLeft.x && y2 === topLeft.y) ||
-           (x2 === bottomRight.x && y2 === bottomRight.y) ||
-           (x2 === topRight.x && y2 === topRight.y) ||
-           (x2 === bottomLeft.x && y2 === bottomLeft.y);*/
     };
     return LogicalGrid;
 })(ex.Class);
@@ -732,7 +772,7 @@ var MatchManager = (function (_super) {
                 cell.piece.scaleTo(1.3, 1.3, 1.8, 1.8).scaleTo(1, 1, 1.8, 1.8);
                 this._run.push(cell.piece);
                 this._playNote();
-                ex.Logger.getInstance().info("Run started", this._run);
+                ex.Logger.getInstance().debug("Run started", this._run);
             }
             else {
                 this._run = grid.getAdjacentPieceGroup(cell.piece);
@@ -768,7 +808,7 @@ var MatchManager = (function (_super) {
                     piece.selected = true;
                     this._run.push(piece);
                     this._playNote();
-                    ex.Logger.getInstance().info("Run modified", this._run);
+                    ex.Logger.getInstance().debug("Run modified", this._run);
                     // notify
                     this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
                     if (!piece.hover) {
@@ -792,7 +832,7 @@ var MatchManager = (function (_super) {
                     this._run[removePiece].selected = false;
                     this._run.splice(removePiece, 1);
                     Resources.UndoSound.play();
-                    ex.Logger.getInstance().info("Run modified", this._run);
+                    ex.Logger.getInstance().debug("Run modified", this._run);
                 }
             }
             else {
@@ -806,7 +846,7 @@ var MatchManager = (function (_super) {
             }
             // have a valid run?
             if (this._run.length > 0) {
-                ex.Logger.getInstance().info("Run ended", this._run);
+                ex.Logger.getInstance().debug("Run ended", this._run);
                 // notify
                 this.eventDispatcher.publish("match", new MatchEvent(_.clone(this._run)));
                 this._run.forEach(function (p) { return p.selected = false; });
@@ -919,10 +959,10 @@ var TurnManager = (function () {
             else if (!isMatch) {
                 _this.currentPromise = _this.advanceRows();
             }
-            console.log("Done!");
         });
     };
     TurnManager.prototype.advanceRows = function () {
+        var _this = this;
         var promises = [];
         for (var i = 0; i < grid.rows; i++) {
             promises.push(this.logicalGrid.shift(i, i - 1));
@@ -937,7 +977,15 @@ var TurnManager = (function () {
             if (gameMode == 0 /* Standard */) {
                 if (grid.getNumAvailablePieces() <= 0) {
                     //reset the board if there are no legal moves
-                    sweeper.sweepAll(true);
+                    //debugger;
+                    //sweeper.sweepAll(true);
+                    grid.getPieces().forEach(function (p) {
+                        effects.clearEffect(p);
+                        grid.clearPiece(p);
+                    });
+                    noMoves.play().then(function () {
+                        _this.logicalGrid.seed(Config.NumStartingRows, true);
+                    });
                 }
             }
         }).error(function (e) {
@@ -1328,22 +1376,19 @@ var Sweeper = (function (_super) {
             return !!cell.piece;
         });
         // todo mega animation!
-        cells.forEach(function (cell) {
+        grid.getPieces().forEach(function (piece) {
             // todo adjust mega sweep scoring?
-            stats.scorePieces([cell.piece]);
+            stats.scorePieces([piece]);
             // clear
-            grid.clearPiece(cell.piece);
+            effects.clearEffect(piece);
+            grid.clearPiece(piece);
         });
         // reset meter
         stats.resetAllMeters();
         // add combo multiplier
         stats.increaseScoreMultiplier();
-        for (var i = 0; i < Config.NumStartingRows; i++) {
-            grid.fill(grid.rows - (i + 1));
-        }
-        if (grid.getNumAvailablePieces() <= 0) {
-            this.sweepAll(true);
-        }
+        // fill grid
+        grid.seed(Config.NumStartingRows, true, Config.MegaSweepDelay);
         Resources.MegaSweepSound.play();
     };
     Sweeper.prototype.sweep = function (type) {
@@ -1364,6 +1409,7 @@ var Sweeper = (function (_super) {
             });
             cells.forEach(function (cell) {
                 stats.scorePieces([cell.piece]);
+                effects.clearEffect(cell.piece);
                 grid.clearPiece(cell.piece);
             });
             // reset meter
@@ -1430,79 +1476,24 @@ var UIWidget = (function (_super) {
     };
     return UIWidget;
 })(ex.Class);
-var Background = (function (_super) {
-    __extends(Background, _super);
-    function Background(corner, texture) {
-        _super.call(this, corner.x, corner.y, game.getWidth() + texture.width, game.getHeight() + texture.height);
-        this.corner = corner;
-        this.texture = texture;
-        this.addDrawing(texture);
+var NoMoves = (function (_super) {
+    __extends(NoMoves, _super);
+    function NoMoves() {
+        _super.call(this, -200, game.getHeight() / 2, 200, 100);
+        this.color = ex.Color.Azure.clone();
+        this.anchor.setTo(.5, .5);
     }
-    Background.prototype.update = function (engine, delta) {
-        _super.prototype.update.call(this, engine, delta);
-        if (this.x < this.corner.x - this.texture.width || this.x > game.getWidth()) {
-            this.x = this.corner.x;
-            this.y = this.corner.y;
-        }
-        ;
-        if (this.y < this.corner.y - this.texture.height || this.y > game.getHeight()) {
-            this.x = this.corner.x;
-            this.y = this.corner.y;
-        }
+    NoMoves.prototype.play = function () {
+        var _this = this;
+        var corner = this._engine.screenToWorldCoordinates(new ex.Point(0, 0));
+        this.x = corner.x - this.getWidth();
+        this.y = game.getHeight() / 2;
+        return this.easeTo(game.getWidth() / 2, game.getHeight() / 2, 500, ex.EasingFunctions.EaseInOutCubic).delay(200).easeTo(game.getWidth() + this.getWidth(), this.y, 500, ex.EasingFunctions.EaseInOutCubic).asPromise().then(function () {
+            _this.x = corner.x - _this.getWidth();
+        });
     };
-    Background.prototype.draw = function (ctx, delta) {
-        for (var i = 0; i < Math.ceil(game.getWidth() / this.texture.width) + 5; i++) {
-            if (this.dx <= 0) {
-                this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y);
-            }
-            else {
-                this.currentDrawing.draw(ctx, this.x - i * this.texture.width, this.y);
-            }
-            if (this.dy <= 0) {
-                this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y + this.texture.height);
-            }
-            else {
-                this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y - this.texture.height);
-            }
-        }
-    };
-    return Background;
-})(ex.Actor);
-var Effects = (function () {
-    function Effects() {
-    }
-    Effects.prototype.clearEffect = function (piece) {
-        //TODO move emitter to Grid
-        var emitter = new ex.ParticleEmitter(piece.x, piece.y, 1, 1);
-        emitter.minVel = 30;
-        emitter.maxVel = 125;
-        emitter.minAngle = Math.PI / 4;
-        emitter.maxAngle = (Math.PI * 3) / 4;
-        emitter.isEmitting = false;
-        emitter.emitRate = 5;
-        emitter.opacity = 0.84;
-        emitter.fadeFlag = true;
-        emitter.particleLife = 1000;
-        emitter.maxSize = 0.4;
-        emitter.minSize = 0.2;
-        emitter.acceleration = new ex.Vector(0, -500);
-        emitter.beginColor = ex.Color.Red;
-        emitter.endColor = ex.Color.Yellow;
-        emitter.startSize = 0.5;
-        emitter.endSize = 0.01;
-        emitter.particleSprite = piece.currentDrawing.clone();
-        emitter.particleSprite.transformAboutPoint(new ex.Point(.5, .5));
-        emitter.particleRotationalVelocity = Math.PI / 10;
-        emitter.randomRotation = true;
-        emitter.fadeFlag = true;
-        emitter.focus = new ex.Vector(0, emitter.y - 1000); // relative to the emitter
-        emitter.focusAccel = 900;
-        game.addChild(emitter);
-        emitter.emit(5);
-        //emitter.moveTo(emitter.x + 1, emitter.y + 1, 20);
-    };
-    return Effects;
-})();
+    return NoMoves;
+})(ex.UIActor);
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
 /// <reference path="util.ts"/>
@@ -1520,6 +1511,7 @@ var Effects = (function () {
 /// <reference path="UIWidget.ts"/>
 /// <reference path="background.ts"/>
 /// <reference path="Effects.ts"/>
+/// <reference path="nomoves.ts"/>
 var _this = this;
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game", 0 /* FullScreen */);
 game.backgroundColor = ex.Color.Transparent;
@@ -1533,9 +1525,11 @@ _.forIn(Resources, function (resource) {
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var mainMenu = new MainMenu();
 var polyline = new PolyLine();
+var noMoves = new NoMoves();
 game.add(mainMenu);
 game.add(polyline);
-var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, background, effects;
+game.add(noMoves);
+var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, background, noMoves, effects;
 // game modes
 var loadConfig = function (config) {
     Config.resetDefault();
@@ -1545,7 +1539,6 @@ var loadConfig = function (config) {
 loadConfig(Config.loadCasual);
 //reset the game with the given grid dimensions
 function InitSetup() {
-    grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
     visualGrid = new VisualGrid(grid);
     effects = new Effects();
     var i;
@@ -1559,9 +1552,6 @@ function InitSetup() {
     background = new Background(leftCorner, Resources.BackgroundTexture);
     background.dy = -10;
     game.add(background);
-    if (turnManager && turnManager.currentPromise.state() === 2 /* Pending */) {
-        turnManager.currentPromise.resolve();
-    }
     //initialize game objects
     if (matcher)
         matcher.dispose(); //unbind events
@@ -1578,11 +1568,9 @@ function InitSetup() {
     game.add(visualGrid);
     game.add(sweeper);
     game.add(mask);
-    for (i = 0; i < Config.NumStartingRows; i++) {
-        grid.fill(grid.rows - (i + 1));
-    }
+    //add pieces to initial rows
+    grid.seed(Config.NumStartingRows);
     playLoop();
-    //turnManager.currentPromise = ex.Promise.wrap(true);
 }
 game.input.keyboard.on('up', function (evt) {
     if (evt.key === 68 /* D */) {
@@ -1595,21 +1583,24 @@ game.input.keyboard.on('up', function (evt) {
         // fill first row
         grid.fill(grid.rows - 1);
     }
-    //if (evt.key === ex.Input.Keys.Up || evt.key == ex.Input.Keys.Down || evt.key === ex.Input.Keys.Left || evt.key === ex.Input.Keys.Right) {
-    //   var numCols = grid.cols || 0;
-    //   var numRows = grid.rows || 0;
-    //   if (evt.key === ex.Input.Keys.Up) {
-    //      numRows++;
-    //   } else if (evt.key === ex.Input.Keys.Down) {
-    //      numRows--;
-    //   } else if (evt.key === ex.Input.Keys.Left) {
-    //      numCols--;
-    //   } else if (evt.key === ex.Input.Keys.Right) {
-    //      numCols++;
-    //   }
-    //   grid = new LogicalGrid(numRows, numCols);
-    //   InitSetup();
-    //}   
+    if (evt.key === 38 /* Up */ || evt.key == 40 /* Down */ || evt.key === 37 /* Left */ || evt.key === 39 /* Right */) {
+        var numCols = grid.cols || 0;
+        var numRows = grid.rows || 0;
+        if (evt.key === 38 /* Up */) {
+            numRows++;
+        }
+        else if (evt.key === 40 /* Down */) {
+            numRows--;
+        }
+        else if (evt.key === 37 /* Left */) {
+            numCols--;
+        }
+        else if (evt.key === 39 /* Right */) {
+            numCols++;
+        }
+        grid = new LogicalGrid(numRows, numCols);
+        InitSetup();
+    }
 });
 var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
@@ -1678,4 +1669,3 @@ function gameOver() {
 game.start(loader).then(function () {
     playLoop();
 });
-//# sourceMappingURL=game.js.map

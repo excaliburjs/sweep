@@ -15,6 +15,7 @@
 /// <reference path="UIWidget.ts"/>
 /// <reference path="background.ts"/>
 /// <reference path="Effects.ts"/>
+/// <reference path="nomoves.ts"/>
 
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game", ex.DisplayMode.FullScreen);
 game.backgroundColor = ex.Color.Transparent;
@@ -33,8 +34,10 @@ _.forIn(Resources, (resource) => {
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var mainMenu = new MainMenu();
 var polyline = new PolyLine();
+var noMoves = new NoMoves();
 game.add(mainMenu);
 game.add(polyline);
+game.add(noMoves);
 
 var visualGrid: VisualGrid,
    turnManager: TurnManager,
@@ -44,6 +47,7 @@ var visualGrid: VisualGrid,
    stats: Stats,
    mask: ex.Actor,
    background: Background,
+   noMoves: NoMoves,
    effects;
 
 // game modes
@@ -101,9 +105,8 @@ function InitSetup() {
    game.add(mask);
 
    //add pieces to initial rows
-   for (i = 0; i < Config.NumStartingRows; i++) {
-      grid.fill(grid.rows - (i + 1));
-   }
+   grid.seed(Config.NumStartingRows);
+
    playLoop();
    //turnManager.currentPromise = ex.Promise.wrap(true);
 }

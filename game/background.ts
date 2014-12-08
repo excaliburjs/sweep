@@ -6,6 +6,8 @@ class Background extends ex.Actor {
    }
 
    update(engine: ex.Engine, delta: number) {
+      this.corner = engine.screenToWorldCoordinates(new ex.Point(0, 0));
+      this.x = this.corner.x-20;
       super.update(engine, delta);
       if (this.x < this.corner.x - this.texture.width || this.x > game.getWidth()) {
          this.x = this.corner.x;

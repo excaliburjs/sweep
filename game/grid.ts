@@ -93,29 +93,11 @@ class LogicalGrid extends ex.Class {
 
       if (piece && piece.cell) {
          piece.cell.piece = null;
-
          piece.cell = null;
-
-
          piece.kill();
       }
    }
-
-   /* private _getPieceGroupHelper(currentPiece: Piece, currentGroup: Piece[]) {
-       var unexploredNeighbors = currentPiece.cell.getNeighbors().filter(c => {
-          return c.piece && currentGroup.indexOf(c.piece) === -1 && c.piece.getType() === currentPiece.getType();
-       }).map(c => c.piece);
-       currentGroup = currentGroup.concat(unexploredNeighbors);
-       if (unexploredNeighbors.length === 0) {
-          return currentGroup;
-       } else {
-          for (var i = 0; i < unexploredNeighbors.length; i++) {
-             this._getPieceGroupHelper(unexploredNeighbors[i], currentGroup);
-          }
-          return currentGroup;
-       }
-    }*/
-
+   
    public getAdjacentPieceGroup(piece: Piece): Piece[] {
       var currentGroup: Piece[] = [piece];
 
@@ -157,7 +139,11 @@ class LogicalGrid extends ex.Class {
       return selectablePieces.length;
    }
 
-   public fill(row: number, smooth: boolean = false) {
+   public getPieces(): Piece[] {
+      return this.cells.filter(c => c.piece !== null).map(c => c.piece);
+   }
+
+   public fill(row: number, smooth: boolean = false, delay: number = 0) {
 
       for (var i = 0; i < this.cols; i++) {
          (() => {
@@ -182,7 +168,7 @@ class LogicalGrid extends ex.Class {
             }
 
             if (smooth) {
-               piece.easeTo(cell.getCenter().x, cell.getCenter().y, 300, ex.EasingFunctions.EaseInOutCubic).asPromise().then(() => {
+               piece.delay(delay).easeTo(cell.getCenter().x, cell.getCenter().y, 300, ex.EasingFunctions.EaseInOutCubic).asPromise().then(() => {
                   piece.x = cell.getCenter().x;
                   piece.y = cell.getCenter().y;
                });
@@ -191,6 +177,19 @@ class LogicalGrid extends ex.Class {
       }
       mask.kill();
       game.add(mask);
+   }
+
+   public seed(rows: number, smooth: boolean = false, delay: number = 0) {
+      for (var i = 0; i < rows; i++) {
+         grid.fill(grid.rows - (i + 1), smooth, delay);
+      }
+
+      if (this.getNumAvailablePieces() < 2) {
+         this.getPieces().forEach(p => this.clearPiece(p));
+
+         // DANGER WILL ROBINSON DANGER DANGER!
+         this.seed(rows, smooth, delay);
+      }
    }
 
    public shift(from: number, to: number): ex.Promise<any> {
@@ -230,47 +229,6 @@ class LogicalGrid extends ex.Class {
 
    public areNeighbors(cell1: Cell, cell2: Cell): boolean {
       return cell1.getNeighbors().indexOf(cell2) > -1;
-
-      /*      
-      // find neighbors of cell1
-      var x = cell1.x,
-         y = cell1.y,
-         x2 = cell2.x,
-         y2 = cell2.y,
-         left = new ex.Point(x - 1, y),
-         topLeft = new ex.Point(x - 1, y - 1),
-         right = new ex.Point(x + 1, y),
-         bottomRight = new ex.Point(x + 1, y + 1),
-         top = new ex.Point(x, y - 1),
-         topRight = new ex.Point(x + 1, y - 1),
-         bottom = new ex.Point(x, y + 1),
-         bottomLeft = new ex.Point(x - 1, y + 1);
-
-      ex.Logger.getInstance().debug("LogicalGrid.areNeighbors", {
-         cell1: cell1,
-         cell2: cell2,
-         forX: x,
-         forY: y,
-         otherX: x2,
-         otherY: y2,
-         left: left,
-         topLeft: topLeft,
-         right: right,
-         topRight: topRight,
-         bottom: bottom,
-         bottomLeft: bottomLeft,
-         bottomRight: bottomRight
-      });
-
-      return (x2 === left.x && y2 === left.y) ||
-         (x2 === right.x && y2 === right.y) ||
-         (x2 === top.x && y2 === top.y) ||
-         (x2 === bottom.x && y2 === bottom.y) ||
-         (x2 === topLeft.x && y2 === topLeft.y) ||
-         (x2 === bottomRight.x && y2 === bottomRight.y) ||
-         (x2 === topRight.x && y2 === topRight.y) ||
-         (x2 === bottomLeft.x && y2 === bottomLeft.y);*/
-
    }
 }
 

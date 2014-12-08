@@ -84,14 +84,15 @@ class Sweeper extends ex.Actor {
       });
 
       // todo mega animation!
-      cells.forEach(cell => {
-
+      grid.getPieces().forEach((piece) => {
          // todo adjust mega sweep scoring?
-         stats.scorePieces([cell.piece]);
+         stats.scorePieces([piece]);
 
          // clear
-         grid.clearPiece(cell.piece);
+         effects.clearEffect(piece);
+         grid.clearPiece(piece);
       });
+
 
       // reset meter
       stats.resetAllMeters();
@@ -100,15 +101,8 @@ class Sweeper extends ex.Actor {
       stats.increaseScoreMultiplier();
 
       // fill grid
-      for (var i = 0; i < Config.NumStartingRows; i++) {
-         grid.fill(grid.rows - (i + 1));
-      }
-
-      if (grid.getNumAvailablePieces() <= 0) {
-         this.sweepAll(true);
-      }
-
-
+      grid.seed(Config.NumStartingRows, true, Config.MegaSweepDelay);
+      
       Resources.MegaSweepSound.play();
    }
 
@@ -131,6 +125,7 @@ class Sweeper extends ex.Actor {
 
          cells.forEach(cell => {
             stats.scorePieces([cell.piece]);
+            effects.clearEffect(cell.piece);
             grid.clearPiece(cell.piece);
          });
 

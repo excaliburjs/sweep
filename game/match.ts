@@ -79,7 +79,7 @@ class MatchManager extends ex.Class {
             cell.piece.scaleTo(1.3, 1.3, 1.8, 1.8).scaleTo(1,1,1.8,1.8);
             this._run.push(cell.piece);
             this._playNote();
-            ex.Logger.getInstance().info("Run started", this._run);
+            ex.Logger.getInstance().debug("Run started", this._run);
          } else {
             this._run = grid.getAdjacentPieceGroup(cell.piece);
             // notify
@@ -130,7 +130,7 @@ class MatchManager extends ex.Class {
                this._run.push(piece);
                this._playNote();
 
-               ex.Logger.getInstance().info("Run modified", this._run);
+               ex.Logger.getInstance().debug("Run modified", this._run);
 
                // notify
                this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
@@ -162,7 +162,7 @@ class MatchManager extends ex.Class {
                this._run[removePiece].selected = false;
                this._run.splice(removePiece, 1);
                Resources.UndoSound.play();
-               ex.Logger.getInstance().info("Run modified", this._run);
+               ex.Logger.getInstance().debug("Run modified", this._run);
             }
          } else {
             
@@ -179,7 +179,7 @@ class MatchManager extends ex.Class {
 
          // have a valid run?
          if (this._run.length > 0) {
-            ex.Logger.getInstance().info("Run ended", this._run);
+            ex.Logger.getInstance().debug("Run ended", this._run);
 
             // notify
             this.eventDispatcher.publish("match", new MatchEvent(_.clone(this._run)));
