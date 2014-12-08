@@ -49,6 +49,12 @@ class TurnManager {
       }).error((e) => {
          console.log(e);
       });
+
+      if (grid.getNumAvailablePieces() <= 0) {
+         //reset the board if there are no legal moves
+         sweeper.sweepAll(true);
+      }
+
    }
 
    private _handleMatchEvent(evt: MatchEvent) {

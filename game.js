@@ -770,6 +770,10 @@ var TurnManager = (function () {
         }).error(function (e) {
             console.log(e);
         });
+        if (grid.getNumAvailablePieces() <= 0) {
+            //reset the board if there are no legal moves
+            sweeper.sweepAll(true);
+        }
     };
     TurnManager.prototype._handleMatchEvent = function (evt) {
         var _this = this;
@@ -1118,10 +1122,11 @@ var Sweeper = (function (_super) {
         this._emitter.x = visualGrid.x;
         this._emitter.y = this.y;
     };
-    Sweeper.prototype.sweepAll = function () {
+    Sweeper.prototype.sweepAll = function (force) {
+        if (force === void 0) { force = false; }
         if (matcher.gameOver)
             return;
-        if (!stats.allMetersFull())
+        if (!stats.allMetersFull() && !force)
             return;
         var cells = grid.cells.filter(function (cell) {
             return !!cell.piece;
@@ -1139,6 +1144,9 @@ var Sweeper = (function (_super) {
         stats.increaseScoreMultiplier();
         for (var i = 0; i < Config.NumStartingRows; i++) {
             grid.fill(grid.rows - (i + 1));
+        }
+        if (grid.getNumAvailablePieces() <= 0) {
+            this.sweepAll(true);
         }
     };
     Sweeper.prototype.sweep = function (type) {
