@@ -19,6 +19,8 @@ class Config {
    static MeterHeight: number = 30;
    static EnableGridLines = false;
    static PolylineThickness = 5;
+   static MainMenuButtonWidth = 185;
+   static MainMenuButtonHeight = 62;
 
    //
    // game modes
@@ -53,7 +55,7 @@ class Config {
    static resetDefault() {
       Config.EnableTimer = false;
       Config.AdvanceRowsOnMatch = true;
-      Config.SweepThreshold = 15;
+      Config.SweepThreshold = 4;
       Config.EnableSweepMeters = true;
       Config.EnableSingleTapClear = false;
       Config.ClearSweepMetersAfterSingleUse = true;

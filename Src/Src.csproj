@@ -30,7 +30,10 @@
     </Content>
     <Content Include="credits.html" />
     <Content Include="images\bg2.jpg" />
+    <Content Include="images\challenge.png" />
+    <Content Include="images\logo.png" />
     <Content Include="images\readme.txt" />
+    <Content Include="images\standard.png" />
     <Content Include="images\Tile1.png" />
     <Content Include="images\Tile2.png" />
     <Content Include="images\Tile3.png" />
@@ -42,6 +45,7 @@
     <TypeScriptCompile Include="game\Config.ts" />
     <TypeScriptCompile Include="game\game.ts" />
     <TypeScriptCompile Include="game\grid.ts" />
+    <TypeScriptCompile Include="game\mainmenu.ts" />
     <TypeScriptCompile Include="game\match.ts" />
     <TypeScriptCompile Include="game\Piece.ts" />
     <TypeScriptCompile Include="game\polyline.ts" />
