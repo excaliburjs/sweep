@@ -1545,6 +1545,7 @@ var loadConfig = function (config) {
 loadConfig(Config.loadCasual);
 //reset the game with the given grid dimensions
 function InitSetup() {
+    grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
     visualGrid = new VisualGrid(grid);
     effects = new Effects();
     var i;
@@ -1558,6 +1559,9 @@ function InitSetup() {
     background = new Background(leftCorner, Resources.BackgroundTexture);
     background.dy = -10;
     game.add(background);
+    if (turnManager && turnManager.currentPromise.state() === 2 /* Pending */) {
+        turnManager.currentPromise.resolve();
+    }
     //initialize game objects
     if (matcher)
         matcher.dispose(); //unbind events
@@ -1578,6 +1582,7 @@ function InitSetup() {
         grid.fill(grid.rows - (i + 1));
     }
     playLoop();
+    //turnManager.currentPromise = ex.Promise.wrap(true);
 }
 game.input.keyboard.on('up', function (evt) {
     if (evt.key === 68 /* D */) {
@@ -1590,24 +1595,21 @@ game.input.keyboard.on('up', function (evt) {
         // fill first row
         grid.fill(grid.rows - 1);
     }
-    if (evt.key === 38 /* Up */ || evt.key == 40 /* Down */ || evt.key === 37 /* Left */ || evt.key === 39 /* Right */) {
-        var numCols = grid.cols || 0;
-        var numRows = grid.rows || 0;
-        if (evt.key === 38 /* Up */) {
-            numRows++;
-        }
-        else if (evt.key === 40 /* Down */) {
-            numRows--;
-        }
-        else if (evt.key === 37 /* Left */) {
-            numCols--;
-        }
-        else if (evt.key === 39 /* Right */) {
-            numCols++;
-        }
-        grid = new LogicalGrid(numRows, numCols);
-        InitSetup();
-    }
+    //if (evt.key === ex.Input.Keys.Up || evt.key == ex.Input.Keys.Down || evt.key === ex.Input.Keys.Left || evt.key === ex.Input.Keys.Right) {
+    //   var numCols = grid.cols || 0;
+    //   var numRows = grid.rows || 0;
+    //   if (evt.key === ex.Input.Keys.Up) {
+    //      numRows++;
+    //   } else if (evt.key === ex.Input.Keys.Down) {
+    //      numRows--;
+    //   } else if (evt.key === ex.Input.Keys.Left) {
+    //      numCols--;
+    //   } else if (evt.key === ex.Input.Keys.Right) {
+    //      numCols++;
+    //   }
+    //   grid = new LogicalGrid(numRows, numCols);
+    //   InitSetup();
+    //}   
 });
 var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);

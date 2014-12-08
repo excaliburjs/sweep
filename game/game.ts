@@ -57,6 +57,7 @@ loadConfig(Config.loadCasual);
 
 //reset the game with the given grid dimensions
 function InitSetup() {
+   grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
    visualGrid = new VisualGrid(grid);
 
    effects = new Effects();
@@ -75,6 +76,10 @@ function InitSetup() {
    background = new Background(leftCorner, Resources.BackgroundTexture);
    background.dy = -10;
    game.add(background);
+
+   if (turnManager && turnManager.currentPromise.state() === ex.PromiseState.Pending) {
+      turnManager.currentPromise.resolve();
+   }
 
    //initialize game objects
    if (matcher) matcher.dispose(); //unbind events
@@ -100,6 +105,7 @@ function InitSetup() {
       grid.fill(grid.rows - (i + 1));
    }
    playLoop();
+   //turnManager.currentPromise = ex.Promise.wrap(true);
 }
 
 game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
@@ -116,24 +122,24 @@ game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
       grid.fill(grid.rows - 1);
    }
 
-   if (evt.key === ex.Input.Keys.Up || evt.key == ex.Input.Keys.Down || evt.key === ex.Input.Keys.Left || evt.key === ex.Input.Keys.Right) {
+   //if (evt.key === ex.Input.Keys.Up || evt.key == ex.Input.Keys.Down || evt.key === ex.Input.Keys.Left || evt.key === ex.Input.Keys.Right) {
 
-      var numCols = grid.cols || 0;
-      var numRows = grid.rows || 0;
+   //   var numCols = grid.cols || 0;
+   //   var numRows = grid.rows || 0;
 
-      if (evt.key === ex.Input.Keys.Up) {
-         numRows++;
-      } else if (evt.key === ex.Input.Keys.Down) {
-         numRows--;
-      } else if (evt.key === ex.Input.Keys.Left) {
-         numCols--;
-      } else if (evt.key === ex.Input.Keys.Right) {
-         numCols++;
-      }
+   //   if (evt.key === ex.Input.Keys.Up) {
+   //      numRows++;
+   //   } else if (evt.key === ex.Input.Keys.Down) {
+   //      numRows--;
+   //   } else if (evt.key === ex.Input.Keys.Left) {
+   //      numCols--;
+   //   } else if (evt.key === ex.Input.Keys.Right) {
+   //      numCols++;
+   //   }
 
-      grid = new LogicalGrid(numRows, numCols);
-      InitSetup();
-   }   
+   //   grid = new LogicalGrid(numRows, numCols);
+   //   InitSetup();
+   //}   
 });
 
 var gameOverWidget = new UIWidget();
