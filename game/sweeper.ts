@@ -73,11 +73,11 @@ class Sweeper extends ex.Actor {
 
    public sweepAll(force: boolean = false): void {
 
-      game.currentScene.camera.shake(4, 4, Config.MegaSweepShakeDuration);
-
       if (matcher.gameOver) return;
 
       if (!stats.allMetersFull() && !force) return;
+
+      game.currentScene.camera.shake(4, 4, Config.MegaSweepShakeDuration);
 
       var cells = grid.cells.filter(cell => {
          return !!cell.piece;
@@ -114,8 +114,6 @@ class Sweeper extends ex.Actor {
 
    public sweep(type: PieceType = null): void {
 
-      game.currentScene.camera.shake(4, 4, Config.SweepShakeDuration);
-
       if (matcher.gameOver) return; 
 
       if (type !== null) {
@@ -125,6 +123,7 @@ class Sweeper extends ex.Actor {
          // don't allow individual sweeps if mega sweep is available
          // that shouldn't happen
          if (stats.allMetersFull()) return;
+         game.currentScene.camera.shake(4, 4, Config.SweepShakeDuration);
 
          var cells = grid.cells.filter(cell => {
             return cell.piece && cell.piece.getType() === type;

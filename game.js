@@ -1139,11 +1139,11 @@ var Sweeper = (function (_super) {
     };
     Sweeper.prototype.sweepAll = function (force) {
         if (force === void 0) { force = false; }
-        game.currentScene.camera.shake(4, 4, Config.MegaSweepShakeDuration);
         if (matcher.gameOver)
             return;
         if (!stats.allMetersFull() && !force)
             return;
+        game.currentScene.camera.shake(4, 4, Config.MegaSweepShakeDuration);
         var cells = grid.cells.filter(function (cell) {
             return !!cell.piece;
         });
@@ -1168,7 +1168,6 @@ var Sweeper = (function (_super) {
     };
     Sweeper.prototype.sweep = function (type) {
         if (type === void 0) { type = null; }
-        game.currentScene.camera.shake(4, 4, Config.SweepShakeDuration);
         if (matcher.gameOver)
             return;
         if (type !== null) {
@@ -1179,6 +1178,7 @@ var Sweeper = (function (_super) {
             // that shouldn't happen
             if (stats.allMetersFull())
                 return;
+            game.currentScene.camera.shake(4, 4, Config.SweepShakeDuration);
             var cells = grid.cells.filter(function (cell) {
                 return cell.piece && cell.piece.getType() === type;
             });
