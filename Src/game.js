@@ -544,11 +544,7 @@ var LogicalGrid = (function (_super) {
                 var piece = this.getCell(i, from).piece;
                 if (piece) {
                     this.clearPiece(piece);
-                    //TODO add game over logic here
-                    //TODO disable input (on board), add score card with play again button
                     matcher.gameOver = true;
-                    var gameOverLabel = new ex.Label("GAME OVER", visualGrid.x + visualGrid.getWidth() + 30, visualGrid.y + visualGrid.getHeight() / 2);
-                    game.currentScene.addChild(gameOverLabel);
                     gameOver();
                 }
             }
@@ -1609,6 +1605,8 @@ function InitSetup() {
     game.add(visualGrid);
     game.add(sweeper);
     stats.drawScores();
+    // hide game over
+    document.getElementById("game-over").className = "";
     //add pieces to initial rows
     grid.seed(Config.NumStartingRows);
     if (!muted) {
@@ -1729,18 +1727,19 @@ function gameOver() {
     playGameOver();
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
-    var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
-    var gameOverWidgetActor = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() - 800, 300, 300, color);
-    game.addChild(gameOverWidgetActor);
-    gameOverWidgetActor.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1000);
-    game.addChild(gameOverWidget.widget);
-    //gameOverWidget.widget.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1000);
-    //gameOverWidget.moveWidget(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 50);
-    //TODO buttons fade in once widget is in place? perhaps button actors are invisible, and the sprite for the widget has the buttons on it
-    var postScoreButton = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2 - 50, 250, 50, ex.Color.Blue);
-    gameOverWidget.addButton(postScoreButton);
-    var playAgainButton = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2 + 50, 250, 50, ex.Color.Green);
-    gameOverWidget.addButton(playAgainButton);
+    document.getElementById("game-over").className = "show";
+    //var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
+    //var gameOverWidgetActor = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() - 800, 300, 300, color);
+    //game.addChild(gameOverWidgetActor);
+    //gameOverWidgetActor.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1000);
+    //game.addChild(gameOverWidget.widget);
+    ////gameOverWidget.widget.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1000);
+    ////gameOverWidget.moveWidget(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 50);
+    ////TODO buttons fade in once widget is in place? perhaps button actors are invisible, and the sprite for the widget has the buttons on it
+    //var postScoreButton = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2 - 50, 250, 50, ex.Color.Blue);
+    //gameOverWidget.addButton(postScoreButton);
+    //var playAgainButton = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2 + 50, 250, 50, ex.Color.Green);
+    //gameOverWidget.addButton(playAgainButton);
 }
 // TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {

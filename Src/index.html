@@ -11,8 +11,48 @@
 <body>
     <div id="commit"><a href="https://github.com/excaliburjs/ludum-31/commit/COMMIT_NUMBER">@COMMIT_NUMBER</a></div>
     <div id="background"></div>
-    <i id="sound" class="fa fa-fw fa-2x fa-volume-up"></i>    
+    <i id="sound" class="fa fa-fw fa-2x fa-volume-up"></i>
     <canvas id="game"></canvas>
+
+<div id="game-over">
+    <div id="game-over-bg"></div>
+    <div id="game-over-modal">
+        <div id="game-over-inner">
+            <h1>SWEPT SOME STACKS</h1>
+
+            <div class="scores">
+                <h2>SWEPT</h2>
+
+                <p id="game-over-swept">0</p>
+
+                <h2>TOTAL CHAIN BONUS</h2>
+
+                <p id="game-over-time">0</p>
+
+                <h2>MULTIPLIER</h2>
+
+                <p id="game-over-multiplier">0</p>
+
+                <h2>TIME BONUS</h2>
+
+                <p id="game-over-time">0</p>
+
+                <h2>TOTAL SCORE</h2>
+
+                <p id="game-over-total">0</p>
+            </div>
+
+            <hr/>
+            <h4>Share Your Score</h4>
+            <p>
+                <a class="share" href="#tweet"><i class="fa fa-2x fa-twitter-square"></i></a>
+                <a class="share" href="#share"><i class="fa fa-2x fa-facebook-square"></i></a>
+            </p>
+            <h4>Looking for a challenge?</h4>
+            <p><a href="#" class="try">Try Challenge Mode!</a></p>
+        </div>
+    </div>
+</div>
 
     <script src="scripts/lodash.min.js"></script>
     <script src="scripts/spectra.min.js"></script>
