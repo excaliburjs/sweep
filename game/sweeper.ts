@@ -175,7 +175,7 @@ class Sweeper extends ex.Actor {
 
          turnManager.advanceTurn();
       }
-      Resources.MegaSweepSound.play();
+      Resources.SweepSound.play();
       
    }
 }

@@ -1260,7 +1260,7 @@ var Sweeper = (function (_super) {
             }
             turnManager.advanceTurn();
         }
-        Resources.MegaSweepSound.play();
+        Resources.SweepSound.play();
     };
     return Sweeper;
 })(ex.Actor);
