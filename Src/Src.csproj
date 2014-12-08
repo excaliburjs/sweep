@@ -51,6 +51,7 @@
     <TypeScriptCompile Include="game\game.ts" />
     <TypeScriptCompile Include="game\grid.ts" />
     <TypeScriptCompile Include="game\mainmenu.ts" />
+    <TypeScriptCompile Include="game\mask.ts" />
     <TypeScriptCompile Include="game\match.ts" />
     <TypeScriptCompile Include="game\nomoves.ts" />
     <TypeScriptCompile Include="game\Piece.ts" />

@@ -44,10 +44,12 @@ var Palette = {
    GridBackgroundColor: new ex.Color(0, 20, 25, 0.9),
 
    // Beach
-   PieceColor1: ex.Color.fromHex("#DBB96D"),
-   PieceColor2: ex.Color.fromHex("#BF6D72"),
-   PieceColor3: ex.Color.fromHex("#5096F2"),
-   PieceColor4: ex.Color.fromHex("#9979E0"),
+   PieceColor1: ex.Color.fromHex("#174e5e"),
+   PieceColor2: ex.Color.fromHex("#43385a"),
+   PieceColor3: ex.Color.fromHex("#4c603a"),
+   PieceColor4: ex.Color.fromHex("#c17b55"),
+
+   MegaSweepColor: ex.Color.fromHex("#55c192"),
 
    PolylineColor: ex.Color.fromHex("#F48347"),
    PolylineBorderColor: new ex.Color(255, 255, 255, 0.7)

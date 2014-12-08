@@ -23,7 +23,7 @@ class Cell {
    }
 
    public getCenter(): ex.Point {
-      return new ex.Point(this.x * Config.CellWidth + Config.CellWidth / 2, this.y * Config.CellHeight + Config.CellHeight / 2);
+      return new ex.Point(this.x * Config.CellWidth + (Config.CellWidth / 2) + visualGrid.x, this.y * Config.CellHeight + (Config.CellHeight / 2) + visualGrid.y);
    }
 }
 
@@ -151,7 +151,7 @@ class LogicalGrid extends ex.Class {
 
             var cell = this.getCell(i, row);
             piece.x = cell.getCenter().x;
-            piece.y = mask.y + Config.CellHeight;
+            piece.y = visualGrid.y + visualGrid.getHeight() + Config.CellHeight;
             var intendedCell = this.setCell(i, row, piece, !smooth);
             var hasSameType = intendedCell.getNeighbors().some((c) => {
                if (c && c.piece) {
@@ -163,7 +163,7 @@ class LogicalGrid extends ex.Class {
                this.clearPiece(piece);
                piece = PieceFactory.getRandomPiece();
                piece.x = cell.getCenter().x;
-               piece.y = mask.y + Config.CellHeight;
+               piece.y = visualGrid.y + visualGrid.getHeight() + Config.CellHeight;
                this.setCell(i, row, piece, !smooth);
             }
 
@@ -175,8 +175,6 @@ class LogicalGrid extends ex.Class {
             }
          })();
       }
-      mask.kill();
-      game.add(mask);
    }
 
    public seed(rows: number, smooth: boolean = false, delay: number = 0) {
@@ -235,7 +233,7 @@ class LogicalGrid extends ex.Class {
 
 class VisualGrid extends ex.Actor {
    constructor(public logicalGrid: LogicalGrid) {
-      super(0, 0, Config.CellWidth * logicalGrid.cols, Config.CellHeight * logicalGrid.rows);
+      super(0, Config.GridY, Config.CellWidth * logicalGrid.cols, Config.CellHeight * logicalGrid.rows);
       this.anchor.setTo(0, 0);
 
    }
@@ -251,12 +249,12 @@ class VisualGrid extends ex.Actor {
       this.logicalGrid.cells.forEach(c => {
 
          ctx.fillStyle = Palette.GridBackgroundColor.toString();
-         ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
+         ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight + this.y, Config.CellWidth, Config.CellHeight);
 
          if (Config.EnableGridLines) {
             ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
             ctx.lineWidth = 1;
-            ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
+            ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight + this.y, Config.CellWidth, Config.CellHeight);
          }
 
       });

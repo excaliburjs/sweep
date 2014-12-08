@@ -58,8 +58,8 @@ var Config = (function () {
     Config.resetDefault = function () {
         Config.EnableTimer = false;
         Config.AdvanceRowsOnMatch = true;
-        Config.SweepThreshold = 4;
-        Config.EnableSweepMeters = true;
+        Config.SweepThreshold = 20;
+        Config.EnableSweepMeters = false;
         Config.EnableSingleTapClear = false;
         Config.ClearSweepMetersAfterSingleUse = true;
         Config.EnableSweeper = false;
@@ -73,6 +73,7 @@ var Config = (function () {
     };
     Config.loadCasual = function () {
         gameMode = 0 /* Standard */;
+        Config.EnableSweepMeters = true;
     };
     /**
      * @obsolete
@@ -108,19 +109,19 @@ var Config = (function () {
         Config.SweepAltMinThreshold = 10;
         Config.SweepAltMaxThreshold = 50;
     };
-    Config.gameWidth = 720;
-    Config.gameHeight = 720;
     Config.PieceContainsPadding = 5;
     Config.PieceWidth = 36;
     Config.PieceHeight = 36;
     Config.CellWidth = 45;
     Config.CellHeight = 45;
-    Config.GridCellsHigh = 12;
+    Config.GridY = -10;
+    Config.GridCellsHigh = 11;
     Config.GridCellsWide = 6;
     Config.NumStartingRows = 3;
     Config.ScoreXBuffer = 20;
-    Config.MeterWidth = 90;
-    Config.MeterHeight = 30;
+    Config.MeterWidth = 45;
+    Config.MeterHeight = 27;
+    Config.MeterMargin = 8;
     Config.EnableGridLines = false;
     Config.PolylineThickness = 5;
     Config.MainMenuButtonWidth = 185;
@@ -264,10 +265,11 @@ var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
     GridBackgroundColor: new ex.Color(0, 20, 25, 0.9),
     // Beach
-    PieceColor1: ex.Color.fromHex("#DBB96D"),
-    PieceColor2: ex.Color.fromHex("#BF6D72"),
-    PieceColor3: ex.Color.fromHex("#5096F2"),
-    PieceColor4: ex.Color.fromHex("#9979E0"),
+    PieceColor1: ex.Color.fromHex("#174e5e"),
+    PieceColor2: ex.Color.fromHex("#43385a"),
+    PieceColor3: ex.Color.fromHex("#4c603a"),
+    PieceColor4: ex.Color.fromHex("#c17b55"),
+    MegaSweepColor: ex.Color.fromHex("#55c192"),
     PolylineColor: ex.Color.fromHex("#F48347"),
     PolylineBorderColor: new ex.Color(255, 255, 255, 0.7)
 };
@@ -280,7 +282,7 @@ var PieceType;
 })(PieceType || (PieceType = {}));
 var PieceTypes = [0 /* Circle */, 2 /* Square */, 1 /* Triangle */, 3 /* Star */];
 var PieceTypeToColor = [Palette.PieceColor1, Palette.PieceColor2, Palette.PieceColor3, Palette.PieceColor4];
-var PieceTypeToTexture = [Resources.TextureTile2, Resources.TextureTile1, Resources.TextureTile3, Resources.TextureTile4];
+var PieceTypeToTexture = [Resources.TextureTile1, Resources.TextureTile2, Resources.TextureTile3, Resources.TextureTile4];
 var PieceEvent = (function (_super) {
     __extends(PieceEvent, _super);
     function PieceEvent(cell) {
@@ -377,7 +379,7 @@ var Cell = (function () {
         return this.logicalGrid.getCell(this.x, this.y + 1);
     };
     Cell.prototype.getCenter = function () {
-        return new ex.Point(this.x * Config.CellWidth + Config.CellWidth / 2, this.y * Config.CellHeight + Config.CellHeight / 2);
+        return new ex.Point(this.x * Config.CellWidth + (Config.CellWidth / 2) + visualGrid.x, this.y * Config.CellHeight + (Config.CellHeight / 2) + visualGrid.y);
     };
     return Cell;
 })();
@@ -493,7 +495,7 @@ var LogicalGrid = (function (_super) {
                 var piece = PieceFactory.getRandomPiece();
                 var cell = _this.getCell(i, row);
                 piece.x = cell.getCenter().x;
-                piece.y = mask.y + Config.CellHeight;
+                piece.y = visualGrid.y + visualGrid.getHeight() + Config.CellHeight;
                 var intendedCell = _this.setCell(i, row, piece, !smooth);
                 var hasSameType = intendedCell.getNeighbors().some(function (c) {
                     if (c && c.piece) {
@@ -505,7 +507,7 @@ var LogicalGrid = (function (_super) {
                     _this.clearPiece(piece);
                     piece = PieceFactory.getRandomPiece();
                     piece.x = cell.getCenter().x;
-                    piece.y = mask.y + Config.CellHeight;
+                    piece.y = visualGrid.y + visualGrid.getHeight() + Config.CellHeight;
                     _this.setCell(i, row, piece, !smooth);
                 }
                 if (smooth) {
@@ -516,8 +518,6 @@ var LogicalGrid = (function (_super) {
                 }
             })();
         }
-        mask.kill();
-        game.add(mask);
     };
     LogicalGrid.prototype.seed = function (rows, smooth, delay) {
         var _this = this;
@@ -576,7 +576,7 @@ var LogicalGrid = (function (_super) {
 var VisualGrid = (function (_super) {
     __extends(VisualGrid, _super);
     function VisualGrid(logicalGrid) {
-        _super.call(this, 0, 0, Config.CellWidth * logicalGrid.cols, Config.CellHeight * logicalGrid.rows);
+        _super.call(this, 0, Config.GridY, Config.CellWidth * logicalGrid.cols, Config.CellHeight * logicalGrid.rows);
         this.logicalGrid = logicalGrid;
         this.anchor.setTo(0, 0);
     }
@@ -584,14 +584,15 @@ var VisualGrid = (function (_super) {
         _super.prototype.update.call(this, engine, delta);
     };
     VisualGrid.prototype.draw = function (ctx, delta) {
+        var _this = this;
         _super.prototype.draw.call(this, ctx, delta);
         this.logicalGrid.cells.forEach(function (c) {
             ctx.fillStyle = Palette.GridBackgroundColor.toString();
-            ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
+            ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight + _this.y, Config.CellWidth, Config.CellHeight);
             if (Config.EnableGridLines) {
                 ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
                 ctx.lineWidth = 1;
-                ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight, Config.CellWidth, Config.CellHeight);
+                ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight + _this.y, Config.CellWidth, Config.CellHeight);
             }
         });
     };
@@ -1153,29 +1154,31 @@ var Stats = (function () {
         }
     };
     Stats.prototype.drawScores = function () {
-        var _this = this;
         var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
-        this._totalScore("total ", scoreXPos, 330);
-        var yPos = 350;
+        var meterXPos = visualGrid.x;
+        var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
+        this._totalScore(visualGrid.x, visualGrid.y - 5);
+        var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
+        var meterStartX = meterXPos += (visualGrid.getWidth() - totalMeterWidth) / 2;
         if (Config.EnableSweepMeters) {
-            this._addMeter(0, scoreXPos, yPos);
-            this._addMeter(1, scoreXPos, yPos += Config.MeterHeight + 5);
-            this._addMeter(2, scoreXPos, yPos += Config.MeterHeight + 5);
-            this._addMeter(3, scoreXPos, yPos += Config.MeterHeight + 5);
-            this._addMegaSweep(scoreXPos, 350);
+            this._addMeter(0, meterXPos, meterYPos);
+            this._addMeter(1, meterXPos += Config.MeterWidth + Config.MeterMargin, meterYPos);
+            this._addMeter(2, meterXPos += Config.MeterWidth + Config.MeterMargin, meterYPos);
+            this._addMeter(3, meterXPos += Config.MeterWidth + Config.MeterMargin, meterYPos);
+            this._addMegaSweep(meterStartX, meterYPos);
         }
         if (Config.EnableSweeper) {
-            this._addSweepMeter(scoreXPos, sweeper.y);
+            this._addSweepMeter(meterStartX, meterYPos);
         }
-        this._addScore("chain ", this._chains, 0, scoreXPos, yPos += Config.MeterHeight + 20);
-        this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
-        this._addScore("chain ", this._chains, 2, scoreXPos, yPos += 20);
-        this._addScore("chain ", this._chains, 3, scoreXPos, yPos += 20);
-        var lastChainLabel = new ex.Label("last chain " + this._lastChain, scoreXPos, yPos += 30);
-        game.addEventListener('update', function (data) {
-            lastChainLabel.text = "last chain " + _this._lastChain;
-        });
-        game.currentScene.addChild(lastChainLabel);
+        //this._addScore("chain ", this._chains, 0, scoreXPos, yPos += Config.MeterHeight + 20);
+        //this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
+        //this._addScore("chain ", this._chains, 2, scoreXPos, yPos += 20);
+        //this._addScore("chain ", this._chains, 3, scoreXPos, yPos += 20);
+        //var lastChainLabel = new ex.Label("last chain " + this._lastChain, scoreXPos, yPos += 30);
+        //game.addEventListener('update', (data?: ex.UpdateEvent) => {
+        //   lastChainLabel.text = "last chain " + this._lastChain;
+        //});
+        //game.currentScene.addChild(lastChainLabel);
     };
     Stats.prototype._addScore = function (description, statArray, statIndex, xPos, yPos) {
         var square = new ex.Actor(xPos, yPos, 15, 15, PieceTypeToColor[statIndex]);
@@ -1189,26 +1192,28 @@ var Stats = (function () {
         game.add(label);
         game.add(square);
     };
-    Stats.prototype._totalScore = function (description, xPos, yPos) {
+    Stats.prototype._totalScore = function (xPos, yPos) {
         var _this = this;
         var totalScore = 0;
-        var label = new ex.Label(description + totalScore.toString(), xPos, yPos);
-        label.color = ex.Color.Black;
+        var label = new ex.Label(totalScore.toString(), xPos, yPos, "bold 18px Arial");
+        label.color = ex.Color.White;
         game.addEventListener('update', function (data) {
-            var totalScore = _this._scores[0] + _this._scores[1] + _this._scores[2] + _this._scores[3];
-            label.text = description + totalScore.toString();
+            var totalScore = _this.getTotalScore();
+            label.text = totalScore.toString();
         });
-        game.currentScene.addChild(label);
+        game.add(label);
     };
     Stats.prototype._addMegaSweep = function (x, y) {
         var _this = this;
-        var meter = new ex.Actor(x, y, Config.MeterWidth, Config.MeterHeight * 4, ex.Color.Orange);
+        // todo sprite animation
+        var meter = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, 1);
+        meter.score = 1;
         meter.enableCapturePointer = true;
         var label = new ex.Label("MEGA SWEEP", meter.getCenter().x, meter.getCenter().y);
-        var inputLabel = new ex.Label("PRESS S", meter.getCenter().x, meter.getCenter().y + 14);
+        var inputLabel = new ex.Label("PRESS S", meter.getCenter().x, meter.getCenter().y + 10);
         label.textAlign = inputLabel.textAlign = 2 /* Center */;
         label.color = inputLabel.color = ex.Color.White;
-        label.font = inputLabel.font = "14px";
+        label.font = inputLabel.font = "16px";
         meter.anchor.setTo(0, 0);
         meter.on("pointerup", function () {
             sweeper.sweepAll();
@@ -1228,11 +1233,11 @@ var Stats = (function () {
     };
     Stats.prototype._addMeter = function (piece, x, y) {
         var _this = this;
-        var meter = new Meter(x, y, PieceTypeToColor[piece], Config.SweepThreshold);
+        var meter = new Meter(x, y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold);
         meter.enableCapturePointer = true;
         var label = new ex.Label(null, meter.getCenter().x, meter.getCenter().y + 3);
         label.textAlign = 2 /* Center */;
-        label.color = ex.Color.Black;
+        label.color = ex.Color.White;
         meter.on("pointerup", function () {
             sweeper.sweep(piece);
         });
@@ -1245,10 +1250,10 @@ var Stats = (function () {
             else {
                 meter.visible = label.visible = true;
                 if (_this._meters[piece] === Config.SweepThreshold) {
-                    label.text = "Press " + (piece + 1) + " to SWEEP";
+                    label.text = "SWEEP";
                 }
                 else {
-                    label.text = _this._meters[piece].toString();
+                    label.text = "";
                 }
             }
         });
@@ -1257,7 +1262,7 @@ var Stats = (function () {
     };
     Stats.prototype._addSweepMeter = function (x, y) {
         var _this = this;
-        var square = new Meter(x, y, ex.Color.Red, this._sweepMeterThreshold);
+        var square = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, this._sweepMeterThreshold);
         square.enableCapturePointer = true;
         var label = new ex.Label(null, square.getCenter().x, y + 20);
         label.textAlign = 2 /* Center */;
@@ -1282,23 +1287,35 @@ var Stats = (function () {
 })();
 var Meter = (function (_super) {
     __extends(Meter, _super);
-    function Meter(x, y, color, threshold) {
-        _super.call(this, x, y, Config.MeterWidth, Config.MeterHeight, color);
+    function Meter(x, y, width, height, color, threshold) {
+        _super.call(this, x, y, width, height);
         this.threshold = threshold;
+        this.color = color;
         this.anchor.setTo(0, 0);
     }
+    Meter.prototype.onInitialize = function (engine) {
+        _super.prototype.onInitialize.call(this, engine);
+        var screenPos = engine.worldToScreenCoordinates(new ex.Point(this.x, this.y));
+        this.x = screenPos.x;
+        this.y = screenPos.y;
+    };
     Meter.prototype.draw = function (ctx, delta) {
         var x = this.getBounds().left;
         var y = this.getBounds().top;
-        ctx.strokeStyle = this.color.toString();
-        ctx.lineWidth = 2;
+        // border
+        ctx.strokeStyle = Util.darken(this.color, 0.6).toString();
+        ctx.lineWidth = 1;
         ctx.strokeRect(x, y, this.getWidth(), this.getHeight());
+        // bg
+        ctx.fillStyle = new ex.Color(this.color.r, this.color.g, this.color.b, 0.3).toString();
+        ctx.fillRect(x, y, this.getWidth(), this.getHeight());
         var percentage = (this.score / this.threshold);
+        // fill
         ctx.fillStyle = this.color.toString();
         ctx.fillRect(x, y, (this.getWidth() * percentage), this.getHeight());
     };
     return Meter;
-})(ex.Actor);
+})(ex.UIActor);
 // alt sweep mechanic 1
 var Sweeper = (function (_super) {
     __extends(Sweeper, _super);
@@ -1494,6 +1511,21 @@ var NoMoves = (function (_super) {
     };
     return NoMoves;
 })(ex.UIActor);
+var Mask = (function (_super) {
+    __extends(Mask, _super);
+    function Mask() {
+        _super.call(this, 0, 0, 0, Config.CellHeight);
+        this.anchor.setTo(0, 0);
+        this.color = Util.darken(new ex.Color(Palette.GridBackgroundColor.r, Palette.GridBackgroundColor.g, Palette.GridBackgroundColor.b), 0.3);
+    }
+    Mask.prototype.update = function (engine, delta) {
+        var vgWorldPos = game.worldToScreenCoordinates(new ex.Point(visualGrid.x, visualGrid.getBottom()));
+        this.x = vgWorldPos.x;
+        this.y = vgWorldPos.y;
+        this.setWidth(visualGrid.logicalGrid.cols * Config.CellWidth);
+    };
+    return Mask;
+})(ex.UIActor);
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
 /// <reference path="util.ts"/>
@@ -1512,8 +1544,9 @@ var NoMoves = (function (_super) {
 /// <reference path="background.ts"/>
 /// <reference path="Effects.ts"/>
 /// <reference path="nomoves.ts"/>
+/// <reference path="mask.ts"/>
 var _this = this;
-var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game", 0 /* FullScreen */);
+var game = new ex.Engine(0, 0, "game", 0 /* FullScreen */);
 game.backgroundColor = ex.Color.Transparent;
 var gameMode = 0 /* Standard */;
 var muted = false;
@@ -1527,17 +1560,20 @@ var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var mainMenu = new MainMenu();
 var polyline = new PolyLine();
 var noMoves = new NoMoves();
+var mask = new Mask();
 game.add(mainMenu);
 game.add(polyline);
 game.add(noMoves);
-var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, background, noMoves, effects;
+game.add(mask);
+var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, background, noMoves, effects;
 // game modes
 var loadConfig = function (config) {
     Config.resetDefault();
     config.call(_this);
     InitSetup();
 };
-loadConfig(Config.loadCasual);
+Config.resetDefault();
+InitSetup();
 //reset the game with the given grid dimensions
 function InitSetup() {
     grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
@@ -1567,12 +1603,9 @@ function InitSetup() {
     turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? 0 /* Timed */ : 1 /* Match */);
     transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
     sweeper = new Sweeper(Config.SweepMovesUp ? Config.SweepMaxRow : Config.SweepMinRow, visualGrid.logicalGrid.cols);
-    mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, visualGrid.logicalGrid.cols * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
-    mask.anchor.setTo(0, 0);
-    stats.drawScores();
     game.add(visualGrid);
     game.add(sweeper);
-    game.add(mask);
+    stats.drawScores();
     //add pieces to initial rows
     grid.seed(Config.NumStartingRows);
     if (!muted) {

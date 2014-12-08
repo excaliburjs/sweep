@@ -16,8 +16,9 @@
 /// <reference path="background.ts"/>
 /// <reference path="Effects.ts"/>
 /// <reference path="nomoves.ts"/>
+/// <reference path="mask.ts"/>
 
-var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game", ex.DisplayMode.FullScreen);
+var game = new ex.Engine(0, 0, "game", ex.DisplayMode.FullScreen);
 game.backgroundColor = ex.Color.Transparent;
 
 
@@ -36,9 +37,12 @@ var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
 var mainMenu = new MainMenu();
 var polyline = new PolyLine();
 var noMoves = new NoMoves();
+var mask = new Mask();
+
 game.add(mainMenu);
 game.add(polyline);
 game.add(noMoves);
+game.add(mask);
 
 var visualGrid: VisualGrid,
    turnManager: TurnManager,
@@ -46,7 +50,6 @@ var visualGrid: VisualGrid,
    transitionManager: TransitionManager,
    sweeper: Sweeper,
    stats: Stats,
-   mask: ex.Actor,
    background: Background,
    noMoves: NoMoves,
    effects;
@@ -58,12 +61,13 @@ var loadConfig = (config) => {
    InitSetup();
 };
 
-loadConfig(Config.loadCasual);
+Config.resetDefault();
+InitSetup();
 
 //reset the game with the given grid dimensions
 function InitSetup() {
    grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-   visualGrid = new VisualGrid(grid);
+   visualGrid = new VisualGrid(grid);   
 
    effects = new Effects();
 
@@ -94,16 +98,11 @@ function InitSetup() {
    turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? TurnMode.Timed : TurnMode.Match);
    transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
    sweeper = new Sweeper(Config.SweepMovesUp ? Config.SweepMaxRow : Config.SweepMinRow, visualGrid.logicalGrid.cols);
-   mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, visualGrid.logicalGrid.cols * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
-
-
-   mask.anchor.setTo(0, 0);
- 
-   stats.drawScores();
-
+   
    game.add(visualGrid);
-   game.add(sweeper);   
-   game.add(mask);
+   game.add(sweeper);
+
+   stats.drawScores();
 
    //add pieces to initial rows
    grid.seed(Config.NumStartingRows);
