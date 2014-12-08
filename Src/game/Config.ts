@@ -56,8 +56,8 @@ class Config {
    static resetDefault() {
       Config.EnableTimer = false;
       Config.AdvanceRowsOnMatch = true;
-      Config.SweepThreshold = 4;
-      Config.EnableSweepMeters = true;
+      Config.SweepThreshold = 20;
+      Config.EnableSweepMeters = false;
       Config.EnableSingleTapClear = false;
       Config.ClearSweepMetersAfterSingleUse = true;
 
@@ -73,6 +73,8 @@ class Config {
 
    static loadCasual() {
       gameMode = GameMode.Standard;
+
+      Config.EnableSweepMeters = true;
    }
 
    /**

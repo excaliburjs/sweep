@@ -255,13 +255,22 @@
    }
 }
 
-class Meter extends ex.Actor {
+class Meter extends ex.UIActor {
    public score: number;
 
    constructor(x: number, y: number, width: number, height: number, color: ex.Color, public threshold: number) {
-      super(x, y, width, height, color);
+      super(x, y, width, height);
 
+      this.color = color;
       this.anchor.setTo(0, 0);
+   }
+
+   public onInitialize(engine: ex.Engine) {
+      super.onInitialize(engine);
+
+      var screenPos = engine.worldToScreenCoordinates(new ex.Point(this.x, this.y));
+      this.x = screenPos.x;
+      this.y = screenPos.y;
    }
 
    public draw(ctx: CanvasRenderingContext2D, delta: number) {
