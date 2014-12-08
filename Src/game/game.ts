@@ -62,10 +62,10 @@ function InitSetup() {
    if (matcher) matcher.dispose(); //unbind events
    if (turnManager) turnManager.dispose(); //cancel the timer
    matcher = new MatchManager();
+   stats = new Stats();
    turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? TurnMode.Timed : TurnMode.Match);
    transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
    sweeper = new Sweeper(Config.SweepMovesUp ? Config.SweepMaxRow : Config.SweepMinRow, visualGrid.logicalGrid.cols);
-   stats = new Stats();
    mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, visualGrid.logicalGrid.cols * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
 
 
@@ -148,11 +148,17 @@ function playGameOver() {
 function gameOver() {
    var totalScore = stats.getTotalScore();
    var longestChain = stats.getLongestChain();
+   var turnsTaken = stats.getTurnNumber();
+   var timeElapsed = turnManager.getTime()/1000/60;
    var analytics = (<any>window).ga;
    if (analytics) {
       analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'total score', { 'eventValue': totalScore, 'nonInteraction': 1 });
       analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'longest chain', { 'eventValue': longestChain, 'nonInteraction': 1 });
-      //turnManager
+      if (gameMode == GameMode.Standard) {
+         analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'turns taken', { 'eventValue': turnsTaken, 'nonInteraction': 1 });
+      } else if (gameMode == GameMode.Timed) {
+         analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'time elapsed', { 'eventValue': timeElapsed, 'nonInteraction': 1 });
+      }
    }
 
    playGameOver();
