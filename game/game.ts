@@ -94,6 +94,9 @@ function InitSetup() {
    if (matcher) matcher.dispose(); //unbind events
    if (turnManager) turnManager.dispose(); //cancel the timer
    matcher = new MatchManager();
+   if (stats) {
+      stats.clearMeters();
+   }
    stats = new Stats();
    turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? TurnMode.Timed : TurnMode.Match);
    transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);

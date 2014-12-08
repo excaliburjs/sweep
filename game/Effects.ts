@@ -2,7 +2,7 @@
 
    public clearEffect(piece: Piece) {
 
-      //TODO move emitter to Grid
+      //TODO move emitter to Cell
       var emitter = new ex.ParticleEmitter(piece.x, piece.y, 1, 1);
       emitter.minVel = 30;
       emitter.maxVel = 125;
