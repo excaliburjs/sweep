@@ -14,6 +14,8 @@
    private _longestSquareCombo: number = 0;
    private _longestStarCombo: number = 0;
 
+   private _turnNumber: number = 0;
+
    private _types = [PieceType.Circle, PieceType.Triangle, PieceType.Square, PieceType.Star];
    private _scores = [this._numCirclesDestroyed, this._numTrianglesDestroyed, this._numSquaresDestroyed, this._numStarsDestroyed];
    private _meters = [this._numCirclesDestroyedMeter, this._numTrianglesDestroyedMeter, this._numSquaresDestroyedMeter, this._numStarsDestroyedMeter];
@@ -33,6 +35,14 @@
 
    public getLongestChain(): number {
       return Math.max.apply(Math, this._chains);
+   }
+
+   public getTurnNumber(): number {
+      return this._turnNumber;
+   }
+
+   public incrementTurnNumber() {
+      this._turnNumber++;
    }
 
    public getMeter(pieceType: PieceType) {

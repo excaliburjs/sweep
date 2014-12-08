@@ -19,10 +19,15 @@ class TurnManager {
       this._timer.cancel();
    }
 
+   public getTime() {
+      return this._timer.getTimeRunning();
+   }
+
    public advanceTurn(isMatch = false): void {
       if (this.currentPromise && this.currentPromise.state() === ex.PromiseState.Pending) {
          this.currentPromise.resolve();
       }
+      stats.incrementTurnNumber();
       transitionManager.evaluate().then(() => {
          
          if (isMatch && Config.AdvanceRowsOnMatch) {
@@ -30,7 +35,6 @@ class TurnManager {
          } else if (!isMatch) {
             this.currentPromise = this.advanceRows();
          }
-
          console.log("Done!");
       });
    }
