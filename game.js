@@ -138,6 +138,8 @@ var Config = (function () {
     Config.MeterHeight = 30;
     Config.EnableGridLines = false;
     Config.PolylineThickness = 5;
+    Config.MainMenuButtonWidth = 185;
+    Config.MainMenuButtonHeight = 62;
     Config.SweepShakeDuration = 400;
     Config.MegaSweepShakeDuration = 500;
     return Config;
@@ -172,7 +174,10 @@ var Resources = {
     TextureTile2: new ex.Texture("images/Tile2.png"),
     TextureTile3: new ex.Texture("images/Tile3.png"),
     TextureTile4: new ex.Texture("images/Tile4.png"),
-    BackgroundTexture: new ex.Texture('images/bg2.png')
+    BackgroundTexture: new ex.Texture('images/bg2.png'),
+    TextureLogo: new ex.Texture("images/logo.png"),
+    TextureStandardBtn: new ex.Texture("images/standard.png"),
+    TextureChallengeBtn: new ex.Texture("images/challenge.png")
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
@@ -558,6 +563,93 @@ var VisualGrid = (function (_super) {
     };
     return VisualGrid;
 })(ex.Actor);
+var MainMenu = (function (_super) {
+    __extends(MainMenu, _super);
+    function MainMenu() {
+        _super.call(this);
+        this._show = false;
+        this._showing = false;
+        this.color = new ex.Color(0, 0, 0, 0.9);
+    }
+    MainMenu.prototype.onInitialize = function (engine) {
+        this._logo = new ex.UIActor();
+        this._logo.addDrawing(Resources.TextureLogo.asSprite());
+        this._logo.currentDrawing.setScaleX(0.7);
+        this._logo.currentDrawing.setScaleY(0.7);
+        this._logo.currentDrawing.transformAboutPoint(new ex.Point(0.5, 0.5));
+        this._standardButton = new MenuButton(Resources.TextureStandardBtn.asSprite(), MainMenu.LoadStandardMode, this.x, this.y + MainMenu._StandardButtonPos.y);
+        this._challengeButton = new MenuButton(Resources.TextureChallengeBtn.asSprite(), MainMenu.LoadChallengeMode, this.x, this.y + MainMenu._ChallengeButtonPos.y);
+        game.add(this._logo);
+        game.add(this._standardButton);
+        game.add(this._challengeButton);
+        this.show();
+    };
+    MainMenu.prototype.update = function (engine, delta) {
+        var _this = this;
+        _super.prototype.update.call(this, engine, delta);
+        var vgp = game.worldToScreenCoordinates(new ex.Point(visualGrid.x, visualGrid.y));
+        this.x = vgp.x;
+        this.y = vgp.y;
+        this.setWidth(visualGrid.getWidth());
+        this.setHeight(visualGrid.getHeight());
+        this._standardButton.x = this.x + MainMenu._StandardButtonPos.x;
+        this._standardButton.y = this.y + MainMenu._StandardButtonPos.y;
+        this._challengeButton.x = this.x + MainMenu._ChallengeButtonPos.x;
+        this._challengeButton.y = this.y + MainMenu._ChallengeButtonPos.y;
+        if (this._show) {
+            this._show = false;
+            this._showing = true;
+            // ease out logo
+            this._logo.x = this.getCenter().x;
+            this._logo.y = -70;
+            this._logo.easeTo(this.getCenter().x, this.y + MainMenu._LogoPos.y, 650, ex.EasingFunctions.EaseInOutQuad).callMethod(function () { return _this._showing = false; });
+        }
+        else if (!this._showing) {
+            this._logo.x = this.getCenter().x;
+            this._logo.y = this.y + MainMenu._LogoPos.y;
+        }
+    };
+    MainMenu.prototype.show = function () {
+        this.visible = true;
+        this._logo.visible = true;
+        this._standardButton.visible = true;
+        this._standardButton.enableCapturePointer = true;
+        this._challengeButton.visible = true;
+        this._challengeButton.enableCapturePointer = true;
+        this._show = true;
+    };
+    MainMenu.prototype.hide = function () {
+        this.visible = false;
+        this._logo.visible = false;
+        this._standardButton.visible = false;
+        this._standardButton.enableCapturePointer = false;
+        this._challengeButton.visible = false;
+        this._challengeButton.enableCapturePointer = false;
+        this._show = false;
+    };
+    MainMenu.LoadStandardMode = function () {
+        loadConfig(Config.loadCasual);
+    };
+    MainMenu.LoadChallengeMode = function () {
+        loadConfig(Config.loadSurvivalReverse);
+    };
+    MainMenu._StandardButtonPos = new ex.Point(25, 200);
+    MainMenu._ChallengeButtonPos = new ex.Point(25, 200 + Config.MainMenuButtonHeight + 20);
+    MainMenu._LogoPos = new ex.Point(0, 50);
+    return MainMenu;
+})(ex.UIActor);
+var MenuButton = (function (_super) {
+    __extends(MenuButton, _super);
+    function MenuButton(sprite, action, x, y) {
+        _super.call(this, x, y, Config.MainMenuButtonWidth, Config.MainMenuButtonHeight);
+        this.action = action;
+        this.pipeline.push(new ex.CapturePointerModule());
+        this.off("pointerup", action);
+        this.on("pointerup", action);
+        this.addDrawing(sprite);
+    }
+    return MenuButton;
+})(ex.UIActor);
 var MatchEvent = (function (_super) {
     __extends(MatchEvent, _super);
     function MatchEvent(run) {
@@ -1349,6 +1441,7 @@ var Background = (function (_super) {
 /// <reference path="resources.ts"/>
 /// <reference path="Piece.ts"/>
 /// <reference path="grid.ts"/>
+/// <reference path="mainmenu.ts"/>
 /// <reference path="match.ts"/>
 /// <reference path="polyline.ts"/>
 /// <reference path="turn.ts"/>
@@ -1368,6 +1461,8 @@ _.forIn(Resources, function (resource) {
 });
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
+// var mainMenu = new MainMenu();
+//game.add(mainMenu);
 var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, polyline, background;
 // game modes
 var loadConfig = function (config) {

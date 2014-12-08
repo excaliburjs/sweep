@@ -33,9 +33,10 @@ var Resources = {
    TextureTile2: new ex.Texture("images/Tile2.png"),
    TextureTile3: new ex.Texture("images/Tile3.png"),
    TextureTile4: new ex.Texture("images/Tile4.png"),
-
-   BackgroundTexture: new ex.Texture('images/bg2.png')
-
+   BackgroundTexture: new ex.Texture('images/bg2.png'),
+   TextureLogo: new ex.Texture("images/logo.png"),
+   TextureStandardBtn: new ex.Texture("images/standard.png"),
+   TextureChallengeBtn: new ex.Texture("images/challenge.png"),
 };
 
 var Palette = {
