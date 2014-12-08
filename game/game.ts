@@ -63,7 +63,7 @@ function InitSetup() {
 
    var leftCorner = game.screenToWorldCoordinates(new ex.Point(0,0));
    background = new Background(leftCorner, Resources.BackgroundTexture);
-   background.dx = -10;
+   background.dy = -10;
    game.add(background);
 
    //initialize game objects

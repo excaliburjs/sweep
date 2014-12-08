@@ -808,15 +808,15 @@ var TurnManager = (function () {
         }
         this.logicalGrid.fill(grid.rows - 1, true);
         Resources.TapsSound.play();
-        if (grid.getNumAvailablePieces() <= 0) {
-            //reset the board if there are no legal moves
-            sweeper.sweepAll(true);
-        }
         // fill first row
         promises = _.filter(promises, function (p) {
             return p;
         });
         return ex.Promise.join.apply(null, promises).then(function () {
+            if (grid.getNumAvailablePieces() <= 0) {
+                //reset the board if there are no legal moves
+                sweeper.sweepAll(true);
+            }
             //this.logicalGrid.fill(grid.rows - 1, true);
         }).error(function (e) {
             console.log(e);
@@ -1312,13 +1312,13 @@ var Background = (function (_super) {
     };
     Background.prototype.draw = function (ctx, delta) {
         for (var i = 0; i < Math.ceil(game.getWidth() / this.texture.width) + 5; i++) {
-            if (this.dx < 0) {
+            if (this.dx <= 0) {
                 this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y);
             }
             else {
                 this.currentDrawing.draw(ctx, this.x - i * this.texture.width, this.y);
             }
-            if (this.dy < 0) {
+            if (this.dy <= 0) {
                 this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y + this.texture.height);
             }
             else {
@@ -1378,7 +1378,7 @@ function InitSetup() {
     game.currentScene.camera.setFocus(visualGrid.getWidth() / 2, visualGrid.getHeight() / 2);
     var leftCorner = game.screenToWorldCoordinates(new ex.Point(0, 0));
     background = new Background(leftCorner, Resources.BackgroundTexture);
-    background.dx = -10;
+    background.dy = -10;
     game.add(background);
     //initialize game objects
     if (matcher)
