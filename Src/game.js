@@ -1007,11 +1007,12 @@ var TurnManager = (function () {
             return p;
         });
         return ex.Promise.join.apply(null, promises).then(function () {
-            if (grid.getNumAvailablePieces() <= 0) {
-                //reset the board if there are no legal moves
-                sweeper.sweepAll(true);
+            if (gameMode == 0 /* Standard */) {
+                if (grid.getNumAvailablePieces() <= 0) {
+                    //reset the board if there are no legal moves
+                    sweeper.sweepAll(true);
+                }
             }
-            //this.logicalGrid.fill(grid.rows - 1, true);
         }).error(function (e) {
             console.log(e);
         });
