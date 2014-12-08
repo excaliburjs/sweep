@@ -62,10 +62,10 @@ function InitSetup() {
    if (matcher) matcher.dispose(); //unbind events
    if (turnManager) turnManager.dispose(); //cancel the timer
    matcher = new MatchManager();
+   stats = new Stats();
    turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? TurnMode.Timed : TurnMode.Match);
    transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
    sweeper = new Sweeper(Config.SweepMovesUp ? Config.SweepMaxRow : Config.SweepMinRow, visualGrid.logicalGrid.cols);
-   stats = new Stats();
    mask = new ex.Actor(0, Config.GridCellsHigh * Config.CellHeight + 5, visualGrid.logicalGrid.cols * Config.CellWidth, Config.CellHeight * 2, Palette.GameBackgroundColor.clone());
 
 
@@ -81,6 +81,7 @@ function InitSetup() {
    for (i = 0; i < Config.NumStartingRows; i++) {
       grid.fill(grid.rows - (i + 1));
    }
+   playLoop();
 }
 
 game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
@@ -121,15 +122,46 @@ var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
 
+function playLoop() {
+   Resources.LoopSound.stop();
+   Resources.ChallengeLoopSound.stop();
+   // play some sounds
+   if (gameMode === GameMode.Standard) {
+      Resources.TapsSound.setVolume(.2);
+      Resources.LoopSound.setLoop(true);
+      Resources.LoopSound.play();
+   } else {
+
+      Resources.ChallengeLoopSound.setLoop(true);
+      Resources.ChallengeLoopSound.setVolume(.5);
+      Resources.ChallengeLoopSound.play();
+   }
+}
+
+function playGameOver() {
+   Resources.LoopSound.stop();
+   Resources.ChallengeLoopSound.stop();
+   Resources.GameOverSound.setVolume(.4);
+   Resources.GameOverSound.play();
+}
+
 function gameOver() {
    var totalScore = stats.getTotalScore();
    var longestChain = stats.getLongestChain();
+   var turnsTaken = stats.getTurnNumber();
+   var timeElapsed = turnManager.getTime()/1000/60;
    var analytics = (<any>window).ga;
    if (analytics) {
       analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'total score', { 'eventValue': totalScore, 'nonInteraction': 1 });
       analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'longest chain', { 'eventValue': longestChain, 'nonInteraction': 1 });
-      //turnManager
+      if (gameMode == GameMode.Standard) {
+         analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'turns taken', { 'eventValue': turnsTaken, 'nonInteraction': 1 });
+      } else if (gameMode == GameMode.Timed) {
+         analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'time elapsed', { 'eventValue': timeElapsed, 'nonInteraction': 1 });
+      }
    }
+
+   playGameOver();
 
    if (turnManager) turnManager.dispose(); // stop game over from happening infinitely in time attack
    var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3)
@@ -147,17 +179,12 @@ function gameOver() {
 
    var playAgainButton = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2 + 50, 250, 50, ex.Color.Green);
    gameOverWidget.addButton(playAgainButton);
+
+
 }
 
 // TODO clean up pieces that are not in play anymore after update loop
 
 game.start(loader).then(() => {
-   
-   // play some sounds
-   Resources.ChallengeLoopSound.setLoop(true);
-   Resources.ChallengeLoopSound.setVolume(.5);
-   Resources.ChallengeLoopSound.play();
-
-   
-
+   playLoop();
 });

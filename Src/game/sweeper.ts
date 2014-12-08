@@ -108,6 +108,8 @@ class Sweeper extends ex.Actor {
          this.sweepAll(true);
       }
 
+
+      Resources.MegaSweepSound.play();
    }
 
    public sweep(type: PieceType = null): void {
@@ -174,6 +176,7 @@ class Sweeper extends ex.Actor {
 
          turnManager.advanceTurn();
       }
+      Resources.MegaSweepSound.play();
       
    }
 }
