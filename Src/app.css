@@ -80,7 +80,7 @@ canvas {
 #game-over-modal {
   position: absolute;
   left: 50%;
-  top: -100%;
+  top: -130%;
   -moz-transition: top ease-out 0.7s;
   -o-transition: top ease-out 0.7s;
   -webkit-transition: top ease-out 0.7s;
@@ -89,11 +89,17 @@ canvas {
 #game-over.show #game-over-modal {
   top: 20%;
 }
+@media (max-height: 600px) {
+  #game-over.show #game-over-modal {
+    top: 20px;
+  }
+}
 #game-over-inner {
   position: relative;
   left: -50%;
   background: #80649A;
   padding: 20px 40px;
+  min-width: 280px;
 }
 #game-over-inner h1,
 #game-over-inner h2,
@@ -149,5 +155,13 @@ canvas {
 }
 #game-over-inner a.share:hover {
   color: #392950;
+}
+@media (max-width: 480px) {
+  #game-over-inner {
+    padding: 10px 20px;
+  }
+  #game-over-inner .scores {
+    max-width: 100%;
+  }
 }
 /*# sourceMappingURL=app.css.map */
