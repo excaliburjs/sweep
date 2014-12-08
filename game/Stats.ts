@@ -308,8 +308,6 @@
       });
       game.add(square);
       game.add(label);
-      this._meterActors.push(square);
-      this._meterLabels.push(label);
    }
 }
 
