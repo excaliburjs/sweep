@@ -14,6 +14,7 @@
 /// <reference path="sweeper.ts"/>
 /// <reference path="UIWidget.ts"/>
 /// <reference path="background.ts"/>
+/// <reference path="Effects.ts"/>
 
 var game = new ex.Engine(Config.gameWidth, Config.gameHeight, "game", ex.DisplayMode.FullScreen);
 game.backgroundColor = ex.Color.Transparent;
@@ -42,7 +43,8 @@ var visualGrid: VisualGrid,
    stats: Stats,
    mask: ex.Actor,
    polyline: PolyLine,
-   background: Background;
+   background: Background,
+   effects;
 
 // game modes
 var loadConfig = (config) => {
@@ -62,6 +64,8 @@ InitSetup();
 //reset the game with the given grid dimensions
 function InitSetup() {
    visualGrid = new VisualGrid(grid);
+
+   effects = new Effects();
 
    var i: number;
 
