@@ -132,7 +132,7 @@ var Effects = (function () {
     function Effects() {
     }
     Effects.prototype.clearEffect = function (piece) {
-        //TODO move emitter to Piece
+        //TODO move emitter to Grid
         var emitter = new ex.ParticleEmitter(piece.x, piece.y, 1, 1);
         emitter.minVel = 30;
         emitter.maxVel = 125;
@@ -159,6 +159,7 @@ var Effects = (function () {
         emitter.focusAccel = 900;
         game.addChild(emitter);
         emitter.emit(5);
+        //emitter.moveTo(emitter.x + 1, emitter.y + 1, 20);
     };
     return Effects;
 })();
@@ -644,6 +645,7 @@ var MainMenu = (function (_super) {
         this.color = new ex.Color(0, 0, 0, 0.9);
     }
     MainMenu.prototype.onInitialize = function (engine) {
+        _super.prototype.onInitialize.call(this, engine);
         this._logo = new ex.UIActor();
         this._logo.addDrawing(Resources.TextureLogo.asSprite());
         this._logo.currentDrawing.setScaleX(0.7);
@@ -655,11 +657,6 @@ var MainMenu = (function (_super) {
         game.add(this._standardButton);
         game.add(this._challengeButton);
         this.show();
-    };
-    MainMenu.prototype.draw = function (ctx, delta) {
-        if (!this.visible)
-            return;
-        _super.prototype.draw.call(this, ctx, delta);
     };
     MainMenu.prototype.update = function (engine, delta) {
         var _this = this;
@@ -690,25 +687,34 @@ var MainMenu = (function (_super) {
         this.visible = true;
         this._logo.visible = true;
         this._standardButton.visible = true;
+        this._standardButton.enableCapturePointer = true;
         this._challengeButton.visible = true;
+        this._challengeButton.enableCapturePointer = true;
         this._show = true;
     };
     MainMenu.prototype.hide = function () {
         this.visible = false;
         this._logo.visible = false;
         this._standardButton.visible = false;
+        this._standardButton.enableCapturePointer = false;
         this._challengeButton.visible = false;
+        this._challengeButton.enableCapturePointer = false;
         this._show = false;
     };
     MainMenu.LoadStandardMode = function () {
+        ex.Logger.getInstance().info("Loading standard mode");
         loadConfig(Config.loadCasual, true);
         mainMenu.hide();
+        // todo tutorial
     };
     MainMenu.LoadChallengeMode = function () {
+        ex.Logger.getInstance().info("Loading challenge mode");
         loadConfig(Config.loadSurvivalReverse, true);
+        mainMenu.hide();
+        // todo tutorial
     };
-    MainMenu._StandardButtonPos = new ex.Point(25, 200);
-    MainMenu._ChallengeButtonPos = new ex.Point(25, 200 + Config.MainMenuButtonHeight + 20);
+    MainMenu._StandardButtonPos = new ex.Point(42, 200);
+    MainMenu._ChallengeButtonPos = new ex.Point(42, 200 + Config.MainMenuButtonHeight + 20);
     MainMenu._LogoPos = new ex.Point(0, 50);
     return MainMenu;
 })(ex.UIActor);
@@ -718,22 +724,9 @@ var MenuButton = (function (_super) {
         _super.call(this, x, y, Config.MainMenuButtonWidth, Config.MainMenuButtonHeight);
         this.action = action;
         this.addDrawing(sprite);
+        this.off("pointerup", this.action);
+        this.on("pointerup", this.action);
     }
-    MenuButton.prototype.onInitialize = function () {
-        var world = game.screenToWorldCoordinates(new ex.Point(this.x, this.y));
-        this._captureActor = new ex.Actor(world.x, world.y, Config.MainMenuButtonWidth, Config.MainMenuButtonHeight, ex.Color.Transparent);
-        this._captureActor.anchor.setTo(0, 0);
-        game.add(this._captureActor);
-        this._captureActor.off("pointerup", this.action);
-        this._captureActor.on("pointerup", this.action);
-    };
-    MenuButton.prototype.update = function (engine, delta) {
-        _super.prototype.update.call(this, engine, delta);
-        var world = game.screenToWorldCoordinates(new ex.Point(this.x, this.y));
-        this._captureActor.enableCapturePointer = this.visible;
-        this._captureActor.x = world.x;
-        this._captureActor.y = world.y;
-    };
     return MenuButton;
 })(ex.UIActor);
 var MatchEvent = (function (_super) {
@@ -1529,9 +1522,9 @@ _.forIn(Resources, function (resource) {
 });
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-//var mainMenu = new MainMenu();
+var mainMenu = new MainMenu();
 var polyline = new PolyLine();
-//game.add(mainMenu);
+game.add(mainMenu);
 game.add(polyline);
 var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, background, effects;
 // game modes

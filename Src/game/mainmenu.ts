@@ -8,17 +8,19 @@
    private _show = false;
    private _showing = false;
 
-   private static _StandardButtonPos = new ex.Point(25, 200);
-   private static _ChallengeButtonPos = new ex.Point(25, 200 + Config.MainMenuButtonHeight + 20);
+   private static _StandardButtonPos = new ex.Point(42, 200);
+   private static _ChallengeButtonPos = new ex.Point(42, 200 + Config.MainMenuButtonHeight + 20);
    private static _LogoPos = new ex.Point(0, 50);
 
    constructor() {
       super();
 
-      this.color = new ex.Color(0, 0, 0, 0.9);                     
+      this.color = new ex.Color(0, 0, 0, 0.9);
    }
 
    public onInitialize(engine: ex.Engine) {
+      super.onInitialize(engine);
+
       this._logo = new ex.UIActor();
       this._logo.addDrawing(Resources.TextureLogo.asSprite());
       this._logo.currentDrawing.setScaleX(0.7);
@@ -33,12 +35,6 @@
       game.add(this._challengeButton);
 
       this.show();
-   }
-
-   public draw(ctx: CanvasRenderingContext2D, delta: number) {
-      if (!this.visible) return;
-
-      super.draw(ctx, delta);
    }
 
    public update(engine: ex.Engine, delta: number) {
@@ -75,54 +71,47 @@
       this.visible = true;
       this._logo.visible = true;
       this._standardButton.visible = true;
+      this._standardButton.enableCapturePointer = true;
       this._challengeButton.visible = true;
+      this._challengeButton.enableCapturePointer = true;
       this._show = true;
    }
 
    public hide() {
       this.visible = false;
-      this._logo.visible = false;
+      this._logo.visible = false;      
       this._standardButton.visible = false;
+      this._standardButton.enableCapturePointer = false;
       this._challengeButton.visible = false;
+      this._challengeButton.enableCapturePointer = false;
       this._show = false;
    }
 
    public static LoadStandardMode() {
+      ex.Logger.getInstance().info("Loading standard mode");
       loadConfig(Config.loadCasual, true);
       mainMenu.hide();
+
+      // todo tutorial
    }
 
    public static LoadChallengeMode() {
+      ex.Logger.getInstance().info("Loading challenge mode");
       loadConfig(Config.loadSurvivalReverse, true);
+      mainMenu.hide();
+
+      // todo tutorial
    }
 }
 
 class MenuButton extends ex.UIActor {
    
-   private _captureActor: ex.Actor;
-
    constructor(sprite: ex.Sprite, public action: () => void, x: number, y: number) {
       super(x, y, Config.MainMenuButtonWidth, Config.MainMenuButtonHeight);
 
       this.addDrawing(sprite);
+      this.off("pointerup", this.action);
+      this.on("pointerup", this.action);
    }
 
-   public onInitialize() {
-      var world = game.screenToWorldCoordinates(new ex.Point(this.x, this.y));
-      this._captureActor = new ex.Actor(world.x, world.y, Config.MainMenuButtonWidth, Config.MainMenuButtonHeight, ex.Color.Transparent);
-      this._captureActor.anchor.setTo(0, 0);
-
-      game.add(this._captureActor);
-      this._captureActor.off("pointerup", this.action);
-      this._captureActor.on("pointerup", this.action);
-   }
-
-   public update(engine: ex.Engine, delta: number) {
-      super.update(engine, delta);
-
-      var world = game.screenToWorldCoordinates(new ex.Point(this.x, this.y));
-      this._captureActor.enableCapturePointer = this.visible;
-      this._captureActor.x = world.x;
-      this._captureActor.y = world.y;
-   }
 }

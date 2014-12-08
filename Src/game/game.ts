@@ -31,9 +31,9 @@ _.forIn(Resources, (resource) => {
 
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-//var mainMenu = new MainMenu();
+var mainMenu = new MainMenu();
 var polyline = new PolyLine();
-//game.add(mainMenu);
+game.add(mainMenu);
 game.add(polyline);
 
 var visualGrid: VisualGrid,
