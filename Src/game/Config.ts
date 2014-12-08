@@ -42,6 +42,9 @@ class Config {
    static SweepAltMinThreshold: number;
    static SweepAltMaxThreshold: number;
 
+   static SweepShakeDuration: number = 400;
+   static MegaSweepShakeDuration: number = 500;
+
    //
    // cascade configs
    //
@@ -65,6 +68,7 @@ class Config {
    }
 
    static loadCasual() {
+      gameMode = GameMode.Standard;
       // same as default, for now
       document.getElementById("instructions").innerHTML =
          "Take your time and prevent the tiles from reaching the top. <strong>Drag</strong> to chain tiles together to remove them. " +
@@ -95,6 +99,7 @@ class Config {
    }
 
    static loadSurvivalReverse() {
+      gameMode = GameMode.Timed;
       Config.EnableTimer = true;
       Config.AdvanceRowsOnMatch = false;
       Config.TimerValue = 1500;

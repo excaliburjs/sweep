@@ -71,10 +71,13 @@ class Sweeper extends ex.Actor {
       this._emitter.y = this.y;
    }
 
-   public sweepAll(): void {
+   public sweepAll(force: boolean = false): void {
+
+      game.currentScene.camera.shake(4, 4, Config.MegaSweepShakeDuration);
+
       if (matcher.gameOver) return;
 
-      if (!stats.allMetersFull()) return;
+      if (!stats.allMetersFull() && !force) return;
 
       var cells = grid.cells.filter(cell => {
          return !!cell.piece;
@@ -101,10 +104,17 @@ class Sweeper extends ex.Actor {
          grid.fill(grid.rows - (i + 1));
       }
 
+      if (grid.getNumAvailablePieces() <= 0) {
+         this.sweepAll(true);
+      }
+
+
       Resources.MegaSweepSound.play();
    }
 
    public sweep(type: PieceType = null): void {
+
+      game.currentScene.camera.shake(4, 4, Config.SweepShakeDuration);
 
       if (matcher.gameOver) return; 
 
