@@ -126,7 +126,7 @@ function playLoop() {
    Resources.LoopSound.stop();
    Resources.ChallengeLoopSound.stop();
    // play some sounds
-   if (Config.loadCasual) {
+   if (gameMode === GameMode.Standard) {
       Resources.TapsSound.setVolume(.2);
       Resources.LoopSound.setLoop(true);
       Resources.LoopSound.play();

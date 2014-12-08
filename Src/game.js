@@ -26,6 +26,7 @@ var Config = (function () {
         Config.SweepAltMaxThreshold = 50;
     };
     Config.loadCasual = function () {
+        gameMode = 0 /* Standard */;
         // same as default, for now
         document.getElementById("instructions").innerHTML = "Take your time and prevent the tiles from reaching the top. <strong>Drag</strong> to chain tiles together to remove them. " + "If things get hairy, <strong>press 1-4</strong> to choose a color to SWEEP and remove them from the board. Be careful, though, all other " + "meters will be depleted after each use.";
     };
@@ -46,6 +47,7 @@ var Config = (function () {
         document.getElementById("instructions").innerHTML = "Battle against the clock and stop the tiles from reaching the top. <strong>Drag</strong> to chain tiles together to remove them. " + "If things get hairy, press <strong>S</strong> to SWEEP everything above the sweeper line! Each time the sweeper will move " + "down. As time goes on, it'll cost less to earn a SWEEP so play wisely.";
     };
     Config.loadSurvivalReverse = function () {
+        gameMode = 1 /* Timed */;
         Config.EnableTimer = true;
         Config.AdvanceRowsOnMatch = false;
         Config.TimerValue = 1500;
@@ -75,6 +77,8 @@ var Config = (function () {
     Config.MeterWidth = 90;
     Config.MeterHeight = 30;
     Config.EnableGridLines = false;
+    Config.SweepShakeDuration = 400;
+    Config.MegaSweepShakeDuration = 500;
     return Config;
 })();
 var Util = (function () {
@@ -779,6 +783,10 @@ var TurnManager = (function () {
         }).error(function (e) {
             console.log(e);
         });
+        if (grid.getNumAvailablePieces() <= 0) {
+            //reset the board if there are no legal moves
+            sweeper.sweepAll(true);
+        }
     };
     TurnManager.prototype._handleMatchEvent = function (evt) {
         var _this = this;
@@ -1128,10 +1136,12 @@ var Sweeper = (function (_super) {
         this._emitter.x = visualGrid.x;
         this._emitter.y = this.y;
     };
-    Sweeper.prototype.sweepAll = function () {
+    Sweeper.prototype.sweepAll = function (force) {
+        if (force === void 0) { force = false; }
+        game.currentScene.camera.shake(4, 4, Config.MegaSweepShakeDuration);
         if (matcher.gameOver)
             return;
-        if (!stats.allMetersFull())
+        if (!stats.allMetersFull() && !force)
             return;
         var cells = grid.cells.filter(function (cell) {
             return !!cell.piece;
@@ -1150,10 +1160,14 @@ var Sweeper = (function (_super) {
         for (var i = 0; i < Config.NumStartingRows; i++) {
             grid.fill(grid.rows - (i + 1));
         }
+        if (grid.getNumAvailablePieces() <= 0) {
+            this.sweepAll(true);
+        }
         Resources.MegaSweepSound.play();
     };
     Sweeper.prototype.sweep = function (type) {
         if (type === void 0) { type = null; }
+        game.currentScene.camera.shake(4, 4, Config.SweepShakeDuration);
         if (matcher.gameOver)
             return;
         if (type !== null) {
@@ -1339,7 +1353,7 @@ function playLoop() {
     Resources.LoopSound.stop();
     Resources.ChallengeLoopSound.stop();
     // play some sounds
-    if (Config.loadCasual) {
+    if (gameMode === 0 /* Standard */) {
         Resources.TapsSound.setVolume(.2);
         Resources.LoopSound.setLoop(true);
         Resources.LoopSound.play();
