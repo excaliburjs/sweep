@@ -145,7 +145,7 @@ var Effects = (function () {
     function Effects() {
     }
     Effects.prototype.clearEffect = function (piece) {
-        //TODO move emitter to Grid
+        //TODO move emitter to Cell
         var emitter = new ex.ParticleEmitter(piece.x, piece.y, 1, 1);
         emitter.minVel = 30;
         emitter.maxVel = 125;
@@ -1110,6 +1110,8 @@ var Stats = (function () {
         this._lastChain = 0;
         this._lastChainBonus = 0;
         this._sweepMeterThreshold = Config.SweepAltThreshold;
+        this._meterActors = new Array();
+        this._meterLabels = new Array();
     }
     Stats.prototype.getTotalScore = function () {
         var totalScore = this._scores[0] + this._scores[1] + this._scores[2] + this._scores[3];
@@ -1311,6 +1313,20 @@ var Stats = (function () {
         });
         game.add(meter);
         game.add(label);
+        this._meterActors.push(meter);
+        this._meterLabels.push(label);
+    };
+    Stats.prototype.clearMeters = function () {
+        if (this._meterActors) {
+            for (var i = 0; i < this._meterActors.length; i++) {
+                game.remove(this._meterActors[i]);
+            }
+        }
+        if (this._meterLabels) {
+            for (var i = 0; i < this._meterLabels.length; i++) {
+                game.remove(this._meterLabels[i]);
+            }
+        }
     };
     Stats.prototype._addSweepMeter = function (x, y) {
         var _this = this;
@@ -1652,6 +1668,9 @@ function InitSetup() {
     if (turnManager)
         turnManager.dispose(); //cancel the timer
     matcher = new MatchManager();
+    if (stats) {
+        stats.clearMeters();
+    }
     stats = new Stats();
     turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? 0 /* Timed */ : 1 /* Match */);
     transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
@@ -1664,7 +1683,6 @@ function InitSetup() {
     if (!muted) {
         playLoop();
     }
-    //turnManager.currentPromise = ex.Promise.wrap(true);
 }
 game.input.keyboard.on('up', function (evt) {
     if (evt.key === 68 /* D */) {
@@ -1677,21 +1695,6 @@ game.input.keyboard.on('up', function (evt) {
         // fill first row
         grid.fill(grid.rows - 1);
     }
-    //if (evt.key === ex.Input.Keys.Up || evt.key == ex.Input.Keys.Down || evt.key === ex.Input.Keys.Left || evt.key === ex.Input.Keys.Right) {
-    //   var numCols = grid.cols || 0;
-    //   var numRows = grid.rows || 0;
-    //   if (evt.key === ex.Input.Keys.Up) {
-    //      numRows++;
-    //   } else if (evt.key === ex.Input.Keys.Down) {
-    //      numRows--;
-    //   } else if (evt.key === ex.Input.Keys.Left) {
-    //      numCols--;
-    //   } else if (evt.key === ex.Input.Keys.Right) {
-    //      numCols++;
-    //   }
-    //   grid = new LogicalGrid(numRows, numCols);
-    //   InitSetup();
-    //}   
 });
 var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
