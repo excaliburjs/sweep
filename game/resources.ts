@@ -32,7 +32,9 @@ var Resources = {
    TextureTile1: new ex.Texture("images/Tile1.png"),
    TextureTile2: new ex.Texture("images/Tile2.png"),
    TextureTile3: new ex.Texture("images/Tile3.png"),
-   TextureTile4: new ex.Texture("images/Tile4.png")
+   TextureTile4: new ex.Texture("images/Tile4.png"),
+
+   BackgroundTexture: new ex.Texture('images/bg2.png')
 
 };
 
