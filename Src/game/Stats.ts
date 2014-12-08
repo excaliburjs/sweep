@@ -33,6 +33,7 @@
    private _lastChain: number = 0;
    private _lastChainBonus: number = 0;
    private _totalChainBonus: number = 0;
+   private _totalPiecesSwept: number = 0;
 
    constructor() {
       this._sweepMeterThreshold = Config.SweepAltThreshold;
@@ -43,6 +44,14 @@
    public getTotalScore(): number {
       var totalScore = this._scores[0] + this._scores[1] + this._scores[2] + this._scores[3];
       return totalScore;
+   }
+
+   public getTotalPiecesSwept(): number {
+      return this._totalPiecesSwept;
+   }
+
+   public getTotalChainBonus(): number {
+      return this._totalChainBonus;
    }
 
    public getLongestChain(): number {
@@ -101,6 +110,7 @@
    public scorePieces(pieces: Piece[]) {
       var type = this._types.indexOf(pieces[0].getType());
 
+      this._totalPiecesSwept += pieces.length;
       this._scores[type] += this.scoreMultiplier(pieces.length + this.chainBonus(pieces), type);
       var newScore = this._meters[type] + pieces.length;
 
@@ -122,7 +132,7 @@
       var bonus = 0;
       if (chain > 3) {
          if (chain < Config.ChainThresholdSmall) {
-            return Config.ChainBonusSmall;
+            bonus =  Config.ChainBonusSmall;
          } else if (chain < Config.ChainThresholdMedium) {
             bonus = Config.ChainBonusMedium
          } else if (chain < Config.ChainThresholdLarge) {
