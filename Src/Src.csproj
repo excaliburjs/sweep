@@ -43,6 +43,7 @@
   <ItemGroup>
     <TypeScriptCompile Include="game\background.ts" />
     <TypeScriptCompile Include="game\Config.ts" />
+    <TypeScriptCompile Include="game\Effects.ts" />
     <TypeScriptCompile Include="game\game.ts" />
     <TypeScriptCompile Include="game\grid.ts" />
     <TypeScriptCompile Include="game\mainmenu.ts" />
