@@ -207,4 +207,8 @@ class MatchManager extends ex.Class {
 
       return this._run[0].getType();
    }
+
+   public getRun(): Piece[] {
+      return _.clone(this._run);
+   }
 }

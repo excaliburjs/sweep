@@ -44,5 +44,8 @@ var Palette = {
    PieceColor1: ex.Color.fromHex("#DBB96D"),
    PieceColor2: ex.Color.fromHex("#BF6D72"),
    PieceColor3: ex.Color.fromHex("#5096F2"),
-   PieceColor4: ex.Color.fromHex("#9979E0")
+   PieceColor4: ex.Color.fromHex("#9979E0"),
+
+   PolylineColor: ex.Color.fromHex("#F48347"),
+   PolylineBorderColor: new ex.Color(255, 255, 255, 0.7)
 };

@@ -137,6 +137,7 @@ var Config = (function () {
     Config.MeterWidth = 90;
     Config.MeterHeight = 30;
     Config.EnableGridLines = false;
+    Config.PolylineThickness = 5;
     Config.SweepShakeDuration = 400;
     Config.MegaSweepShakeDuration = 500;
     return Config;
@@ -179,7 +180,9 @@ var Palette = {
     PieceColor1: ex.Color.fromHex("#DBB96D"),
     PieceColor2: ex.Color.fromHex("#BF6D72"),
     PieceColor3: ex.Color.fromHex("#5096F2"),
-    PieceColor4: ex.Color.fromHex("#9979E0")
+    PieceColor4: ex.Color.fromHex("#9979E0"),
+    PolylineColor: ex.Color.fromHex("#F48347"),
+    PolylineBorderColor: new ex.Color(255, 255, 255, 0.7)
 };
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -721,8 +724,44 @@ var MatchManager = (function (_super) {
             return null;
         return this._run[0].getType();
     };
+    MatchManager.prototype.getRun = function () {
+        return _.clone(this._run);
+    };
     return MatchManager;
 })(ex.Class);
+var PolyLine = (function (_super) {
+    __extends(PolyLine, _super);
+    function PolyLine() {
+        _super.call(this);
+    }
+    PolyLine.prototype.draw = function (ctx, delta) {
+        var run = matcher.getRun();
+        if (!run.length || !matcher.runInProgress)
+            return;
+        this._drawLine(run, ctx, Config.PolylineThickness + 2, Palette.PolylineBorderColor);
+        this._drawLine(run, ctx, Config.PolylineThickness, Palette.PolylineColor);
+    };
+    PolyLine.prototype._drawLine = function (run, ctx, thickness, color) {
+        ctx.beginPath();
+        ctx.strokeStyle = color.toString();
+        ctx.lineWidth = thickness;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        run.forEach(function (p, i) {
+            var center = game.worldToScreenCoordinates(p.getCenter());
+            var target = center;
+            if (i === 0) {
+                ctx.moveTo(target.x, target.y);
+            }
+            else {
+                ctx.lineTo(target.x, target.y);
+            }
+        });
+        ctx.stroke();
+        ctx.closePath();
+    };
+    return PolyLine;
+})(ex.UIActor);
 var TurnMode;
 (function (TurnMode) {
     TurnMode[TurnMode["Timed"] = 0] = "Timed";
@@ -1258,6 +1297,7 @@ var UIWidget = (function (_super) {
 /// <reference path="Piece.ts"/>
 /// <reference path="grid.ts"/>
 /// <reference path="match.ts"/>
+/// <reference path="polyline.ts"/>
 /// <reference path="turn.ts"/>
 /// <reference path="transition.ts"/>
 /// <reference path="Stats.ts"/>
@@ -1274,7 +1314,7 @@ _.forIn(Resources, function (resource) {
 });
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask;
+var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, mask, polyline;
 // game modes
 var loadConfig = function (config) {
     Config.resetDefault();
@@ -1302,6 +1342,7 @@ function InitSetup() {
     if (turnManager)
         turnManager.dispose(); //cancel the timer
     matcher = new MatchManager();
+    polyline = new PolyLine();
     stats = new Stats();
     turnManager = new TurnManager(visualGrid.logicalGrid, matcher, Config.EnableTimer ? 0 /* Timed */ : 1 /* Match */);
     transitionManager = new TransitionManager(visualGrid.logicalGrid, visualGrid);
@@ -1311,6 +1352,7 @@ function InitSetup() {
     stats.drawScores();
     game.add(visualGrid);
     game.add(sweeper);
+    game.add(polyline);
     game.add(mask);
     for (i = 0; i < Config.NumStartingRows; i++) {
         grid.fill(grid.rows - (i + 1));

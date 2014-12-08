@@ -18,6 +18,7 @@ class Config {
    static MeterWidth: number = 90;
    static MeterHeight: number = 30;
    static EnableGridLines = false;
+   static PolylineThickness = 5;
 
    //
    // game modes
