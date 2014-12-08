@@ -22,6 +22,7 @@ game.backgroundColor = ex.Color.Transparent;
 
 
 var gameMode = GameMode.Standard;
+var muted = false;
 
 var loader = new ex.Loader();
 
@@ -106,8 +107,9 @@ function InitSetup() {
 
    //add pieces to initial rows
    grid.seed(Config.NumStartingRows);
-
-   playLoop();
+   if (!muted) {
+      playLoop();
+   }
    //turnManager.currentPromise = ex.Promise.wrap(true);
 }
 
@@ -149,7 +151,37 @@ var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
 
+
+function hasClass(element, cls) {
+   return element.classList.contains(cls);
+}
+
+function replaceClass(element, search, replace) {
+   if (hasClass(element, search)) {
+      this.removeClass(element, search);
+      this.addClass(element, replace);
+   }
+}
+
+function addClass(element, cls) {
+   element.classList.add(cls);
+}
+
+function removeClass(element, cls) {
+   element.classList.remove(cls);
+}
+
+
+function setVolume(volume: number) {
+   for (var r in Resources) {
+      if (Resources[r] instanceof ex.Sound) {
+         Resources[r].setVolume(volume);
+      }
+   }
+}
+
 function playLoop() {
+   setVolume(1);
    Resources.LoopSound.stop();
    Resources.ChallengeLoopSound.stop();
    // play some sounds
@@ -168,10 +200,23 @@ function playLoop() {
    }
 }
 
-function mute() {
+function muteAll() {
    Resources.LoopSound.stop();
    Resources.ChallengeLoopSound.stop();
+   setVolume(0);
 }
+
+document.getElementById("sound").addEventListener('click', function () {
+   if (hasClass(this, 'fa-volume-up')) {
+      replaceClass(this, 'fa-volume-up', 'fa-volume-off');
+      muted = true;
+      muteAll();
+   } else {
+      replaceClass(this, 'fa-volume-off', 'fa-volume-up');
+      muted = false;
+      playLoop();
+   }
+});
 
 function playGameOver() {
    Resources.LoopSound.stop();
