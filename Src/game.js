@@ -273,6 +273,7 @@ var Resources = {
     TextureLogo: new ex.Texture("images/logo.png"),
     TextureStandardBtn: new ex.Texture("images/standard.png"),
     TextureChallengeBtn: new ex.Texture("images/challenge.png"),
+    NoMovesTexture: new ex.Texture('images/no-moves.png')
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
@@ -617,6 +618,7 @@ var VisualGrid = (function (_super) {
     };
     return VisualGrid;
 })(ex.Actor);
+/// <reference path="../scripts/typings/Cookies.d.ts"/>
 var MainMenu = (function (_super) {
     __extends(MainMenu, _super);
     function MainMenu() {
@@ -692,7 +694,15 @@ var MainMenu = (function (_super) {
     };
     MainMenu.prototype.onGameModeSwitch = function () {
         mainMenu.hide();
-        // todo tutorial
+        if (gameMode === 0 /* Standard */ && !this._hasFinishedTutorial(0 /* Standard */)) {
+        }
+        else if (gameMode === 1 /* Timed */ && !this._hasFinishedTutorial(1 /* Timed */)) {
+        }
+    };
+    MainMenu.prototype._hasFinishedTutorial = function (gameMode) {
+        var c = Cookies.get("tutorial-" + gameMode);
+        ex.Logger.getInstance().debug("Retrieved tutorial cookie: tutorial-" + gameMode, c);
+        return c && c === "1";
     };
     // todo move loadConfig logic to here so we can manage state better?
     MainMenu.LoadStandardMode = function () {
@@ -705,8 +715,8 @@ var MainMenu = (function (_super) {
         loadConfig(Config.loadSurvivalReverse);
         mainMenu.onGameModeSwitch();
     };
-    MainMenu._StandardButtonPos = new ex.Point(42, 200);
-    MainMenu._ChallengeButtonPos = new ex.Point(42, 200 + Config.MainMenuButtonHeight + 20);
+    MainMenu._StandardButtonPos = new ex.Point(42, 170);
+    MainMenu._ChallengeButtonPos = new ex.Point(42, 170 + Config.MainMenuButtonHeight + 20);
     MainMenu._LogoPos = new ex.Point(0, 50);
     return MainMenu;
 })(ex.UIActor);
@@ -871,19 +881,6 @@ var MatchManager = (function (_super) {
                 this._run.length = 0;
             }
             this.runInProgress = false;
-        }
-        else {
-            var point = new ex.Point(pe.x, pe.y);
-            if (gameOverWidget.getBounds(0).contains(point)) {
-                //TODO post your score
-                console.log("POSTED YOUR SCORE");
-            }
-            else if (gameOverWidget.getBounds(1).contains(point)) {
-                //TODO play again
-                console.log("PLAY AGAIN");
-                grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-                InitSetup();
-            }
         }
     };
     MatchManager.prototype._handleCancelRun = function () {
@@ -1566,37 +1563,14 @@ var Sweeper = (function (_super) {
     };
     return Sweeper;
 })(ex.Actor);
-var UIWidget = (function (_super) {
-    __extends(UIWidget, _super);
-    function UIWidget() {
-        _super.call(this);
-        this._buttons = new Array();
-        var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
-        this.widget = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() + 500, 300, 300, color);
-    }
-    UIWidget.prototype.addButton = function (button) {
-        this._buttons.push(button);
-        game.addChild(button);
-        //button.on(buttonType, 
-    };
-    UIWidget.prototype.getBounds = function (index) {
-        var boundingBox = new ex.BoundingBox(this._buttons[index].getBounds().left, this._buttons[index].getBounds().top, this._buttons[index].getBounds().right, this._buttons[index].getBounds().bottom);
-        return boundingBox;
-    };
-    UIWidget.prototype.moveWidget = function (x, y, speed) {
-        this.widget.moveTo(x, y, speed);
-        //for (var i = 0; i < this._buttons.length; i++) {
-        //   this._buttons[i].moveTo(x, y, speed);
-        //}
-    };
-    return UIWidget;
-})(ex.Class);
 var NoMoves = (function (_super) {
     __extends(NoMoves, _super);
     function NoMoves() {
         _super.call(this, -200, game.getHeight() / 2, 200, 100);
         this.color = ex.Color.Azure.clone();
         this.anchor.setTo(.5, .5);
+        this.setCenterDrawing(true);
+        this.addDrawing(Resources.NoMovesTexture);
     }
     NoMoves.prototype.play = function () {
         var _this = this;
@@ -1639,7 +1613,6 @@ var Mask = (function (_super) {
 /// <reference path="transition.ts"/>
 /// <reference path="Stats.ts"/>
 /// <reference path="sweeper.ts"/>
-/// <reference path="UIWidget.ts"/>
 /// <reference path="background.ts"/>
 /// <reference path="Effects.ts"/>
 /// <reference path="nomoves.ts"/>
@@ -1728,7 +1701,6 @@ game.input.keyboard.on('up', function (evt) {
         grid.fill(grid.rows - 1);
     }
 });
-var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
 function hasClass(element, cls) {
@@ -1824,6 +1796,8 @@ function gameOver() {
     if (gameMode == 1 /* Timed */) {
         document.getElementById("try-challenge").className = "hide";
     }
+    document.getElementById("play-again").addEventListener('click', InitSetup);
+    //document.get
     // I'm so sorry, I'm so very sorry...so tired
     var text = document.getElementById("twidget").dataset['text'];
     document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
