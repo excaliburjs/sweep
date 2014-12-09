@@ -1731,18 +1731,19 @@ function InitSetup() {
         playLoop();
     }
 }
-game.input.keyboard.on('up', function (evt) {
-    if (evt.key === 68 /* D */) {
-        game.isDebug = !game.isDebug;
-    }
-    if (evt.key === 85 /* U */) {
-        for (var i = 0; i < grid.rows; i++) {
-            grid.shift(i, i - 1);
-        }
-        // fill first row
-        grid.fill(grid.rows - 1);
-    }
-});
+//game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
+//   if (evt.key === ex.Input.Keys.D) {
+//      game.isDebug = !game.isDebug;
+//   }
+//   if (evt.key === ex.Input.Keys.U) {
+//      // shift all rows up 1
+//      for (var i = 0; i < grid.rows; i++) {
+//         grid.shift(i, i - 1);         
+//      }
+//      // fill first row
+//      grid.fill(grid.rows - 1);
+//   }
+//});
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
 function hasClass(element, cls) {
