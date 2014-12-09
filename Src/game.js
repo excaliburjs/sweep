@@ -58,7 +58,7 @@ var Config = (function () {
     Config.resetDefault = function () {
         Config.EnableTimer = false;
         Config.AdvanceRowsOnMatch = true;
-        Config.SweepThreshold = 20;
+        Config.SweepThreshold = 5;
         Config.EnableSweepMeters = false;
         Config.EnableSingleTapClear = false;
         Config.ClearSweepMetersAfterSingleUse = true;
@@ -273,7 +273,8 @@ var Resources = {
     TextureLogo: new ex.Texture("images/logo.png"),
     TextureStandardBtn: new ex.Texture("images/standard.png"),
     TextureChallengeBtn: new ex.Texture("images/challenge.png"),
-    NoMovesTexture: new ex.Texture('images/no-moves.png')
+    NoMovesTexture: new ex.Texture('images/no-moves.png'),
+    TextureSweepIndicator: new ex.Texture("images/sweep-indicator.png")
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
@@ -561,8 +562,10 @@ var LogicalGrid = (function (_super) {
                 var piece = this.getCell(i, from).piece;
                 if (piece) {
                     this.clearPiece(piece);
-                    matcher.gameOver = true;
-                    gameOver();
+                    if (!matcher.gameOver) {
+                        matcher.gameOver = true;
+                        gameOver();
+                    }
                 }
             }
             else if (this.getCell(i, from).piece) {
@@ -641,6 +644,16 @@ var MainMenu = (function (_super) {
         game.add(this._logo);
         game.add(this._standardButton);
         game.add(this._challengeButton);
+        document.getElementById("dismiss-normal-modal").addEventListener("click", function () {
+            removeClass(document.getElementById("tutorial-normal"), "show");
+            MainMenu._markTutorialAsDone(0 /* Standard */);
+            MainMenu.LoadStandardMode();
+        });
+        document.getElementById("dismiss-challenge-modal").addEventListener("click", function () {
+            removeClass(document.getElementById("tutorial-challenge"), "show");
+            MainMenu._markTutorialAsDone(1 /* Timed */);
+            MainMenu.LoadChallengeMode();
+        });
         this.show();
     };
     MainMenu.prototype.update = function (engine, delta) {
@@ -692,28 +705,35 @@ var MainMenu = (function (_super) {
         this._show = false;
         this._hide = true;
     };
-    MainMenu.prototype.onGameModeSwitch = function () {
-        mainMenu.hide();
-        if (gameMode === 0 /* Standard */ && !this._hasFinishedTutorial(0 /* Standard */)) {
-        }
-        else if (gameMode === 1 /* Timed */ && !this._hasFinishedTutorial(1 /* Timed */)) {
-        }
+    MainMenu._markTutorialAsDone = function (gameMode) {
+        Cookies.set("ld-31-tutorial-" + gameMode, "1");
     };
-    MainMenu.prototype._hasFinishedTutorial = function (gameMode) {
-        var c = Cookies.get("tutorial-" + gameMode);
-        ex.Logger.getInstance().debug("Retrieved tutorial cookie: tutorial-" + gameMode, c);
+    MainMenu._hasFinishedTutorial = function (gameMode) {
+        var c = Cookies.get("ld-31-tutorial-" + gameMode);
+        ex.Logger.getInstance().info("Retrieved tutorial cookie: tutorial-" + gameMode, c);
         return c && c === "1";
     };
     // todo move loadConfig logic to here so we can manage state better?
     MainMenu.LoadStandardMode = function () {
         ex.Logger.getInstance().info("Loading standard mode");
-        loadConfig(Config.loadCasual);
-        mainMenu.onGameModeSwitch();
+        if (!MainMenu._hasFinishedTutorial(0 /* Standard */)) {
+            // play normal tutorial
+            addClass(document.getElementById("tutorial-normal"), "show");
+        }
+        else {
+            loadConfig(Config.loadCasual);
+            mainMenu.hide();
+        }
     };
     MainMenu.LoadChallengeMode = function () {
         ex.Logger.getInstance().info("Loading challenge mode");
-        loadConfig(Config.loadSurvivalReverse);
-        mainMenu.onGameModeSwitch();
+        if (!MainMenu._hasFinishedTutorial(1 /* Timed */)) {
+            addClass(document.getElementById("tutorial-challenge"), "show");
+        }
+        else {
+            loadConfig(Config.loadSurvivalReverse);
+            mainMenu.hide();
+        }
     };
     MainMenu._StandardButtonPos = new ex.Point(42, 170);
     MainMenu._ChallengeButtonPos = new ex.Point(42, 170 + Config.MainMenuButtonHeight + 20);
@@ -1387,6 +1407,7 @@ var Meter = (function (_super) {
         this.threshold = threshold;
         this.color = color;
         this.anchor.setTo(0, 0);
+        this._sweepIndicator = Resources.TextureSweepIndicator.asSprite();
     }
     Meter.prototype.onInitialize = function (engine) {
         _super.prototype.onInitialize.call(this, engine);
@@ -1408,6 +1429,11 @@ var Meter = (function (_super) {
         // fill
         ctx.fillStyle = this.color.toString();
         ctx.fillRect(x, y, (this.getWidth() * percentage), this.getHeight());
+        if (this.score === this.threshold) {
+            var centeredX = this.getCenter().x - (this._sweepIndicator.width / 2);
+            var centeredY = this.getCenter().y - (this._sweepIndicator.height / 2);
+            this._sweepIndicator.draw(ctx, centeredX, centeredY);
+        }
     };
     return Meter;
 })(ex.UIActor);
@@ -1446,7 +1472,7 @@ var Sweeper = (function (_super) {
         _super.prototype.onInitialize.call(this, engine);
         if (Config.EnableSweeper) {
             this._emitter.isEmitting = true;
-            game.add(this._label);
+            //game.add(this._label);
             game.add(this._emitter);
         }
         this.y = visualGrid.y + (this._row * Config.CellHeight);
@@ -1646,6 +1672,15 @@ var loadConfig = function (config) {
 };
 Config.resetDefault();
 InitSetup();
+document.getElementById("play-again").addEventListener('click', function () {
+    if (gameMode == 0 /* Standard */) {
+        MainMenu.LoadStandardMode();
+    }
+    else if (gameMode == 1 /* Timed */) {
+        MainMenu.LoadChallengeMode();
+    }
+});
+document.getElementById("challenge").addEventListener('click', MainMenu.LoadChallengeMode);
 //reset the game with the given grid dimensions
 function InitSetup() {
     grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
@@ -1682,7 +1717,7 @@ function InitSetup() {
     game.add(sweeper);
     stats.drawScores();
     // hide game over
-    document.getElementById("game-over").className = "";
+    removeClass(document.getElementById("game-over"), "show");
     //add pieces to initial rows
     grid.seed(Config.NumStartingRows);
     if (!muted) {
@@ -1786,7 +1821,7 @@ function gameOver() {
     playGameOver();
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
-    document.getElementById("game-over").className = "show";
+    addClass(document.getElementById("game-over"), "show");
     document.getElementById("game-over-swept").innerHTML = stats.getTotalPiecesSwept().toString();
     document.getElementById("game-over-chain").innerHTML = stats.getTotalChainBonus().toString();
     var enduranceBonus = stats.calculateEnduranceBonus();
@@ -1796,8 +1831,6 @@ function gameOver() {
     if (gameMode == 1 /* Timed */) {
         document.getElementById("try-challenge").className = "hide";
     }
-    document.getElementById("play-again").addEventListener('click', InitSetup);
-    //document.get
     // I'm so sorry, I'm so very sorry...so tired
     var text = document.getElementById("twidget").dataset['text'];
     document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
