@@ -70,7 +70,13 @@ document.getElementById("play-again").addEventListener('click', () => {
       MainMenu.LoadChallengeMode();
    }
 });
-document.getElementById("challenge").addEventListener('click', MainMenu.LoadChallengeMode);
+document.getElementById("challenge").addEventListener('click', () => {
+   if (gameMode == GameMode.Standard) {
+      MainMenu.LoadChallengeMode();
+   } else if (gameMode == GameMode.Timed) {
+      MainMenu.LoadStandardMode();
+   }
+});
 
 //reset the game with the given grid dimensions
 function InitSetup() {
@@ -220,6 +226,13 @@ function playGameOver() {
 }
 
 function gameOver() {
+
+   if (gameMode == GameMode.Standard) {
+      document.getElementById("challenge").innerHTML = "Try Challenge Mode";
+   } else if (gameMode == GameMode.Timed) {
+      document.getElementById("challenge").innerHTML = "Try Standard Mode";
+   }
+
    var totalScore = stats.getFinalScore();
    var longestChain = stats.getLongestChain();
    var turnsTaken = stats.getTurnNumber();
@@ -253,11 +266,6 @@ function gameOver() {
    document.getElementById("game-over-time").innerHTML = enduranceBonus.toString();
 
    document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
-
-   if (gameMode == GameMode.Timed) {
-      document.getElementById("try-challenge").className = "hide";
-   }
-
 
    // I'm so sorry, I'm so very sorry...so tired
    var text = document.getElementById("twidget").dataset['text'];
