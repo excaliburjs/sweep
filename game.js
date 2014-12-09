@@ -1373,7 +1373,7 @@ var Sweeper = (function (_super) {
         _super.prototype.onInitialize.call(this, engine);
         if (Config.EnableSweeper) {
             this._emitter.isEmitting = true;
-            game.add(this._label);
+            //game.add(this._label);
             game.add(this._emitter);
         }
         this.y = visualGrid.y + (this._row * Config.CellHeight);
