@@ -486,8 +486,10 @@ var LogicalGrid = (function (_super) {
                 var piece = this.getCell(i, from).piece;
                 if (piece) {
                     this.clearPiece(piece);
-                    matcher.gameOver = true;
-                    gameOver();
+                    if (!matcher.gameOver) {
+                        matcher.gameOver = true;
+                        gameOver();
+                    }
                 }
             }
             else if (this.getCell(i, from).piece) {
@@ -1646,6 +1648,15 @@ var loadConfig = function (config) {
 };
 Config.resetDefault();
 InitSetup();
+document.getElementById("play-again").addEventListener('click', function () {
+    if (gameMode == 0 /* Standard */) {
+        MainMenu.LoadStandardMode();
+    }
+    else if (gameMode == 1 /* Timed */) {
+        MainMenu.LoadChallengeMode();
+    }
+});
+document.getElementById("challenge").addEventListener('click', MainMenu.LoadChallengeMode);
 //reset the game with the given grid dimensions
 function InitSetup() {
     grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
@@ -1796,8 +1807,6 @@ function gameOver() {
     if (gameMode == 1 /* Timed */) {
         document.getElementById("try-challenge").className = "hide";
     }
-    document.getElementById("play-again").addEventListener('click', InitSetup);
-    //document.get
     // I'm so sorry, I'm so very sorry...so tired
     var text = document.getElementById("twidget").dataset['text'];
     document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
