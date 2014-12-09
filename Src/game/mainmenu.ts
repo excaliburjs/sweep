@@ -38,6 +38,17 @@ class MainMenu extends ex.UIActor {
       game.add(this._standardButton);
       game.add(this._challengeButton);
 
+      document.getElementById("dismiss-normal-modal").addEventListener("click", () => {
+         removeClass(document.getElementById("tutorial-normal"), "show");
+         MainMenu._markTutorialAsDone(GameMode.Standard);
+         MainMenu.LoadStandardMode();
+      });
+      document.getElementById("dismiss-challenge-modal").addEventListener("click", () => {
+         removeClass(document.getElementById("tutorial-challenge"), "show");
+         MainMenu._markTutorialAsDone(GameMode.Timed);
+         MainMenu.LoadChallengeMode();
+      });
+
       this.show();
    }
 
@@ -99,44 +110,40 @@ class MainMenu extends ex.UIActor {
       this._hide = true;
    }
 
-   private onGameModeSwitch() {
-      mainMenu.hide();
-      
-      if (gameMode === GameMode.Standard && !this._hasFinishedTutorial(GameMode.Standard)) {
-         // play normal tutorial
-
-         // demo drag actions
-
-         // demo sweep meters
-
-         // hint at mega sweep
-      } else if (gameMode === GameMode.Timed && !this._hasFinishedTutorial(GameMode.Timed)) {
-         
-      }
+   private static _markTutorialAsDone(gameMode: GameMode) {
+      Cookies.set("ld-31-tutorial-" + gameMode, "1");
    }
 
-   private _hasFinishedTutorial(gameMode: GameMode): boolean {
-      var c = Cookies.get("tutorial-" + gameMode);
+   private static _hasFinishedTutorial(gameMode: GameMode): boolean {
+      var c = Cookies.get("ld-31-tutorial-" + gameMode);
 
-      ex.Logger.getInstance().debug("Retrieved tutorial cookie: tutorial-" + gameMode, c);
+      ex.Logger.getInstance().info("Retrieved tutorial cookie: tutorial-" + gameMode, c);
 
       return c && c === "1";
    }
-
    
-
    // todo move loadConfig logic to here so we can manage state better?
 
    public static LoadStandardMode() {
       ex.Logger.getInstance().info("Loading standard mode");
-      loadConfig(Config.loadCasual);
-      mainMenu.onGameModeSwitch();
+
+      if (!MainMenu._hasFinishedTutorial(GameMode.Standard)) {
+         // play normal tutorial
+         addClass(document.getElementById("tutorial-normal"), "show");
+      } else {
+         loadConfig(Config.loadCasual);
+         mainMenu.hide();
+      }
    }
 
    public static LoadChallengeMode() {
       ex.Logger.getInstance().info("Loading challenge mode");
-      loadConfig(Config.loadSurvivalReverse);
-      mainMenu.onGameModeSwitch();
+      if (!MainMenu._hasFinishedTutorial(GameMode.Timed)) {
+         addClass(document.getElementById("tutorial-challenge"), "show");
+      } else {
+         loadConfig(Config.loadSurvivalReverse);
+         mainMenu.hide();
+      }
    }
 }
 

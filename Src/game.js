@@ -617,6 +617,7 @@ var VisualGrid = (function (_super) {
     };
     return VisualGrid;
 })(ex.Actor);
+/// <reference path="../scripts/typings/Cookies.d.ts"/>
 var MainMenu = (function (_super) {
     __extends(MainMenu, _super);
     function MainMenu() {
@@ -639,6 +640,16 @@ var MainMenu = (function (_super) {
         game.add(this._logo);
         game.add(this._standardButton);
         game.add(this._challengeButton);
+        document.getElementById("dismiss-normal-modal").addEventListener("click", function () {
+            removeClass(document.getElementById("tutorial-normal"), "show");
+            MainMenu._markTutorialAsDone(0 /* Standard */);
+            MainMenu.LoadStandardMode();
+        });
+        document.getElementById("dismiss-challenge-modal").addEventListener("click", function () {
+            removeClass(document.getElementById("tutorial-challenge"), "show");
+            MainMenu._markTutorialAsDone(1 /* Timed */);
+            MainMenu.LoadChallengeMode();
+        });
         this.show();
     };
     MainMenu.prototype.update = function (engine, delta) {
@@ -690,23 +701,38 @@ var MainMenu = (function (_super) {
         this._show = false;
         this._hide = true;
     };
-    MainMenu.prototype.onGameModeSwitch = function () {
-        mainMenu.hide();
-        // todo tutorial
+    MainMenu._markTutorialAsDone = function (gameMode) {
+        Cookies.set("ld-31-tutorial-" + gameMode, "1");
+    };
+    MainMenu._hasFinishedTutorial = function (gameMode) {
+        var c = Cookies.get("ld-31-tutorial-" + gameMode);
+        ex.Logger.getInstance().info("Retrieved tutorial cookie: tutorial-" + gameMode, c);
+        return c && c === "1";
     };
     // todo move loadConfig logic to here so we can manage state better?
     MainMenu.LoadStandardMode = function () {
         ex.Logger.getInstance().info("Loading standard mode");
-        loadConfig(Config.loadCasual);
-        mainMenu.onGameModeSwitch();
+        if (!MainMenu._hasFinishedTutorial(0 /* Standard */)) {
+            // play normal tutorial
+            addClass(document.getElementById("tutorial-normal"), "show");
+        }
+        else {
+            loadConfig(Config.loadCasual);
+            mainMenu.hide();
+        }
     };
     MainMenu.LoadChallengeMode = function () {
         ex.Logger.getInstance().info("Loading challenge mode");
-        loadConfig(Config.loadSurvivalReverse);
-        mainMenu.onGameModeSwitch();
+        if (!MainMenu._hasFinishedTutorial(1 /* Timed */)) {
+            addClass(document.getElementById("tutorial-challenge"), "show");
+        }
+        else {
+            loadConfig(Config.loadSurvivalReverse);
+            mainMenu.hide();
+        }
     };
-    MainMenu._StandardButtonPos = new ex.Point(42, 200);
-    MainMenu._ChallengeButtonPos = new ex.Point(42, 200 + Config.MainMenuButtonHeight + 20);
+    MainMenu._StandardButtonPos = new ex.Point(42, 170);
+    MainMenu._ChallengeButtonPos = new ex.Point(42, 170 + Config.MainMenuButtonHeight + 20);
     MainMenu._LogoPos = new ex.Point(0, 50);
     return MainMenu;
 })(ex.UIActor);
@@ -871,19 +897,6 @@ var MatchManager = (function (_super) {
                 this._run.length = 0;
             }
             this.runInProgress = false;
-        }
-        else {
-            var point = new ex.Point(pe.x, pe.y);
-            if (gameOverWidget.getBounds(0).contains(point)) {
-                //TODO post your score
-                console.log("POSTED YOUR SCORE");
-            }
-            else if (gameOverWidget.getBounds(1).contains(point)) {
-                //TODO play again
-                console.log("PLAY AGAIN");
-                grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-                InitSetup();
-            }
         }
     };
     MatchManager.prototype._handleCancelRun = function () {
@@ -1566,31 +1579,6 @@ var Sweeper = (function (_super) {
     };
     return Sweeper;
 })(ex.Actor);
-var UIWidget = (function (_super) {
-    __extends(UIWidget, _super);
-    function UIWidget() {
-        _super.call(this);
-        this._buttons = new Array();
-        var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
-        this.widget = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() + 500, 300, 300, color);
-    }
-    UIWidget.prototype.addButton = function (button) {
-        this._buttons.push(button);
-        game.addChild(button);
-        //button.on(buttonType, 
-    };
-    UIWidget.prototype.getBounds = function (index) {
-        var boundingBox = new ex.BoundingBox(this._buttons[index].getBounds().left, this._buttons[index].getBounds().top, this._buttons[index].getBounds().right, this._buttons[index].getBounds().bottom);
-        return boundingBox;
-    };
-    UIWidget.prototype.moveWidget = function (x, y, speed) {
-        this.widget.moveTo(x, y, speed);
-        //for (var i = 0; i < this._buttons.length; i++) {
-        //   this._buttons[i].moveTo(x, y, speed);
-        //}
-    };
-    return UIWidget;
-})(ex.Class);
 var NoMoves = (function (_super) {
     __extends(NoMoves, _super);
     function NoMoves() {
@@ -1639,7 +1627,6 @@ var Mask = (function (_super) {
 /// <reference path="transition.ts"/>
 /// <reference path="Stats.ts"/>
 /// <reference path="sweeper.ts"/>
-/// <reference path="UIWidget.ts"/>
 /// <reference path="background.ts"/>
 /// <reference path="Effects.ts"/>
 /// <reference path="nomoves.ts"/>
@@ -1709,7 +1696,7 @@ function InitSetup() {
     game.add(sweeper);
     stats.drawScores();
     // hide game over
-    document.getElementById("game-over").className = "";
+    removeClass(document.getElementById("game-over"), "show");
     //add pieces to initial rows
     grid.seed(Config.NumStartingRows);
     if (!muted) {
@@ -1728,7 +1715,6 @@ game.input.keyboard.on('up', function (evt) {
         grid.fill(grid.rows - 1);
     }
 });
-var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
 function hasClass(element, cls) {
@@ -1814,7 +1800,7 @@ function gameOver() {
     playGameOver();
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
-    document.getElementById("game-over").className = "show";
+    addClass(document.getElementById("game-over"), "show");
     document.getElementById("game-over-swept").innerHTML = stats.getTotalPiecesSwept().toString();
     document.getElementById("game-over-chain").innerHTML = stats.getTotalChainBonus().toString();
     var enduranceBonus = stats.calculateEnduranceBonus();
