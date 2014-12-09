@@ -116,7 +116,7 @@ function InitSetup() {
    stats.drawScores();
 
    // hide game over
-   document.getElementById("game-over").className = "";
+   removeClass(document.getElementById("game-over"), "show");
 
    //add pieces to initial rows
    grid.seed(Config.NumStartingRows);
@@ -239,7 +239,7 @@ function gameOver() {
 
    if (turnManager) turnManager.dispose(); // stop game over from happening infinitely in time attack
 
-   document.getElementById("game-over").className = "show";
+   addClass(document.getElementById("game-over"), "show");
 
 
    document.getElementById("game-over-swept").innerHTML = stats.getTotalPiecesSwept().toString();

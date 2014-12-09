@@ -5,19 +5,72 @@
     <meta charset="utf-8" />
     <title>Ludum 31</title>
     <link rel="stylesheet" href="css/font-awesome.css" type="text/css" />
-    <link rel="stylesheet" href="app.css?bd3ddfb38a07ac2dc5629a6a0533dfc4f9b2f78e" type="text/css" />
+    <link rel="stylesheet" href="app.css?40c01cd02891405369aaefc4d9f5a3fb2aaa1e5f" type="text/css" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 </head>
-    <body>
-    <div id="commit"><a href="https://github.com/excaliburjs/ludum-31/commit/bd3ddfb38a07ac2dc5629a6a0533dfc4f9b2f78e">@bd3ddfb38a07ac2dc5629a6a0533dfc4f9b2f78e</a></div>
+<body>
+    <div id="commit"><a href="https://github.com/excaliburjs/ludum-31/commit/40c01cd02891405369aaefc4d9f5a3fb2aaa1e5f">@40c01cd02891405369aaefc4d9f5a3fb2aaa1e5f</a></div>
     <div id="background"></div>
     <i id="sound" class="fa fa-fw fa-2x fa-volume-up"></i>
-    <canvas id="game"></canvas>
 
-<div id="game-over">
-    <div id="game-over-bg"></div>
-    <div id="game-over-modal">
-        <div id="game-over-inner">
+
+    <div id="tutorial-normal" class="modal tutorial">
+
+        <div class="modal-bg"></div>
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <h1>Standard Mode</h1>
+
+                <div class="slides">
+                    <div id="tutorial-normal-1" class="slide">
+                        <a href="#tutorial-normal-2">
+                            <img src="images/tutorial-standard-1.png" alt="Swipe in all directions to clear tiles" />
+                        </a>
+                    </div>
+                    <div id="tutorial-normal-2" class="slide">
+                        <a href="#tutorial-normal-3">
+                            <img src="images/tutorial-standard-2.png" alt="Clearing tiles fills sweep meter"/>
+                        </a>
+                    </div>
+                    <div id="tutorial-normal-3" class="slide">
+                        <img src="images/tutorial-standard-3.png" alt="Tap or press 1-4 when your meters are full to sweep same-color tiles" />
+                    </div>
+                </div>
+
+                <p><a id="dismiss-normal-modal" href="#" class="got-it">Got it, thanks</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="tutorial-challenge" class="modal tutorial">
+
+        <div class="modal-bg"></div>
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <h1>Challenge Mode</h1>
+
+                <div class="slides">
+                    <div id="tutorial-challenge-1" class="slide">
+                        <a href="#tutorial-challenge-2">
+                            <img src="images/tutorial-challenge-1.png" alt="Tap a tile to clear any same-color tiles connected to it" />
+                        </a>
+                    </div>
+                    <div id="tutorial-challenge-2" class="slide">
+                        <img src="images/tutorial-challenge-2.png" alt="When your sweep meter is full, press S to sweep all tiles above the line" />                        
+                    </div>
+                </div>
+
+                <p><a id="dismiss-challenge-modal" href="#" class="got-it">Got it, thanks</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-over" class="modal">
+        <div class="modal-bg"></div>
+        <div class="modal-content">
+            <div class="modal-body">
             <h1>SWEPT SOME STACKS</h1>
 
             <div class="scores">
@@ -42,7 +95,7 @@
                 <p id="game-over-total">0</p>
             </div>
 
-            <hr/>
+                <hr />
             <h4>BRAG!</h4>
             <p id="social-container">
                 <a id="twidget" href="https://twitter.com/share" class="twitter-share-button" data-text="I scored SOCIAL_SCORE in Sweep Stacks in SOCIAL_MODE!" data-via="ExcaliburJS" data-hashtags="LDJam">Tweet</a>
@@ -70,11 +123,13 @@
     </div>
 </div>
 
+    <canvas id="game"></canvas>
+
     <script src="scripts/lodash.min.js"></script>
     <script src="scripts/spectra.min.js"></script>
     <script src="scripts/cookies.min.js"></script>
-    <script src="Excalibur.js?bd3ddfb38a07ac2dc5629a6a0533dfc4f9b2f78e"></script>
-    <script src="game.js?bd3ddfb38a07ac2dc5629a6a0533dfc4f9b2f78e"></script>
+    <script src="Excalibur.js?40c01cd02891405369aaefc4d9f5a3fb2aaa1e5f"></script>
+    <script src="game.js?40c01cd02891405369aaefc4d9f5a3fb2aaa1e5f"></script>
     <script>
         (function (i, s, o, g, r, a, m) {
             i['GoogleAnalyticsObject'] = r;
