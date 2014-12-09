@@ -105,8 +105,8 @@ canvas {
     position: relative;
     left: -50%;
     background: #80649A;
-    padding: 20px 40px;
-    min-width: 280px;
+    padding: 20px 20px;
+    min-width: 300px;
 
     h1, h2, h3, h4 { color: white; text-align: center; }
     p { text-align: center; }
@@ -116,14 +116,14 @@ canvas {
 
     .scores {
         text-align: left;
-        max-width: 200px;
+        max-width: 280px;
 
         h2 { 
             font-size: 0.8em; 
             text-align: left; 
             float: left; 
             clear: left; 
-            margin: 0 0 1.5em 0;
+            margin: 0 0 0.5em 0;
             line-height: 1.5em;
         }
         h2 + p {
@@ -135,6 +135,19 @@ canvas {
         }
     }
     
+    .buttons {
+        text-align: center;
+
+        .play-again {
+            display: inline-block;
+            padding-right: 10px;
+        }
+
+        .other {
+            display: inline-block;
+        }
+    }
+
     hr { border: 1px solid lighten(#80649A, 20%); clear: both; }
 
     a.try {
@@ -144,6 +157,15 @@ canvas {
         padding: 1em;
         display: inline-block;
         &:hover { background: lighten(#FF4A51, 10%); }
+    }
+
+    a.play-again {
+        color: white;
+        text-decoration: none;
+        background: #FF931E;
+        padding: 1em;
+        display: inline-block;
+        &:hover { background: lighten(#FF931E, 10%); }
     }
 
     a.share { 
