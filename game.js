@@ -642,6 +642,7 @@ var MainMenu = (function (_super) {
     MainMenu.LoadStandardMode = function (skipTutorial) {
         if (skipTutorial === void 0) { skipTutorial = false; }
         ex.Logger.getInstance().info("Loading standard mode");
+        skipTutorial = (typeof skipTutorial === "boolean" && skipTutorial);
         if (!skipTutorial && !MainMenu._hasFinishedTutorial(0 /* Standard */)) {
             // play normal tutorial
             removeClass(document.getElementById("game-over"), "show");
@@ -655,6 +656,7 @@ var MainMenu = (function (_super) {
     MainMenu.LoadChallengeMode = function (skipTutorial) {
         if (skipTutorial === void 0) { skipTutorial = false; }
         ex.Logger.getInstance().info("Loading challenge mode");
+        skipTutorial = (typeof skipTutorial === "boolean" && skipTutorial);
         if (!skipTutorial && !MainMenu._hasFinishedTutorial(1 /* Timed */)) {
             removeClass(document.getElementById("game-over"), "show");
             addClass(document.getElementById("tutorial-challenge"), "show");
