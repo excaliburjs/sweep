@@ -1464,7 +1464,7 @@ var Sweeper = (function (_super) {
         this._emitter.startSize = 0;
         this._emitter.endSize = 0;
         this._emitter.acceleration = new ex.Vector(0, -955);
-        this._emitter.beginColor = ex.Color.Red;
+        this._emitter.beginColor = ex.Color.fromHex("#FF4A51");
         this._emitter.endColor = ex.Color.Transparent;
         this._emitter.anchor.setTo(0, 1);
     }
