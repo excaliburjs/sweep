@@ -11,7 +11,7 @@
 <body>
     <div id="commit"><a href="https://github.com/excaliburjs/ludum-31/commit/COMMIT_NUMBER">@COMMIT_NUMBER</a></div>
     <div id="background"></div>
-    <i id="sound" class="fa fa-fw fa-2x fa-volume-up"></i>
+    <i id="sound" class="fa fa-fw fa-volume-up"></i>
 
 
     <div id="tutorial-normal" class="modal tutorial">
@@ -24,7 +24,7 @@
 
                 <div class="slides">
                     <div id="tutorial-normal-1" class="slide">
-                        <img src="images/tutorial-standard-1.png" alt="Swipe in all directions to clear tiles" />
+                            <img src="images/tutorial-standard-1.png" alt="Swipe in all directions to clear tiles" />
                     </div>
                     <div id="tutorial-normal-2" class="slide">
                         <img src="images/tutorial-standard-2.png" alt="Clearing tiles fills sweep meter"/>
@@ -49,7 +49,7 @@
 
                 <div class="slides">
                     <div id="tutorial-challenge-1" class="slide">
-                        <img src="images/tutorial-challenge-1.png" alt="Tap a tile to clear any same-color tiles connected to it" />
+                            <img src="images/tutorial-challenge-1.png" alt="Tap a tile to clear any same-color tiles connected to it" />
                     </div>
                     <div id="tutorial-challenge-2" class="slide">
                         <img src="images/tutorial-challenge-2.png" alt="When your sweep meter is full, press S to sweep all tiles above the line" />                        
@@ -109,7 +109,7 @@
             </p>
             <div id="try-challenge" class="buttons">
                 <p class="play-again"><a href="#" class="play-again" id="play-again">Play Again</a></p>
-                <p class="other" ><a href="#" class="try" id="challenge">Try Challenge Mode!</a></p>
+                    <p class="other"><a href="#" class="try" id="challenge">Try Challenge Mode!</a></p>
             </div>
             
         </div>
@@ -117,6 +117,9 @@
 </div>
 
     <canvas id="game"></canvas>
+    <div id="credits" style="position:absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); padding: 0.5em">
+        <a style="color: #FF931E" href="credits.html"><span class="fa fa-fw fa-group"></span></a>
+    </div>
 
     <script src="scripts/lodash.min.js"></script>
     <script src="scripts/spectra.min.js"></script>
