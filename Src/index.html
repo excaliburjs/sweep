@@ -11,7 +11,7 @@
 <body>
     <div id="commit"><a href="https://github.com/excaliburjs/ludum-31/commit/COMMIT_NUMBER">@COMMIT_NUMBER</a></div>
     <div id="background"></div>
-    <i id="sound" class="fa fa-fw fa-2x fa-volume-up"></i>
+    <i id="sound" class="fa fa-fw fa-volume-up"></i>
 
 
     <div id="tutorial-normal" class="modal tutorial">
@@ -30,7 +30,7 @@
                     </div>
                     <div id="tutorial-normal-2" class="slide">
                         <a href="#tutorial-normal-3">
-                            <img src="images/tutorial-standard-2.png" alt="Clearing tiles fills sweep meter"/>
+                            <img src="images/tutorial-standard-2.png" alt="Clearing tiles fills sweep meter" />
                         </a>
                     </div>
                     <div id="tutorial-normal-3" class="slide">
@@ -58,7 +58,7 @@
                         </a>
                     </div>
                     <div id="tutorial-challenge-2" class="slide">
-                        <img src="images/tutorial-challenge-2.png" alt="When your sweep meter is full, press S to sweep all tiles above the line" />                        
+                        <img src="images/tutorial-challenge-2.png" alt="When your sweep meter is full, press S to sweep all tiles above the line" />
                     </div>
                 </div>
 
@@ -71,58 +71,61 @@
         <div class="modal-bg"></div>
         <div class="modal-content">
             <div class="modal-body">
-            <h1>SWEPT SOME STACKS</h1>
+                <h1>SWEPT SOME STACKS</h1>
 
-            <div class="scores">
-                <h2>SWEPT</h2>
+                <div class="scores">
+                    <h2>SWEPT</h2>
 
-                <p id="game-over-swept">0</p>
+                    <p id="game-over-swept">0</p>
 
-                <h2>CHAIN BONUS</h2>
+                    <h2>CHAIN BONUS</h2>
 
-                <p id="game-over-chain">0</p>
+                    <p id="game-over-chain">0</p>
 
-                <h2>MULTIPLIER BONUS</h2>
+                    <h2>MULTIPLIER BONUS</h2>
 
-                <p id="game-over-multiplier">0</p>
+                    <p id="game-over-multiplier">0</p>
 
-                <h2>ENDURANCE BONUS</h2>
+                    <h2>ENDURANCE BONUS</h2>
 
-                <p id="game-over-time">0</p>
+                    <p id="game-over-time">0</p>
 
-                <h2>TOTAL SCORE</h2>
+                    <h2>TOTAL SCORE</h2>
 
-                <p id="game-over-total">0</p>
-            </div>
+                    <p id="game-over-total">0</p>
+                </div>
 
                 <hr />
-            <h4>BRAG!</h4>
-            <p id="social-container">
-                <a id="twidget" href="https://twitter.com/share" class="twitter-share-button" data-text="I scored SOCIAL_SCORE in Sweep Stacks in SOCIAL_MODE!" data-via="ExcaliburJS" data-hashtags="LDJam">Tweet</a>
-                <div id="facebook-sucks">
-                    <div style="top: -5px" id="fidget" class="fb-share-button" data-href="http://excaliburjs.com/ludum-31/" data-layout="button_count"></div>
-                    <div id="fb-root"></div>
-                    <script>
-                        (function (d, s, id) {
-                            var js, fjs = d.getElementsByTagName(s)[0];
-                            if (d.getElementById(id)) return;
-                            js = d.createElement(s); js.id = id;
-                            js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
-                            fjs.parentNode.insertBefore(js, fjs);
-                        }(document, 'script', 'facebook-jssdk'));</script>
+                <h4>BRAG!</h4>
+                <p id="social-container">
+                    <a id="twidget" href="https://twitter.com/share" class="twitter-share-button" data-text="I scored SOCIAL_SCORE in Sweep Stacks in SOCIAL_MODE!" data-via="ExcaliburJS" data-hashtags="LDJam">Tweet</a>
+                    <div id="facebook-sucks">
+                        <div style="top: -5px" id="fidget" class="fb-share-button" data-href="http://excaliburjs.com/ludum-31/" data-layout="button_count"></div>
+                        <div id="fb-root"></div>
+                        <script>
+                            (function (d, s, id) {
+                                var js, fjs = d.getElementsByTagName(s)[0];
+                                if (d.getElementById(id)) return;
+                                js = d.createElement(s); js.id = id;
+                                js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
+                                fjs.parentNode.insertBefore(js, fjs);
+                            }(document, 'script', 'facebook-jssdk'));</script>
+                    </div>
+
+                </p>
+                <div id="try-challenge" class="buttons">
+                    <p class="play-again"><a href="#" class="play-again" id="play-again">Play Again</a></p>
+                    <p class="other"><a href="#" class="try" id="challenge">Try Challenge Mode!</a></p>
                 </div>
-                
-            </p>
-            <div id="try-challenge" class="buttons">
-                <p class="play-again"><a href="#" class="play-again" id="play-again">Play Again</a></p>
-                <p class="other" ><a href="#" class="try" id="challenge">Try Challenge Mode!</a></p>
+
             </div>
-            
         </div>
     </div>
-</div>
 
     <canvas id="game"></canvas>
+    <div id="credits" style="position:absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); padding: 0.5em">
+        <a style="color: #FF931E" href="/credits.html"><span class="fa fa-fw fa-group"></span></a>
+    </div>
 
     <script src="scripts/lodash.min.js"></script>
     <script src="scripts/spectra.min.js"></script>
