@@ -12,7 +12,6 @@
 /// <reference path="transition.ts"/>
 /// <reference path="Stats.ts"/>
 /// <reference path="sweeper.ts"/>
-/// <reference path="UIWidget.ts"/>
 /// <reference path="background.ts"/>
 /// <reference path="Effects.ts"/>
 /// <reference path="nomoves.ts"/>
@@ -134,7 +133,6 @@ game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
  
 });
 
-var gameOverWidget = new UIWidget();
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
 
