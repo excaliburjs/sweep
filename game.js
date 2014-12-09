@@ -72,7 +72,7 @@ var Config = (function () {
     Config.resetDefault = function () {
         Config.EnableTimer = false;
         Config.AdvanceRowsOnMatch = true;
-        Config.SweepThreshold = 20;
+        Config.SweepThreshold = 5;
         Config.EnableSweepMeters = false;
         Config.EnableSingleTapClear = false;
         Config.ClearSweepMetersAfterSingleUse = true;
@@ -192,7 +192,8 @@ var Resources = {
     TextureLogo: new ex.Texture("images/logo.png"),
     TextureStandardBtn: new ex.Texture("images/standard.png"),
     TextureChallengeBtn: new ex.Texture("images/challenge.png"),
-    NoMovesTexture: new ex.Texture('images/no-moves.png')
+    NoMovesTexture: new ex.Texture('images/no-moves.png'),
+    TextureSweepIndicator: new ex.Texture("images/sweep-indicator.png")
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
@@ -1331,6 +1332,7 @@ var Meter = (function (_super) {
         this.threshold = threshold;
         this.color = color;
         this.anchor.setTo(0, 0);
+        this._sweepIndicator = Resources.TextureSweepIndicator.asSprite();
     }
     Meter.prototype.onInitialize = function (engine) {
         _super.prototype.onInitialize.call(this, engine);
@@ -1352,6 +1354,11 @@ var Meter = (function (_super) {
         // fill
         ctx.fillStyle = this.color.toString();
         ctx.fillRect(x, y, (this.getWidth() * percentage), this.getHeight());
+        if (this.score === this.threshold) {
+            var centeredX = this.getCenter().x - (this._sweepIndicator.width / 2);
+            var centeredY = this.getCenter().y - (this._sweepIndicator.height / 2);
+            this._sweepIndicator.draw(ctx, centeredX, centeredY);
+        }
     };
     return Meter;
 })(ex.UIActor);
