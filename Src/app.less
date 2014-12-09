@@ -62,7 +62,7 @@ canvas {
     }
 }
 
-#game-over-bg {
+.modal-bg {
     position: absolute;
     top: 0;
     left: 0;
@@ -76,13 +76,13 @@ canvas {
     -webkit-transition: opacity ease-in .7s;
     transition: opacity ease-in .7s;
 
-    #game-over.show & {
+    .modal.show & {
         opacity: 1;
         display: block;
     }
 }
 
-#game-over-modal {
+.modal-content {
     position: absolute;
     left: 50%;
     top: -130%;
@@ -92,8 +92,8 @@ canvas {
     -webkit-transition: top ease-out .7s;
     transition: top ease-out .7s;
 
-    #game-over.show & {
-        top: 20%;
+    .modal.show & {
+        top: 10%;
 
         @media (max-height: 600px) {
             top: 20px;
@@ -101,18 +101,59 @@ canvas {
     }
 }
 
-#game-over-inner {
+.hide { display: none; }
+
+.modal .modal-body {
     position: relative;
     left: -50%;
-    background: #80649A;
     padding: 20px 20px;
     min-width: 300px;
+
+    @media (max-width: 480px) {
+        padding: 10px 20px;
+    } 
+}
+
+.tutorial {
+    .modal-body {
+        background: #80649A;
+    }
+
+    img { max-width: 100%; }
+
+    h1, h4 { color: white; margin-top: 0; }
+    h1 { font-size: 1.3em; }
+
+    .got-it {
+        color: white;
+        text-decoration: none;
+        background: #FF4A51;
+        padding: 1em;
+        display: inline-block;
+        &:hover { background: lighten(#FF4A51, 10%); }
+    }
+
+    .slides {
+        overflow: hidden;
+        position: relative;
+        width: 260px;
+        height: 236px;
+
+        .slide {
+            height: 236px;
+            span { font-size: 0.9em; display: inline-block; margin-bottom: 0.5em; }
+            strong { color: #FF4A51; }
+            a { display: block; color: white; text-decoration: none; }
+        }
+    }
+}
+
+#game-over .modal-body {
+    background: #80649A;
 
     h1, h2, h3, h4 { color: white; text-align: center; }
     p { text-align: center; }
     h1 { font-size: 1.3em; margin-top: 0; }
-
-    .hide { display: none ;}
 
     .scores {
         text-align: left;
@@ -175,8 +216,6 @@ canvas {
         &:hover { color: #392950; }}   
     
     @media (max-width: 480px) {
-        padding: 10px 20px;
-
         .scores { max-width: 100%; }
     } 
 }
