@@ -191,7 +191,8 @@ var Resources = {
     BackgroundTexture: new ex.Texture('images/bg2.png'),
     TextureLogo: new ex.Texture("images/logo.png"),
     TextureStandardBtn: new ex.Texture("images/standard.png"),
-    TextureChallengeBtn: new ex.Texture("images/challenge.png")
+    TextureChallengeBtn: new ex.Texture("images/challenge.png"),
+    NoMovesTexture: new ex.Texture('images/no-moves.png')
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
@@ -1568,6 +1569,8 @@ var NoMoves = (function (_super) {
         _super.call(this, -200, game.getHeight() / 2, 200, 100);
         this.color = ex.Color.Azure.clone();
         this.anchor.setTo(.5, .5);
+        this.setCenterDrawing(true);
+        this.addDrawing(Resources.NoMovesTexture);
     }
     NoMoves.prototype.play = function () {
         var _this = this;
