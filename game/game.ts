@@ -268,18 +268,22 @@ function gameOver() {
    document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
 
    // I'm so sorry, I'm so very sorry...so tired
-   var text = document.getElementById("twidget").dataset['text'];
-   document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === GameMode.Timed ? "challenge mode" : "standard mode");
-   var twitterScript = <HTMLScriptElement>document.createElement('script');
-   twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
-   document.getElementById("game-over").appendChild(twitterScript);
+   try {
+      var text = document.getElementById("twidget").dataset['text'];
+      document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === GameMode.Timed ? "challenge mode" : "standard mode");
+      var twitterScript = <HTMLScriptElement>document.createElement('script');
+      twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
+      document.getElementById("game-over").appendChild(twitterScript);
 
-  
-   var social = document.getElementById('social-container');
-   var facebookW = document.getElementById('fidget');
-   facebookW.parentNode.removeChild(facebookW);
-   social.appendChild(facebookW);
 
+      var social = document.getElementById('social-container');
+      var facebookW = document.getElementById('fidget');
+      facebookW.parentNode.removeChild(facebookW);
+      social.appendChild(facebookW);
+   } catch (e) {
+      console.log("Something happened ", e);
+      //swallow
+   }
    //document.getElementById("fidget").attributes.href
 
 
