@@ -633,6 +633,7 @@ var MainMenu = (function (_super) {
         this.color = new ex.Color(0, 0, 0, 0.9);
     }
     MainMenu.prototype.onInitialize = function (engine) {
+        var _this = this;
         _super.prototype.onInitialize.call(this, engine);
         this._logo = new ex.UIActor();
         this._logo.addDrawing(Resources.TextureLogo.asSprite());
@@ -644,15 +645,53 @@ var MainMenu = (function (_super) {
         game.add(this._logo);
         game.add(this._standardButton);
         game.add(this._challengeButton);
-        document.getElementById("dismiss-normal-modal").addEventListener("click", function () {
-            removeClass(document.getElementById("tutorial-normal"), "show");
-            MainMenu._markTutorialAsDone(0 /* Standard */);
-            MainMenu.LoadStandardMode(true);
+        document.getElementById("dismiss-normal-modal").addEventListener("click", _.bind(this._dismissNormalTutorial, this));
+        document.getElementById("dismiss-challenge-modal").addEventListener("click", _.bind(this._dismissChallengeTutorial, this));
+        var tutNormalIdx = 0;
+        var tutChallengeIdx = 0;
+        document.getElementById("tutorial-normal-next").addEventListener("click", function (e) {
+            e.preventDefault();
+            var slides = document.querySelectorAll("#tutorial-normal .slide");
+            if (slides.length <= 0)
+                return;
+            if (slides.length === (tutNormalIdx + 1)) {
+                _this._dismissNormalTutorial();
+                return;
+            }
+            if (slides.length - 1 === tutNormalIdx + 1) {
+                document.getElementById("tutorial-normal-next").innerHTML = "Got it!";
+            }
+            else {
+                document.getElementById("tutorial-normal-next").innerHTML = "Next";
+            }
+            tutNormalIdx = (tutNormalIdx + 1) % slides.length;
+            for (var i = 0; i < slides.length; i++) {
+                slides[i].classList.add("hide");
+            }
+            slides[tutNormalIdx].classList.remove("hide");
+            return;
         });
-        document.getElementById("dismiss-challenge-modal").addEventListener("click", function () {
-            removeClass(document.getElementById("tutorial-challenge"), "show");
-            MainMenu._markTutorialAsDone(1 /* Timed */);
-            MainMenu.LoadChallengeMode(true);
+        document.getElementById("tutorial-challenge-next").addEventListener("click", function (e) {
+            e.preventDefault();
+            var slides = document.querySelectorAll("#tutorial-challenge .slide");
+            if (slides.length <= 0)
+                return;
+            if (slides.length === (tutChallengeIdx + 1)) {
+                _this._dismissChallengeTutorial();
+                return;
+            }
+            if (slides.length - 1 === tutChallengeIdx + 1) {
+                document.getElementById("tutorial-challenge-next").innerHTML = "Got it!";
+            }
+            else {
+                document.getElementById("tutorial-challenge-next").innerHTML = "Next";
+            }
+            tutChallengeIdx = (tutChallengeIdx + 1) % slides.length;
+            for (var i = 0; i < slides.length; i++) {
+                slides[i].classList.add("hide");
+            }
+            slides[tutChallengeIdx].classList.remove("hide");
+            return;
         });
         this.show();
     };
@@ -705,8 +744,18 @@ var MainMenu = (function (_super) {
         this._show = false;
         this._hide = true;
     };
+    MainMenu.prototype._dismissNormalTutorial = function () {
+        removeClass(document.getElementById("tutorial-normal"), "show");
+        MainMenu._markTutorialAsDone(0 /* Standard */);
+        MainMenu.LoadStandardMode(true);
+    };
+    MainMenu.prototype._dismissChallengeTutorial = function () {
+        removeClass(document.getElementById("tutorial-challenge"), "show");
+        MainMenu._markTutorialAsDone(1 /* Timed */);
+        MainMenu.LoadChallengeMode(true);
+    };
     MainMenu._markTutorialAsDone = function (gameMode) {
-        Cookies.set("ld-31-tutorial-" + gameMode, "1");
+        Cookies.set("ld-31-tutorial-" + gameMode, "1", { expires: new Date(2020, 0, 1) });
     };
     MainMenu._hasFinishedTutorial = function (gameMode) {
         var c = Cookies.get("ld-31-tutorial-" + gameMode);

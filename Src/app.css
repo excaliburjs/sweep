@@ -122,21 +122,36 @@ canvas {
 .tutorial h1 {
   font-size: 1.3em;
 }
-.tutorial .got-it {
+.tutorial p {
+  text-align: center;
+}
+.tutorial .next {
   color: white;
   text-decoration: none;
   background: #FF4A51;
+  padding: 1em 2em;
+  display: inline-block;
+  margin-right: 1em;
+}
+.tutorial .next:hover {
+  background: #ff7d82;
+}
+.tutorial .got-it {
+  color: white;
+  text-decoration: none;
+  background: #b3a2c2;
   padding: 1em;
   display: inline-block;
 }
 .tutorial .got-it:hover {
-  background: #ff7d82;
+  background: #ccc1d6;
 }
 .tutorial .slides {
   overflow: hidden;
   position: relative;
   width: 260px;
   height: 236px;
+  margin: 0 auto;
 }
 .tutorial .slides .slide {
   height: 236px;
