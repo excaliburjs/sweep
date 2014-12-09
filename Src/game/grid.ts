@@ -201,8 +201,10 @@ class LogicalGrid extends ex.Class {
             var piece = this.getCell(i, from).piece;
             if (piece) {
                this.clearPiece(piece);
-               matcher.gameOver = true;
-               gameOver();
+               if (!matcher.gameOver) {
+                  matcher.gameOver = true;
+                  gameOver();
+               }
             }
          } else if (this.getCell(i, from).piece) {
             (() => {
