@@ -109,7 +109,7 @@ var Config = (function () {
         Config.SweepAltMinThreshold = 10;
         Config.SweepAltMaxThreshold = 50;
     };
-    Config.PieceContainsPadding = 5;
+    Config.PieceContainsPadding = 2;
     Config.PieceWidth = 36;
     Config.PieceHeight = 36;
     Config.CellWidth = 45;
@@ -633,6 +633,7 @@ var MainMenu = (function (_super) {
         this.color = new ex.Color(0, 0, 0, 0.9);
     }
     MainMenu.prototype.onInitialize = function (engine) {
+        var _this = this;
         _super.prototype.onInitialize.call(this, engine);
         this._logo = new ex.UIActor();
         this._logo.addDrawing(Resources.TextureLogo.asSprite());
@@ -644,15 +645,53 @@ var MainMenu = (function (_super) {
         game.add(this._logo);
         game.add(this._standardButton);
         game.add(this._challengeButton);
-        document.getElementById("dismiss-normal-modal").addEventListener("click", function () {
-            removeClass(document.getElementById("tutorial-normal"), "show");
-            MainMenu._markTutorialAsDone(0 /* Standard */);
-            MainMenu.LoadStandardMode(true);
+        document.getElementById("dismiss-normal-modal").addEventListener("click", _.bind(this._dismissNormalTutorial, this));
+        document.getElementById("dismiss-challenge-modal").addEventListener("click", _.bind(this._dismissChallengeTutorial, this));
+        var tutNormalIdx = 0;
+        var tutChallengeIdx = 0;
+        document.getElementById("tutorial-normal-next").addEventListener("click", function (e) {
+            e.preventDefault();
+            var slides = document.querySelectorAll("#tutorial-normal .slide");
+            if (slides.length <= 0)
+                return;
+            if (slides.length === (tutNormalIdx + 1)) {
+                _this._dismissNormalTutorial();
+                return;
+            }
+            if (slides.length - 1 === tutNormalIdx + 1) {
+                document.getElementById("tutorial-normal-next").innerHTML = "Got it!";
+            }
+            else {
+                document.getElementById("tutorial-normal-next").innerHTML = "Next";
+            }
+            tutNormalIdx = (tutNormalIdx + 1) % slides.length;
+            for (var i = 0; i < slides.length; i++) {
+                slides[i].classList.add("hide");
+            }
+            slides[tutNormalIdx].classList.remove("hide");
+            return;
         });
-        document.getElementById("dismiss-challenge-modal").addEventListener("click", function () {
-            removeClass(document.getElementById("tutorial-challenge"), "show");
-            MainMenu._markTutorialAsDone(1 /* Timed */);
-            MainMenu.LoadChallengeMode(true);
+        document.getElementById("tutorial-challenge-next").addEventListener("click", function (e) {
+            e.preventDefault();
+            var slides = document.querySelectorAll("#tutorial-challenge .slide");
+            if (slides.length <= 0)
+                return;
+            if (slides.length === (tutChallengeIdx + 1)) {
+                _this._dismissChallengeTutorial();
+                return;
+            }
+            if (slides.length - 1 === tutChallengeIdx + 1) {
+                document.getElementById("tutorial-challenge-next").innerHTML = "Got it!";
+            }
+            else {
+                document.getElementById("tutorial-challenge-next").innerHTML = "Next";
+            }
+            tutChallengeIdx = (tutChallengeIdx + 1) % slides.length;
+            for (var i = 0; i < slides.length; i++) {
+                slides[i].classList.add("hide");
+            }
+            slides[tutChallengeIdx].classList.remove("hide");
+            return;
         });
         this.show();
     };
@@ -705,8 +744,18 @@ var MainMenu = (function (_super) {
         this._show = false;
         this._hide = true;
     };
+    MainMenu.prototype._dismissNormalTutorial = function () {
+        removeClass(document.getElementById("tutorial-normal"), "show");
+        MainMenu._markTutorialAsDone(0 /* Standard */);
+        MainMenu.LoadStandardMode(true);
+    };
+    MainMenu.prototype._dismissChallengeTutorial = function () {
+        removeClass(document.getElementById("tutorial-challenge"), "show");
+        MainMenu._markTutorialAsDone(1 /* Timed */);
+        MainMenu.LoadChallengeMode(true);
+    };
     MainMenu._markTutorialAsDone = function (gameMode) {
-        Cookies.set("ld-31-tutorial-" + gameMode, "1");
+        Cookies.set("ld-31-tutorial-" + gameMode, "1", { expires: new Date(2020, 0, 1) });
     };
     MainMenu._hasFinishedTutorial = function (gameMode) {
         var c = Cookies.get("ld-31-tutorial-" + gameMode);
@@ -1314,11 +1363,6 @@ var Stats = (function () {
         var meter = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, 1);
         meter.score = 1;
         meter.enableCapturePointer = true;
-        var label = new ex.Label("MEGA SWEEP", meter.getCenter().x, meter.getCenter().y);
-        var inputLabel = new ex.Label("PRESS S", meter.getCenter().x, meter.getCenter().y + 10);
-        label.textAlign = inputLabel.textAlign = 2 /* Center */;
-        label.color = inputLabel.color = ex.Color.White;
-        label.font = inputLabel.font = "16px";
         meter.anchor.setTo(0, 0);
         meter.on("pointerup", function () {
             sweeper.sweepAll();
@@ -1326,23 +1370,19 @@ var Stats = (function () {
         game.addEventListener('update', function (data) {
             // mega sweep
             if (_this.allMetersFull()) {
-                meter.visible = label.visible = inputLabel.visible = true;
+                meter.visible = true;
             }
             else {
-                meter.visible = label.visible = inputLabel.visible = false;
+                meter.visible = false;
             }
         });
         game.add(meter);
-        game.add(label);
-        game.add(inputLabel);
+        this._meterActors.push(meter);
     };
     Stats.prototype._addMeter = function (piece, x, y) {
         var _this = this;
         var meter = new Meter(x, y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold);
         meter.enableCapturePointer = true;
-        var label = new ex.Label(null, meter.getCenter().x, meter.getCenter().y + 3);
-        label.textAlign = 2 /* Center */;
-        label.color = ex.Color.White;
         meter.on("pointerup", function () {
             sweeper.sweep(piece);
         });
@@ -1350,22 +1390,14 @@ var Stats = (function () {
             meter.score = _this._meters[piece];
             // mega sweep
             if (_this.allMetersFull()) {
-                meter.visible = label.visible = false;
+                meter.visible = false;
             }
             else {
-                meter.visible = label.visible = true;
-                if (_this._meters[piece] === Config.SweepThreshold) {
-                    label.text = "SWEEP";
-                }
-                else {
-                    label.text = "";
-                }
+                meter.visible = true;
             }
         });
         game.add(meter);
-        game.add(label);
         this._meterActors.push(meter);
-        this._meterLabels.push(label);
     };
     Stats.prototype.clearMeters = function () {
         if (this._meterActors) {
@@ -1383,26 +1415,15 @@ var Stats = (function () {
         var _this = this;
         var square = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, this._sweepMeterThreshold);
         square.enableCapturePointer = true;
-        var label = new ex.Label(null, square.getCenter().x, y + 20);
-        label.textAlign = 2 /* Center */;
-        label.color = ex.Color.Black;
         square.on("pointerup", function () {
             sweeper.sweep();
         });
         game.addEventListener('update', function (data) {
             square.score = _this._sweepMeter;
             square.threshold = _this._sweepMeterThreshold;
-            if (_this._sweepMeter === _this._sweepMeterThreshold) {
-                label.text = "'S' TO SWEEP";
-            }
-            else {
-                label.text = Math.floor((_this._sweepMeter / _this._sweepMeterThreshold) * 100) + '%';
-            }
         });
         game.add(square);
-        game.add(label);
         this._meterActors.push(square);
-        this._meterLabels.push(label);
     };
     return Stats;
 })();
@@ -1850,7 +1871,7 @@ function gameOver() {
     document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
     try {
         var text = document.getElementById("twidget").dataset['text'];
-        document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
+        document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getFinalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
         var twitterScript = document.createElement('script');
         twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
         document.getElementById("game-over").appendChild(twitterScript);
