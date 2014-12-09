@@ -37,6 +37,7 @@ var Resources = {
    TextureLogo: new ex.Texture("images/logo.png"),
    TextureStandardBtn: new ex.Texture("images/standard.png"),
    TextureChallengeBtn: new ex.Texture("images/challenge.png"),
+   NoMovesTexture: new ex.Texture('images/no-moves.png')
 };
 
 var Palette = {
