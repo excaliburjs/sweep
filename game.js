@@ -1673,7 +1673,14 @@ document.getElementById("play-again").addEventListener('click', function () {
         MainMenu.LoadChallengeMode();
     }
 });
-document.getElementById("challenge").addEventListener('click', MainMenu.LoadChallengeMode);
+document.getElementById("challenge").addEventListener('click', function () {
+    if (gameMode == 0 /* Standard */) {
+        MainMenu.LoadChallengeMode();
+    }
+    else if (gameMode == 1 /* Timed */) {
+        MainMenu.LoadStandardMode();
+    }
+});
 //reset the game with the given grid dimensions
 function InitSetup() {
     grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
@@ -1796,6 +1803,12 @@ function playGameOver() {
     Resources.GameOverSound.play();
 }
 function gameOver() {
+    if (gameMode == 0 /* Standard */) {
+        document.getElementById("challenge").innerHTML = "Try Challenge Mode";
+    }
+    else if (gameMode == 1 /* Timed */) {
+        document.getElementById("challenge").innerHTML = "Try Standard Mode";
+    }
     var totalScore = stats.getFinalScore();
     var longestChain = stats.getLongestChain();
     var turnsTaken = stats.getTurnNumber();
@@ -1821,9 +1834,6 @@ function gameOver() {
     document.getElementById("game-over-multiplier").innerHTML = (stats.getFinalScore() - enduranceBonus - stats.getTotalChainBonus() - stats.getTotalPiecesSwept()).toString();
     document.getElementById("game-over-time").innerHTML = enduranceBonus.toString();
     document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
-    if (gameMode == 1 /* Timed */) {
-        document.getElementById("try-challenge").className = "hide";
-    }
     // I'm so sorry, I'm so very sorry...so tired
     var text = document.getElementById("twidget").dataset['text'];
     document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
