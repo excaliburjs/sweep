@@ -344,12 +344,15 @@
 
 class Meter extends ex.UIActor {
    public score: number;
+   private _sweepIndicator: ex.Sprite;
 
    constructor(x: number, y: number, width: number, height: number, color: ex.Color, public threshold: number) {
       super(x, y, width, height);
 
       this.color = color;
       this.anchor.setTo(0, 0);
+
+      this._sweepIndicator = Resources.TextureSweepIndicator.asSprite();
    }
 
    public onInitialize(engine: ex.Engine) {
@@ -379,5 +382,12 @@ class Meter extends ex.UIActor {
       // fill
       ctx.fillStyle = this.color.toString();
       ctx.fillRect(x, y, (this.getWidth() * percentage), this.getHeight());
+
+      if (this.score === this.threshold) {
+         var centeredX = this.getCenter().x - (this._sweepIndicator.width / 2);
+         var centeredY = this.getCenter().y - (this._sweepIndicator.height / 2);
+
+         this._sweepIndicator.draw(ctx, centeredX, centeredY);
+      }
    }
 }

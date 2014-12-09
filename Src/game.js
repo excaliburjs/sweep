@@ -58,7 +58,7 @@ var Config = (function () {
     Config.resetDefault = function () {
         Config.EnableTimer = false;
         Config.AdvanceRowsOnMatch = true;
-        Config.SweepThreshold = 20;
+        Config.SweepThreshold = 15;
         Config.EnableSweepMeters = false;
         Config.EnableSingleTapClear = false;
         Config.ClearSweepMetersAfterSingleUse = true;
@@ -273,14 +273,15 @@ var Resources = {
     TextureLogo: new ex.Texture("images/logo.png"),
     TextureStandardBtn: new ex.Texture("images/standard.png"),
     TextureChallengeBtn: new ex.Texture("images/challenge.png"),
-    NoMovesTexture: new ex.Texture('images/no-moves.png')
+    NoMovesTexture: new ex.Texture('images/no-moves.png'),
+    TextureSweepIndicator: new ex.Texture("images/sweep-indicator.png")
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
     GridBackgroundColor: new ex.Color(0, 20, 25, 0.9),
     // Beach
     PieceColor1: ex.Color.fromHex("#174e5e"),
-    PieceColor2: ex.Color.fromHex("#43385a"),
+    PieceColor2: ex.Color.fromHex("#7A5CA7"),
     PieceColor3: ex.Color.fromHex("#4c603a"),
     PieceColor4: ex.Color.fromHex("#c17b55"),
     MegaSweepColor: ex.Color.fromHex("#55c192"),
@@ -643,6 +644,16 @@ var MainMenu = (function (_super) {
         game.add(this._logo);
         game.add(this._standardButton);
         game.add(this._challengeButton);
+        document.getElementById("dismiss-normal-modal").addEventListener("click", function () {
+            removeClass(document.getElementById("tutorial-normal"), "show");
+            MainMenu._markTutorialAsDone(0 /* Standard */);
+            MainMenu.LoadStandardMode();
+        });
+        document.getElementById("dismiss-challenge-modal").addEventListener("click", function () {
+            removeClass(document.getElementById("tutorial-challenge"), "show");
+            MainMenu._markTutorialAsDone(1 /* Timed */);
+            MainMenu.LoadChallengeMode();
+        });
         this.show();
     };
     MainMenu.prototype.update = function (engine, delta) {
@@ -694,28 +705,35 @@ var MainMenu = (function (_super) {
         this._show = false;
         this._hide = true;
     };
-    MainMenu.prototype.onGameModeSwitch = function () {
-        mainMenu.hide();
-        if (gameMode === 0 /* Standard */ && !this._hasFinishedTutorial(0 /* Standard */)) {
-        }
-        else if (gameMode === 1 /* Timed */ && !this._hasFinishedTutorial(1 /* Timed */)) {
-        }
+    MainMenu._markTutorialAsDone = function (gameMode) {
+        Cookies.set("ld-31-tutorial-" + gameMode, "1");
     };
-    MainMenu.prototype._hasFinishedTutorial = function (gameMode) {
-        var c = Cookies.get("tutorial-" + gameMode);
-        ex.Logger.getInstance().debug("Retrieved tutorial cookie: tutorial-" + gameMode, c);
+    MainMenu._hasFinishedTutorial = function (gameMode) {
+        var c = Cookies.get("ld-31-tutorial-" + gameMode);
+        ex.Logger.getInstance().info("Retrieved tutorial cookie: tutorial-" + gameMode, c);
         return c && c === "1";
     };
     // todo move loadConfig logic to here so we can manage state better?
     MainMenu.LoadStandardMode = function () {
         ex.Logger.getInstance().info("Loading standard mode");
-        loadConfig(Config.loadCasual);
-        mainMenu.onGameModeSwitch();
+        if (!MainMenu._hasFinishedTutorial(0 /* Standard */)) {
+            // play normal tutorial
+            addClass(document.getElementById("tutorial-normal"), "show");
+        }
+        else {
+            loadConfig(Config.loadCasual);
+            mainMenu.hide();
+        }
     };
     MainMenu.LoadChallengeMode = function () {
         ex.Logger.getInstance().info("Loading challenge mode");
-        loadConfig(Config.loadSurvivalReverse);
-        mainMenu.onGameModeSwitch();
+        if (!MainMenu._hasFinishedTutorial(1 /* Timed */)) {
+            addClass(document.getElementById("tutorial-challenge"), "show");
+        }
+        else {
+            loadConfig(Config.loadSurvivalReverse);
+            mainMenu.hide();
+        }
     };
     MainMenu._StandardButtonPos = new ex.Point(42, 170);
     MainMenu._ChallengeButtonPos = new ex.Point(42, 170 + Config.MainMenuButtonHeight + 20);
@@ -1389,6 +1407,7 @@ var Meter = (function (_super) {
         this.threshold = threshold;
         this.color = color;
         this.anchor.setTo(0, 0);
+        this._sweepIndicator = Resources.TextureSweepIndicator.asSprite();
     }
     Meter.prototype.onInitialize = function (engine) {
         _super.prototype.onInitialize.call(this, engine);
@@ -1410,6 +1429,11 @@ var Meter = (function (_super) {
         // fill
         ctx.fillStyle = this.color.toString();
         ctx.fillRect(x, y, (this.getWidth() * percentage), this.getHeight());
+        if (this.score === this.threshold) {
+            var centeredX = this.getCenter().x - (this._sweepIndicator.width / 2);
+            var centeredY = this.getCenter().y - (this._sweepIndicator.height / 2);
+            this._sweepIndicator.draw(ctx, centeredX, centeredY);
+        }
     };
     return Meter;
 })(ex.UIActor);
@@ -1440,7 +1464,7 @@ var Sweeper = (function (_super) {
         this._emitter.startSize = 0;
         this._emitter.endSize = 0;
         this._emitter.acceleration = new ex.Vector(0, -955);
-        this._emitter.beginColor = ex.Color.Red;
+        this._emitter.beginColor = ex.Color.fromHex("#FF4A51");
         this._emitter.endColor = ex.Color.Transparent;
         this._emitter.anchor.setTo(0, 1);
     }
@@ -1448,7 +1472,7 @@ var Sweeper = (function (_super) {
         _super.prototype.onInitialize.call(this, engine);
         if (Config.EnableSweeper) {
             this._emitter.isEmitting = true;
-            game.add(this._label);
+            //game.add(this._label);
             game.add(this._emitter);
         }
         this.y = visualGrid.y + (this._row * Config.CellHeight);
@@ -1656,7 +1680,14 @@ document.getElementById("play-again").addEventListener('click', function () {
         MainMenu.LoadChallengeMode();
     }
 });
-document.getElementById("challenge").addEventListener('click', MainMenu.LoadChallengeMode);
+document.getElementById("challenge").addEventListener('click', function () {
+    if (gameMode == 0 /* Standard */) {
+        MainMenu.LoadChallengeMode();
+    }
+    else if (gameMode == 1 /* Timed */) {
+        MainMenu.LoadStandardMode();
+    }
+});
 //reset the game with the given grid dimensions
 function InitSetup() {
     grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
@@ -1693,26 +1724,25 @@ function InitSetup() {
     game.add(sweeper);
     stats.drawScores();
     // hide game over
-    document.getElementById("game-over").className = "";
+    removeClass(document.getElementById("game-over"), "show");
     //add pieces to initial rows
     grid.seed(Config.NumStartingRows);
     if (!muted) {
         playLoop();
     }
 }
-//game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
-//   if (evt.key === ex.Input.Keys.D) {
-//      game.isDebug = !game.isDebug;
-//   }
-//   if (evt.key === ex.Input.Keys.U) {
-//      // shift all rows up 1
-//      for (var i = 0; i < grid.rows; i++) {
-//         grid.shift(i, i - 1);         
-//      }
-//      // fill first row
-//      grid.fill(grid.rows - 1);
-//   }
-//});
+game.input.keyboard.on('up', function (evt) {
+    if (evt.key === 68 /* D */) {
+        game.isDebug = !game.isDebug;
+    }
+    if (evt.key === 85 /* U */) {
+        for (var i = 0; i < grid.rows; i++) {
+            grid.shift(i, i - 1);
+        }
+        // fill first row
+        grid.fill(grid.rows - 1);
+    }
+});
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
 function hasClass(element, cls) {
@@ -1780,6 +1810,12 @@ function playGameOver() {
     Resources.GameOverSound.play();
 }
 function gameOver() {
+    if (gameMode == 0 /* Standard */) {
+        document.getElementById("challenge").innerHTML = "Try Challenge Mode";
+    }
+    else if (gameMode == 1 /* Timed */) {
+        document.getElementById("challenge").innerHTML = "Try Standard Mode";
+    }
     var totalScore = stats.getFinalScore();
     var longestChain = stats.getLongestChain();
     var turnsTaken = stats.getTurnNumber();
@@ -1798,24 +1834,23 @@ function gameOver() {
     playGameOver();
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
-    document.getElementById("game-over").className = "show";
+    addClass(document.getElementById("game-over"), "show");
     document.getElementById("game-over-swept").innerHTML = stats.getTotalPiecesSwept().toString();
     document.getElementById("game-over-chain").innerHTML = stats.getTotalChainBonus().toString();
     var enduranceBonus = stats.calculateEnduranceBonus();
     document.getElementById("game-over-multiplier").innerHTML = (stats.getFinalScore() - enduranceBonus - stats.getTotalChainBonus() - stats.getTotalPiecesSwept()).toString();
     document.getElementById("game-over-time").innerHTML = enduranceBonus.toString();
     document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
-    if (gameMode == 1 /* Timed */) {
-        document.getElementById("try-challenge").className = "hide";
-    }
     // I'm so sorry, I'm so very sorry...so tired
     var text = document.getElementById("twidget").dataset['text'];
     document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
     var twitterScript = document.createElement('script');
     twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
     document.getElementById("game-over").appendChild(twitterScript);
-    var fbText = document.getElementById('fidget').href.replace("SOCIAL_SCORE", stats.getTotalScore().toString()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
-    document.getElementById('fidget').href = fbText;
+    var social = document.getElementById('social-container');
+    var facebookW = document.getElementById('fidget');
+    facebookW.parentNode.removeChild(facebookW);
+    social.appendChild(facebookW);
     //document.getElementById("fidget").attributes.href
     //var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
     //var gameOverWidgetActor = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() - 800, 300, 300, color);

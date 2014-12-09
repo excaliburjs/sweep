@@ -12,12 +12,65 @@
     <div id="commit"><a href="https://github.com/excaliburjs/ludum-31/commit/COMMIT_NUMBER">@COMMIT_NUMBER</a></div>
     <div id="background"></div>
     <i id="sound" class="fa fa-fw fa-2x fa-volume-up"></i>
-    <canvas id="game"></canvas>
 
-<div id="game-over">
-    <div id="game-over-bg"></div>
-    <div id="game-over-modal">
-        <div id="game-over-inner">
+
+    <div id="tutorial-normal" class="modal tutorial">
+
+        <div class="modal-bg"></div>
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <h1>Standard Mode</h1>
+
+                <div class="slides">
+                    <div id="tutorial-normal-1" class="slide">
+                        <a href="#tutorial-normal-2">
+                            <img src="images/tutorial-standard-1.png" alt="Swipe in all directions to clear tiles" />
+                        </a>
+                    </div>
+                    <div id="tutorial-normal-2" class="slide">
+                        <a href="#tutorial-normal-3">
+                            <img src="images/tutorial-standard-2.png" alt="Clearing tiles fills sweep meter"/>
+                        </a>
+                    </div>
+                    <div id="tutorial-normal-3" class="slide">
+                        <img src="images/tutorial-standard-3.png" alt="Tap or press 1-4 when your meters are full to sweep same-color tiles" />
+                    </div>
+                </div>
+
+                <p><a id="dismiss-normal-modal" href="#" class="got-it">Got it, thanks</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="tutorial-challenge" class="modal tutorial">
+
+        <div class="modal-bg"></div>
+        <div class="modal-content">
+            <div class="modal-body">
+
+                <h1>Challenge Mode</h1>
+
+                <div class="slides">
+                    <div id="tutorial-challenge-1" class="slide">
+                        <a href="#tutorial-challenge-2">
+                            <img src="images/tutorial-challenge-1.png" alt="Tap a tile to clear any same-color tiles connected to it" />
+                        </a>
+                    </div>
+                    <div id="tutorial-challenge-2" class="slide">
+                        <img src="images/tutorial-challenge-2.png" alt="When your sweep meter is full, press S to sweep all tiles above the line" />                        
+                    </div>
+                </div>
+
+                <p><a id="dismiss-challenge-modal" href="#" class="got-it">Got it, thanks</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-over" class="modal">
+        <div class="modal-bg"></div>
+        <div class="modal-content">
+            <div class="modal-body">
             <h1>SWEPT SOME STACKS</h1>
 
             <div class="scores">
@@ -42,22 +95,33 @@
                 <p id="game-over-total">0</p>
             </div>
 
-            <hr/>
+                <hr />
             <h4>BRAG!</h4>
-            <p>
-                <a id="twidget" href="https://twitter.com/share" class="twitter-share-button" data-text="I scored SOCIAL_SCORE in Sweep Stacks in SOCIAL_MODE!" data-via="ExcaliburJS" data-size="large" data-hashtags="LDJam">Tweet</a>
+            <p id="social-container">
+                <a id="twidget" href="https://twitter.com/share" class="twitter-share-button" data-text="I scored SOCIAL_SCORE in Sweep Stacks in SOCIAL_MODE!" data-via="ExcaliburJS" data-hashtags="LDJam">Tweet</a>
+                <div id="facebook-sucks">
+                    <div style="top: -5px" id="fidget" class="fb-share-button" data-href="http://excaliburjs.com/ludum-31/" data-layout="button_count"></div>
+                    <div id="fb-root"></div>
+                    <script>
+                        (function (d, s, id) {
+                            var js, fjs = d.getElementsByTagName(s)[0];
+                            if (d.getElementById(id)) return;
+                            js = d.createElement(s); js.id = id;
+                            js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
+                            fjs.parentNode.insertBefore(js, fjs);
+                        }(document, 'script', 'facebook-jssdk'));</script>
+                </div>
                 
-                <a id="fidget" class="share" target="_blank" href="https://www.facebook.com/dialog/feed?&display=popup&caption=I%20scored%20SOCIAL_SCORE%20in%20Sweep%20Stacks%20in%20SOCIAL_MODE!&link=http%3A%2F%2Fexcaliburjs.com%2Fludum-31%2F&redirect_uri=http://excaliburjs.com/ludum-31/"><i class="fa fa-2x fa-facebook-square"></i></a>
             </p>
-            <div id="try-challenge">
-            <h4>TOO EASY?</h4>
-            <p><a href="#" class="try" id="challenge">Try Challenge Mode!</a></p>
-            <h4>OR</h4>
-            </div>
             <p><a href="#" class="try" id="play-again">Play Again</a></p>
+            <div id="try-challenge">
+            <p><a href="#" class="try" id="challenge">Try Challenge Mode!</a></p>
+            </div>
         </div>
     </div>
 </div>
+
+    <canvas id="game"></canvas>
 
     <script src="scripts/lodash.min.js"></script>
     <script src="scripts/spectra.min.js"></script>
