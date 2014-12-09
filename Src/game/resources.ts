@@ -47,7 +47,7 @@ var Palette = {
 
    // Beach
    PieceColor1: ex.Color.fromHex("#174e5e"),
-   PieceColor2: ex.Color.fromHex("#43385a"),
+   PieceColor2: ex.Color.fromHex("#7A5CA7"),
    PieceColor3: ex.Color.fromHex("#4c603a"),
    PieceColor4: ex.Color.fromHex("#c17b55"),
 
