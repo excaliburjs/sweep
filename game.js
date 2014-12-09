@@ -1793,6 +1793,8 @@ function gameOver() {
     if (gameMode == 1 /* Timed */) {
         document.getElementById("try-challenge").className = "hide";
     }
+    document.getElementById("play-again").addEventListener('click', InitSetup);
+    //document.get
     // I'm so sorry, I'm so very sorry...so tired
     var text = document.getElementById("twidget").dataset['text'];
     document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");

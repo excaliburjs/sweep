@@ -249,6 +249,9 @@ function gameOver() {
       document.getElementById("try-challenge").className = "hide";
    }
 
+   document.getElementById("play-again").addEventListener('click', InitSetup);
+   //document.get
+
 
    // I'm so sorry, I'm so very sorry...so tired
    var text = document.getElementById("twidget").dataset['text'];
