@@ -280,7 +280,7 @@ var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
     GridBackgroundColor: new ex.Color(0, 20, 25, 0.9),
     // Beach
-    PieceColor1: ex.Color.fromHex("#174e5e"),
+    PieceColor1: ex.Color.fromHex("#00718D"),
     PieceColor2: ex.Color.fromHex("#7A5CA7"),
     PieceColor3: ex.Color.fromHex("#4c603a"),
     PieceColor4: ex.Color.fromHex("#c17b55"),
@@ -647,12 +647,12 @@ var MainMenu = (function (_super) {
         document.getElementById("dismiss-normal-modal").addEventListener("click", function () {
             removeClass(document.getElementById("tutorial-normal"), "show");
             MainMenu._markTutorialAsDone(0 /* Standard */);
-            MainMenu.LoadStandardMode();
+            MainMenu.LoadStandardMode(true);
         });
         document.getElementById("dismiss-challenge-modal").addEventListener("click", function () {
             removeClass(document.getElementById("tutorial-challenge"), "show");
             MainMenu._markTutorialAsDone(1 /* Timed */);
-            MainMenu.LoadChallengeMode();
+            MainMenu.LoadChallengeMode(true);
         });
         this.show();
     };
@@ -714,10 +714,13 @@ var MainMenu = (function (_super) {
         return c && c === "1";
     };
     // todo move loadConfig logic to here so we can manage state better?
-    MainMenu.LoadStandardMode = function () {
+    MainMenu.LoadStandardMode = function (skipTutorial) {
+        if (skipTutorial === void 0) { skipTutorial = false; }
         ex.Logger.getInstance().info("Loading standard mode");
-        if (!MainMenu._hasFinishedTutorial(0 /* Standard */)) {
+        skipTutorial = (typeof skipTutorial === "boolean" && skipTutorial);
+        if (!skipTutorial && !MainMenu._hasFinishedTutorial(0 /* Standard */)) {
             // play normal tutorial
+            removeClass(document.getElementById("game-over"), "show");
             addClass(document.getElementById("tutorial-normal"), "show");
         }
         else {
@@ -725,9 +728,12 @@ var MainMenu = (function (_super) {
             mainMenu.hide();
         }
     };
-    MainMenu.LoadChallengeMode = function () {
+    MainMenu.LoadChallengeMode = function (skipTutorial) {
+        if (skipTutorial === void 0) { skipTutorial = false; }
         ex.Logger.getInstance().info("Loading challenge mode");
-        if (!MainMenu._hasFinishedTutorial(1 /* Timed */)) {
+        skipTutorial = (typeof skipTutorial === "boolean" && skipTutorial);
+        if (!skipTutorial && !MainMenu._hasFinishedTutorial(1 /* Timed */)) {
+            removeClass(document.getElementById("game-over"), "show");
             addClass(document.getElementById("tutorial-challenge"), "show");
         }
         else {
@@ -1731,18 +1737,19 @@ function InitSetup() {
         playLoop();
     }
 }
-game.input.keyboard.on('up', function (evt) {
-    if (evt.key === 68 /* D */) {
-        game.isDebug = !game.isDebug;
-    }
-    if (evt.key === 85 /* U */) {
-        for (var i = 0; i < grid.rows; i++) {
-            grid.shift(i, i - 1);
-        }
-        // fill first row
-        grid.fill(grid.rows - 1);
-    }
-});
+//game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
+//   if (evt.key === ex.Input.Keys.D) {
+//      game.isDebug = !game.isDebug;
+//   }
+//   if (evt.key === ex.Input.Keys.U) {
+//      // shift all rows up 1
+//      for (var i = 0; i < grid.rows; i++) {
+//         grid.shift(i, i - 1);         
+//      }
+//      // fill first row
+//      grid.fill(grid.rows - 1);
+//   }
+//});
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
 function hasClass(element, cls) {
@@ -1841,16 +1848,20 @@ function gameOver() {
     document.getElementById("game-over-multiplier").innerHTML = (stats.getFinalScore() - enduranceBonus - stats.getTotalChainBonus() - stats.getTotalPiecesSwept()).toString();
     document.getElementById("game-over-time").innerHTML = enduranceBonus.toString();
     document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
-    // I'm so sorry, I'm so very sorry...so tired
-    var text = document.getElementById("twidget").dataset['text'];
-    document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
-    var twitterScript = document.createElement('script');
-    twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
-    document.getElementById("game-over").appendChild(twitterScript);
-    var social = document.getElementById('social-container');
-    var facebookW = document.getElementById('fidget');
-    facebookW.parentNode.removeChild(facebookW);
-    social.appendChild(facebookW);
+    try {
+        var text = document.getElementById("twidget").dataset['text'];
+        document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
+        var twitterScript = document.createElement('script');
+        twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
+        document.getElementById("game-over").appendChild(twitterScript);
+        var social = document.getElementById('social-container');
+        var facebookW = document.getElementById('fidget');
+        facebookW.parentNode.removeChild(facebookW);
+        social.appendChild(facebookW);
+    }
+    catch (e) {
+        console.log("Something happened ", e);
+    }
     //document.getElementById("fidget").attributes.href
     //var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
     //var gameOverWidgetActor = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() - 800, 300, 300, color);
