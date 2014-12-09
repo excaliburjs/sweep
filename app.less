@@ -124,13 +124,26 @@ canvas {
     h1, h4 { color: white; margin-top: 0; }
     h1 { font-size: 1.3em; }
 
-    .got-it {
+    p { text-align: center; }
+
+    .next {
         color: white;
         text-decoration: none;
         background: #FF4A51;
+        padding: 1em 2em;
+        display: inline-block;    
+        margin-right: 1em;    
+        &:hover { background: lighten(#FF4A51, 10%); }
+    }
+
+    .got-it {
+        color: white;
+        text-decoration: none;
+        background: lighten(#80649A, 20%);
         padding: 1em;
         display: inline-block;
-        &:hover { background: lighten(#FF4A51, 10%); }
+        
+        &:hover { background: lighten(#80649A, 30%); }
     }
 
     .slides {
@@ -138,6 +151,7 @@ canvas {
         position: relative;
         width: 260px;
         height: 236px;
+        margin: 0 auto;
 
         .slide {
             height: 236px;

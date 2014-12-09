@@ -4,7 +4,7 @@
 }
 
 class Config {
-   static PieceContainsPadding: number = 5;
+   static PieceContainsPadding: number = 2;
    static PieceWidth: number = 36;
    static PieceHeight: number = 36;
    static CellWidth: number = 45;

@@ -38,15 +38,64 @@ class MainMenu extends ex.UIActor {
       game.add(this._standardButton);
       game.add(this._challengeButton);
 
-      document.getElementById("dismiss-normal-modal").addEventListener("click", () => {
-         removeClass(document.getElementById("tutorial-normal"), "show");
-         MainMenu._markTutorialAsDone(GameMode.Standard);
-         MainMenu.LoadStandardMode(true);
+      document.getElementById("dismiss-normal-modal").addEventListener("click", _.bind(this._dismissNormalTutorial, this));
+      document.getElementById("dismiss-challenge-modal").addEventListener("click", _.bind(this._dismissChallengeTutorial, this));
+
+      var tutNormalIdx = 0;
+      var tutChallengeIdx = 0;
+      document.getElementById("tutorial-normal-next").addEventListener("click", (e) => {
+         e.preventDefault();
+
+         var slides = <NodeListOf<HTMLElement>>document.querySelectorAll("#tutorial-normal .slide");
+
+         if (slides.length <= 0) return;
+
+         if (slides.length === (tutNormalIdx + 1)) {
+            this._dismissNormalTutorial();
+            return;
+         }
+
+         if (slides.length - 1 === tutNormalIdx + 1) {
+            document.getElementById("tutorial-normal-next").innerHTML = "Got it!";
+         } else {
+            document.getElementById("tutorial-normal-next").innerHTML = "Next";
+         }
+
+         tutNormalIdx = (tutNormalIdx + 1) % slides.length;
+
+         for (var i = 0; i < slides.length; i++) {
+            slides[i].classList.add("hide");
+         }
+         slides[tutNormalIdx].classList.remove("hide");
+         
+         return;
       });
-      document.getElementById("dismiss-challenge-modal").addEventListener("click", () => {
-         removeClass(document.getElementById("tutorial-challenge"), "show");
-         MainMenu._markTutorialAsDone(GameMode.Timed);
-         MainMenu.LoadChallengeMode(true);
+      document.getElementById("tutorial-challenge-next").addEventListener("click", (e) => {
+         e.preventDefault();
+
+         var slides = <NodeListOf<HTMLElement>>document.querySelectorAll("#tutorial-challenge .slide");
+
+         if (slides.length <= 0) return;
+
+         if (slides.length === (tutChallengeIdx + 1)) {
+            this._dismissChallengeTutorial();
+            return;
+         }
+
+         if (slides.length - 1 === tutChallengeIdx + 1) {
+            document.getElementById("tutorial-challenge-next").innerHTML = "Got it!";
+         } else {
+            document.getElementById("tutorial-challenge-next").innerHTML = "Next";
+         }
+
+         tutChallengeIdx = (tutChallengeIdx + 1) % slides.length;
+
+         for (var i = 0; i < slides.length; i++) {
+            slides[i].classList.add("hide");
+         }
+         slides[tutChallengeIdx].classList.remove("hide");
+
+         return;
       });
 
       this.show();
@@ -110,8 +159,20 @@ class MainMenu extends ex.UIActor {
       this._hide = true;
    }
 
+   private _dismissNormalTutorial() {
+      removeClass(document.getElementById("tutorial-normal"), "show");
+      MainMenu._markTutorialAsDone(GameMode.Standard);
+      MainMenu.LoadStandardMode(true);      
+   }
+
+   private _dismissChallengeTutorial() {
+      removeClass(document.getElementById("tutorial-challenge"), "show");
+      MainMenu._markTutorialAsDone(GameMode.Timed);
+      MainMenu.LoadChallengeMode(true);
+   }
+
    private static _markTutorialAsDone(gameMode: GameMode) {
-      Cookies.set("ld-31-tutorial-" + gameMode, "1");
+      Cookies.set("ld-31-tutorial-" + gameMode, "1", { expires: new Date(2020, 0, 1) });
    }
 
    private static _hasFinishedTutorial(gameMode: GameMode): boolean {
