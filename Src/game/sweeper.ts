@@ -39,7 +39,7 @@ class Sweeper extends ex.Actor {
 
       if (Config.EnableSweeper) {
          this._emitter.isEmitting = true;
-         game.add(this._label);
+         //game.add(this._label);
          game.add(this._emitter);
       }
 

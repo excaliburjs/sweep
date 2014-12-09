@@ -63,6 +63,15 @@ var loadConfig = (config) => {
 Config.resetDefault();
 InitSetup();
 
+document.getElementById("play-again").addEventListener('click', () => {
+   if (gameMode == GameMode.Standard) {
+      MainMenu.LoadStandardMode();
+   } else if (gameMode == GameMode.Timed) {
+      MainMenu.LoadChallengeMode();
+   }
+});
+document.getElementById("challenge").addEventListener('click', MainMenu.LoadChallengeMode);
+
 //reset the game with the given grid dimensions
 function InitSetup() {
    grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
@@ -248,9 +257,6 @@ function gameOver() {
    if (gameMode == GameMode.Timed) {
       document.getElementById("try-challenge").className = "hide";
    }
-
-   document.getElementById("play-again").addEventListener('click', InitSetup);
-   //document.get
 
 
    // I'm so sorry, I'm so very sorry...so tired
