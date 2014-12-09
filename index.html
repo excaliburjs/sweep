@@ -5,14 +5,25 @@
     <meta charset="utf-8" />
     <title>Sweep Stacks (Ludum Dare 31 Game Jam Entry)</title>
     <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css" />
-    <link rel="stylesheet" href="app.min.css?b521b4f11824822c5bc86d47ef06e056e20219d1" type="text/css" />
+    <link rel="stylesheet" href="app.min.css?6f7ea2ea32896ace12cd16ee2b6047b893b7592f" type="text/css" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <script type="text/javascript">
+    var appInsights = window.appInsights || function (config) {
+        function s(config) { t[config] = function () { var i = arguments; t.queue.push(function () { t[config].apply(t, i) }) } } var t = { config: config }, r = document, f = window, e = "script", o = r.createElement(e), i, u; for (o.src = config.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js", r.getElementsByTagName(e)[0].parentNode.appendChild(o), t.cookie = r.cookie, t.queue = [], i = ["Event", "Exception", "Metric", "PageView", "Trace"]; i.length;) s("track" + i.pop()); return config.disableExceptionTracking || (i = "onerror", s("_" + i), u = f[i], f[i] = function (config, r, f, e, o) { var s = u && u(config, r, f, e, o); return s !== !0 && t["_" + i](config, r, f, e, o), s }), t
+    }({
+        instrumentationKey: "10a97613-4f2c-447c-83bd-9ea8af9a8748"
+    });
+
+    window.appInsights = appInsights;
+    appInsights.trackPageView();
+    </script>
+
 </head>
 <body>
     <h1 style="visibility: hidden; position: absolute; top: -1000px; left: -1000px;">Sweep Stacks (Ludum Dare 31 Game Jam Entry)</h1>
 
     <div id="commit">
-        <a href="https://github.com/excaliburjs/ludum-31/commit/b521b4f11824822c5bc86d47ef06e056e20219d1">@b521b4f11824822c5bc86d47ef06e056e20219d1</a>
+        <a href="https://github.com/excaliburjs/ludum-31/commit/6f7ea2ea32896ace12cd16ee2b6047b893b7592f">@6f7ea2ea32896ace12cd16ee2b6047b893b7592f</a>
     </div>
     <div id="background"></div>
     <i id="sound" class="fa fa-fw fa-volume-up"></i>
@@ -138,8 +149,8 @@
     <script src="scripts/lodash.min.js"></script>
     <script src="scripts/spectra.min.js"></script>
     <script src="scripts/cookies.min.js"></script>
-    <script src="Excalibur.js?b521b4f11824822c5bc86d47ef06e056e20219d1"></script>
-    <script src="game.js?b521b4f11824822c5bc86d47ef06e056e20219d1"></script>
+    <script src="Excalibur.js?6f7ea2ea32896ace12cd16ee2b6047b893b7592f"></script>
+    <script src="game.js?6f7ea2ea32896ace12cd16ee2b6047b893b7592f"></script>
     <script>
         (function (i, s, o, g, r, a, m) {
             i['GoogleAnalyticsObject'] = r;
