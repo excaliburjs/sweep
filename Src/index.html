@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="app.css?COMMIT_NUMBER" type="text/css" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 </head>
-<body>
+    <body>
     <div id="commit"><a href="https://github.com/excaliburjs/ludum-31/commit/COMMIT_NUMBER">@COMMIT_NUMBER</a></div>
     <div id="background"></div>
     <i id="sound" class="fa fa-fw fa-2x fa-volume-up"></i>
@@ -44,10 +44,21 @@
 
             <hr/>
             <h4>BRAG!</h4>
-            <p>
-                <a id="twidget" href="https://twitter.com/share" class="twitter-share-button" data-text="I scored SOCIAL_SCORE in Sweep Stacks in SOCIAL_MODE!" data-via="ExcaliburJS" data-size="large" data-hashtags="LDJam">Tweet</a>
+            <p id="social-container">
+                <a id="twidget" href="https://twitter.com/share" class="twitter-share-button" data-text="I scored SOCIAL_SCORE in Sweep Stacks in SOCIAL_MODE!" data-via="ExcaliburJS" data-hashtags="LDJam">Tweet</a>
+                <div id="facebook-sucks">
+                    <div style="top: -5px" id="fidget" class="fb-share-button" data-href="http://excaliburjs.com/ludum-31/" data-layout="button_count"></div>
+                    <div id="fb-root"></div>
+                    <script>
+                        (function (d, s, id) {
+                            var js, fjs = d.getElementsByTagName(s)[0];
+                            if (d.getElementById(id)) return;
+                            js = d.createElement(s); js.id = id;
+                            js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
+                            fjs.parentNode.insertBefore(js, fjs);
+                        }(document, 'script', 'facebook-jssdk'));</script>
+                </div>
                 
-                <a id="fidget" class="share" target="_blank" href="https://www.facebook.com/dialog/feed?&display=popup&caption=I%20scored%20SOCIAL_SCORE%20in%20Sweep%20Stacks%20in%20SOCIAL_MODE!&link=http%3A%2F%2Fexcaliburjs.com%2Fludum-31%2F&redirect_uri=http://excaliburjs.com/ludum-31/"><i class="fa fa-2x fa-facebook-square"></i></a>
             </p>
             <div id="try-challenge">
             <h4>TOO EASY?</h4>
