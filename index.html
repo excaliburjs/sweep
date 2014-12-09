@@ -3,13 +3,17 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Ludum 31</title>
+    <title>Sweep Stacks (Ludum Dare 31 Game Jam Entry)</title>
     <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css" />
-    <link rel="stylesheet" href="app.min.css?252bb6c385171a7953d490db64a0b397c8e65631" type="text/css" />
+    <link rel="stylesheet" href="app.min.css?b521b4f11824822c5bc86d47ef06e056e20219d1" type="text/css" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 </head>
 <body>
-    <div id="commit"><a href="https://github.com/excaliburjs/ludum-31/commit/252bb6c385171a7953d490db64a0b397c8e65631">@252bb6c385171a7953d490db64a0b397c8e65631</a></div>
+    <h1 style="visibility: hidden; position: absolute; top: -1000px; left: -1000px;">Sweep Stacks (Ludum Dare 31 Game Jam Entry)</h1>
+
+    <div id="commit">
+        <a href="https://github.com/excaliburjs/ludum-31/commit/b521b4f11824822c5bc86d47ef06e056e20219d1">@b521b4f11824822c5bc86d47ef06e056e20219d1</a>
+    </div>
     <div id="background"></div>
     <i id="sound" class="fa fa-fw fa-volume-up"></i>
 
@@ -24,17 +28,19 @@
 
                 <div class="slides">
                     <div id="tutorial-normal-1" class="slide">
-                            <img src="images/tutorial-standard-1.png" alt="Swipe in all directions to clear tiles" />
+                        <img src="images/tutorial-standard-1.png" alt="Swipe in all directions to clear tiles" />
                     </div>
                     <div id="tutorial-normal-2" class="slide">
-                        <img src="images/tutorial-standard-2.png" alt="Clearing tiles fills sweep meter"/>
+                        <img src="images/tutorial-standard-2.png" alt="Clearing tiles fills sweep meter" />
                     </div>
                     <div id="tutorial-normal-3" class="slide">
                         <img src="images/tutorial-standard-3.png" alt="Tap or press 1-4 when your meters are full to sweep same-color tiles" />
                     </div>
                 </div>
 
-                <p><a id="tutorial-normal-next" href="#" class="next">Next</a> <a id="dismiss-normal-modal" href="javascript:void(0)" class="got-it">skip</a></p>
+                <p>
+                    <a id="tutorial-normal-next" href="#" class="next">Next</a> <a id="dismiss-normal-modal" href="javascript:void(0)" class="got-it">skip</a>
+                </p>
             </div>
         </div>
     </div>
@@ -49,14 +55,16 @@
 
                 <div class="slides">
                     <div id="tutorial-challenge-1" class="slide">
-                            <img src="images/tutorial-challenge-1.png" alt="Tap a tile to clear any same-color tiles connected to it" />
+                        <img src="images/tutorial-challenge-1.png" alt="Tap a tile to clear any same-color tiles connected to it" />
                     </div>
                     <div id="tutorial-challenge-2" class="slide">
-                        <img src="images/tutorial-challenge-2.png" alt="When your sweep meter is full, press S to sweep all tiles above the line" />                        
+                        <img src="images/tutorial-challenge-2.png" alt="When your sweep meter is full, press S to sweep all tiles above the line" />
                     </div>
                 </div>
 
-                <p><a id="tutorial-challenge-next" href="#" class="next">Next</a> <a id="dismiss-challenge-modal" href="javascript:void(0)" class="got-it">skip</a></p>
+                <p>
+                    <a id="tutorial-challenge-next" href="#" class="next">Next</a> <a id="dismiss-challenge-modal" href="javascript:void(0)" class="got-it">skip</a>
+                </p>
             </div>
         </div>
     </div>
@@ -65,67 +73,73 @@
         <div class="modal-bg"></div>
         <div class="modal-content">
             <div class="modal-body">
-            <h1>SWEPT SOME STACKS</h1>
+                <h1>SWEPT SOME STACKS</h1>
 
-            <div class="scores">
-                <h2>SWEPT</h2>
+                <div class="scores">
+                    <h2>SWEPT</h2>
 
-                <p id="game-over-swept">0</p>
+                    <p id="game-over-swept">0</p>
 
-                <h2>CHAIN BONUS</h2>
+                    <h2>CHAIN BONUS</h2>
 
-                <p id="game-over-chain">0</p>
+                    <p id="game-over-chain">0</p>
 
-                <h2>MULTIPLIER BONUS</h2>
+                    <h2>MULTIPLIER BONUS</h2>
 
-                <p id="game-over-multiplier">0</p>
+                    <p id="game-over-multiplier">0</p>
 
-                <h2>ENDURANCE BONUS</h2>
+                    <h2>ENDURANCE BONUS</h2>
 
-                <p id="game-over-time">0</p>
+                    <p id="game-over-time">0</p>
 
-                <h2>TOTAL SCORE</h2>
+                    <h2>TOTAL SCORE</h2>
 
-                <p id="game-over-total">0</p>
-            </div>
+                    <p id="game-over-total">0</p>
+                </div>
 
                 <hr />
-            <h4>BRAG!</h4>
-            <p id="social-container">
-                <a id="twidget" href="https://twitter.com/share" class="twitter-share-button" data-text="I scored SOCIAL_SCORE in Sweep Stacks in SOCIAL_MODE!" data-via="ExcaliburJS" data-hashtags="LDJam">Tweet</a>
-                <div id="facebook-sucks">
-                    <div style="top: -5px" id="fidget" class="fb-share-button" data-href="http://excaliburjs.com/ludum-31/" data-layout="button_count"></div>
-                    <div id="fb-root"></div>
-                    <script>
-                        (function (d, s, id) {
-                            var js, fjs = d.getElementsByTagName(s)[0];
-                            if (d.getElementById(id)) return;
-                            js = d.createElement(s); js.id = id;
-                            js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
-                            fjs.parentNode.insertBefore(js, fjs);
-                        }(document, 'script', 'facebook-jssdk'));</script>
+                <h4>BRAG!</h4>
+                <p id="social-container">
+                    <a id="twidget" href="https://twitter.com/share" class="twitter-share-button" data-text="I scored SOCIAL_SCORE in Sweep Stacks in SOCIAL_MODE!" data-via="ExcaliburJS" data-hashtags="LDJam">Tweet</a>
+                    <div id="facebook-sucks">
+                        <div style="top: -5px" id="fidget" class="fb-share-button" data-href="http://excaliburjs.com/ludum-31/" data-layout="button_count"></div>
+                        <div id="fb-root"></div>
+                        <script>
+                            (function (d, s, id) {
+                                var js, fjs = d.getElementsByTagName(s)[0];
+                                if (d.getElementById(id)) return;
+                                js = d.createElement(s);
+                                js.id = id;
+                                js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
+                                fjs.parentNode.insertBefore(js, fjs);
+                            }(document, 'script', 'facebook-jssdk'));
+                        </script>
+                    </div>
+
+                </p>
+                <div id="try-challenge" class="buttons">
+                    <p class="play-again">
+                        <a href="#" class="play-again" id="play-again">Play Again</a>
+                    </p>
+                    <p class="other">
+                        <a href="#" class="try" id="challenge">Try Challenge Mode!</a>
+                    </p>
                 </div>
-                
-            </p>
-            <div id="try-challenge" class="buttons">
-                <p class="play-again"><a href="#" class="play-again" id="play-again">Play Again</a></p>
-                    <p class="other"><a href="#" class="try" id="challenge">Try Challenge Mode!</a></p>
+
             </div>
-            
         </div>
     </div>
-</div>
 
     <canvas id="game"></canvas>
-    <div id="credits" style="position:absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); padding: 0.5em">
+    <div id="credits" style="position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.8); padding: 0.5em">
         <a style="color: #FF931E" href="credits.html"><span class="fa fa-fw fa-group"></span></a>
     </div>
 
     <script src="scripts/lodash.min.js"></script>
     <script src="scripts/spectra.min.js"></script>
     <script src="scripts/cookies.min.js"></script>
-    <script src="Excalibur.js?252bb6c385171a7953d490db64a0b397c8e65631"></script>
-    <script src="game.js?252bb6c385171a7953d490db64a0b397c8e65631"></script>
+    <script src="Excalibur.js?b521b4f11824822c5bc86d47ef06e056e20219d1"></script>
+    <script src="game.js?b521b4f11824822c5bc86d47ef06e056e20219d1"></script>
     <script>
         (function (i, s, o, g, r, a, m) {
             i['GoogleAnalyticsObject'] = r;
