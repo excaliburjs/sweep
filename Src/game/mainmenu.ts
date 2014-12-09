@@ -129,6 +129,7 @@ class MainMenu extends ex.UIActor {
 
       if (!MainMenu._hasFinishedTutorial(GameMode.Standard)) {
          // play normal tutorial
+         removeClass(document.getElementById("game-over"), "show");
          addClass(document.getElementById("tutorial-normal"), "show");
       } else {
          loadConfig(Config.loadCasual);
@@ -139,6 +140,7 @@ class MainMenu extends ex.UIActor {
    public static LoadChallengeMode() {
       ex.Logger.getInstance().info("Loading challenge mode");
       if (!MainMenu._hasFinishedTutorial(GameMode.Timed)) {
+         removeClass(document.getElementById("game-over"), "show");
          addClass(document.getElementById("tutorial-challenge"), "show");
       } else {
          loadConfig(Config.loadSurvivalReverse);
