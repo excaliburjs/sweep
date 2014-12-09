@@ -58,7 +58,7 @@ var Config = (function () {
     Config.resetDefault = function () {
         Config.EnableTimer = false;
         Config.AdvanceRowsOnMatch = true;
-        Config.SweepThreshold = 20;
+        Config.SweepThreshold = 15;
         Config.EnableSweepMeters = false;
         Config.EnableSingleTapClear = false;
         Config.ClearSweepMetersAfterSingleUse = true;
@@ -273,14 +273,15 @@ var Resources = {
     TextureLogo: new ex.Texture("images/logo.png"),
     TextureStandardBtn: new ex.Texture("images/standard.png"),
     TextureChallengeBtn: new ex.Texture("images/challenge.png"),
-    NoMovesTexture: new ex.Texture('images/no-moves.png')
+    NoMovesTexture: new ex.Texture('images/no-moves.png'),
+    TextureSweepIndicator: new ex.Texture("images/sweep-indicator.png")
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
     GridBackgroundColor: new ex.Color(0, 20, 25, 0.9),
     // Beach
     PieceColor1: ex.Color.fromHex("#174e5e"),
-    PieceColor2: ex.Color.fromHex("#43385a"),
+    PieceColor2: ex.Color.fromHex("#7A5CA7"),
     PieceColor3: ex.Color.fromHex("#4c603a"),
     PieceColor4: ex.Color.fromHex("#c17b55"),
     MegaSweepColor: ex.Color.fromHex("#55c192"),
@@ -1406,6 +1407,7 @@ var Meter = (function (_super) {
         this.threshold = threshold;
         this.color = color;
         this.anchor.setTo(0, 0);
+        this._sweepIndicator = Resources.TextureSweepIndicator.asSprite();
     }
     Meter.prototype.onInitialize = function (engine) {
         _super.prototype.onInitialize.call(this, engine);
@@ -1427,6 +1429,11 @@ var Meter = (function (_super) {
         // fill
         ctx.fillStyle = this.color.toString();
         ctx.fillRect(x, y, (this.getWidth() * percentage), this.getHeight());
+        if (this.score === this.threshold) {
+            var centeredX = this.getCenter().x - (this._sweepIndicator.width / 2);
+            var centeredY = this.getCenter().y - (this._sweepIndicator.height / 2);
+            this._sweepIndicator.draw(ctx, centeredX, centeredY);
+        }
     };
     return Meter;
 })(ex.UIActor);
@@ -1457,7 +1464,7 @@ var Sweeper = (function (_super) {
         this._emitter.startSize = 0;
         this._emitter.endSize = 0;
         this._emitter.acceleration = new ex.Vector(0, -955);
-        this._emitter.beginColor = ex.Color.Red;
+        this._emitter.beginColor = ex.Color.fromHex("#FF4A51");
         this._emitter.endColor = ex.Color.Transparent;
         this._emitter.anchor.setTo(0, 1);
     }
@@ -1834,20 +1841,16 @@ function gameOver() {
     document.getElementById("game-over-multiplier").innerHTML = (stats.getFinalScore() - enduranceBonus - stats.getTotalChainBonus() - stats.getTotalPiecesSwept()).toString();
     document.getElementById("game-over-time").innerHTML = enduranceBonus.toString();
     document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
-    try {
-        var text = document.getElementById("twidget").dataset['text'];
-        document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
-        var twitterScript = document.createElement('script');
-        twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
-        document.getElementById("game-over").appendChild(twitterScript);
-        var social = document.getElementById('social-container');
-        var facebookW = document.getElementById('fidget');
-        facebookW.parentNode.removeChild(facebookW);
-        social.appendChild(facebookW);
-    }
-    catch (e) {
-        console.log("Something happened ", e);
-    }
+    // I'm so sorry, I'm so very sorry...so tired
+    var text = document.getElementById("twidget").dataset['text'];
+    document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
+    var twitterScript = document.createElement('script');
+    twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
+    document.getElementById("game-over").appendChild(twitterScript);
+    var social = document.getElementById('social-container');
+    var facebookW = document.getElementById('fidget');
+    facebookW.parentNode.removeChild(facebookW);
+    social.appendChild(facebookW);
     //document.getElementById("fidget").attributes.href
     //var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
     //var gameOverWidgetActor = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() - 800, 300, 300, color);
