@@ -572,12 +572,12 @@ var MainMenu = (function (_super) {
         document.getElementById("dismiss-normal-modal").addEventListener("click", function () {
             removeClass(document.getElementById("tutorial-normal"), "show");
             MainMenu._markTutorialAsDone(0 /* Standard */);
-            MainMenu.LoadStandardMode();
+            MainMenu.LoadStandardMode(true);
         });
         document.getElementById("dismiss-challenge-modal").addEventListener("click", function () {
             removeClass(document.getElementById("tutorial-challenge"), "show");
             MainMenu._markTutorialAsDone(1 /* Timed */);
-            MainMenu.LoadChallengeMode();
+            MainMenu.LoadChallengeMode(true);
         });
         this.show();
     };
@@ -639,9 +639,10 @@ var MainMenu = (function (_super) {
         return c && c === "1";
     };
     // todo move loadConfig logic to here so we can manage state better?
-    MainMenu.LoadStandardMode = function () {
+    MainMenu.LoadStandardMode = function (skipTutorial) {
+        if (skipTutorial === void 0) { skipTutorial = false; }
         ex.Logger.getInstance().info("Loading standard mode");
-        if (!MainMenu._hasFinishedTutorial(0 /* Standard */)) {
+        if (!skipTutorial && !MainMenu._hasFinishedTutorial(0 /* Standard */)) {
             // play normal tutorial
             removeClass(document.getElementById("game-over"), "show");
             addClass(document.getElementById("tutorial-normal"), "show");
@@ -651,9 +652,10 @@ var MainMenu = (function (_super) {
             mainMenu.hide();
         }
     };
-    MainMenu.LoadChallengeMode = function () {
+    MainMenu.LoadChallengeMode = function (skipTutorial) {
+        if (skipTutorial === void 0) { skipTutorial = false; }
         ex.Logger.getInstance().info("Loading challenge mode");
-        if (!MainMenu._hasFinishedTutorial(1 /* Timed */)) {
+        if (!skipTutorial && !MainMenu._hasFinishedTutorial(1 /* Timed */)) {
             removeClass(document.getElementById("game-over"), "show");
             addClass(document.getElementById("tutorial-challenge"), "show");
         }
