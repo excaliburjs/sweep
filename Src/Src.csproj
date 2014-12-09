@@ -31,7 +31,7 @@
       <DependentUpon>app.css</DependentUpon>
     </Content>
     <Content Include="credits.html" />
-    <Content Include="css\font-awesome.css" />
+    <Content Include="css\font-awesome.min.css" />
     <Content Include="fonts\fontawesome-webfont.svg" />
     <Content Include="images\bg2.jpg" />
     <Content Include="images\challenge.png" />
@@ -74,7 +74,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="scripts\cookies.min.js" />
-    <Content Include="scripts\lodash.js" />
     <Content Include="scripts\lodash.min.js" />
     <Content Include="scripts\spectra.min.js" />
     <Content Include="sounds\challengeloopfixed.mp3" />
