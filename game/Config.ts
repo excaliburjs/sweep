@@ -74,7 +74,7 @@ class Config {
    static resetDefault() {
       Config.EnableTimer = false;
       Config.AdvanceRowsOnMatch = true;
-      Config.SweepThreshold = 5;
+      Config.SweepThreshold = 15;
       Config.EnableSweepMeters = false;
       Config.EnableSingleTapClear = false;
       Config.ClearSweepMetersAfterSingleUse = true;
