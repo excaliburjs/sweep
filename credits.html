@@ -3,22 +3,39 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Ludum 31 - Credits</title>
-    <link rel="stylesheet" href="css/font-awesome.css" type="text/css" />
-    <link rel="stylesheet" href="app.css?COMMIT_NUMBER" type="text/css" />
+    <title>Credits - Sweep Stacks (Ludum Dare 31 Game Jam Entry)</title>
+    <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css" />
+    <link rel="stylesheet" href="app.min.css?COMMIT_NUMBER" type="text/css"/>
+    <script type="text/javascript">
+    var appInsights = window.appInsights || function (config) {
+        function s(config) { t[config] = function () { var i = arguments; t.queue.push(function () { t[config].apply(t, i) }) } } var t = { config: config }, r = document, f = window, e = "script", o = r.createElement(e), i, u; for (o.src = config.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js", r.getElementsByTagName(e)[0].parentNode.appendChild(o), t.cookie = r.cookie, t.queue = [], i = ["Event", "Exception", "Metric", "PageView", "Trace"]; i.length;) s("track" + i.pop()); return config.disableExceptionTracking || (i = "onerror", s("_" + i), u = f[i], f[i] = function (config, r, f, e, o) { var s = u && u(config, r, f, e, o); return s !== !0 && t["_" + i](config, r, f, e, o), s }), t
+    }({
+        instrumentationKey: "10a97613-4f2c-447c-83bd-9ea8af9a8748"
+    });
+
+    window.appInsights = appInsights;
+    appInsights.trackPageView();
+    </script>
 </head>
 <body>
     <div id="background"></div>
-    <div style="background:#f3d796; border: 2px solid black; padding: 20px">
+    <div class="credits">
         <div align="center">
-            <h2>Credits</h2>
+            <h2>Thanks for playing!</h2>
 
             <p>Assembled for your entertainment by <a href="https://twitter.com/ErikOnarheim">Erik Onarheim</a>, <a href="http://twitter.com/joshedeen">Josh Edeen</a>, <a href="https://twitter.com/kamranayub">Kamran Ayub</a>, <a href="https://twitter.com/alangrgic">Alan Grgic</a> , and <a href="https://twitter.com/doctorigo">Sean Igo</a> for <a href="http://www.ludumdare.com">Ludum Dare 31</a></p>
             <p><strong>Powered by <a href="http://excaliburjs.com">Excalibur.js</a></strong></p>
-            <p>View the source code for this game on <a href="https://github.com/excaliburjs/ludum-31"><span class="fa fa-github-alt"></span> GitHub</a></p>
+            <p>View the source code for this game on <span class="fa fa-github-alt"></span> <a href="https://github.com/excaliburjs/ludum-31">GitHub</a></p>
 
             <h2>Licenses</h2>
-            <p>Background image courtesy of <a href="http://thepatternlibrary.com/">The Pattern Library</a></p>
+            <p>
+                Background image courtesy of <a href="http://thepatternlibrary.com/">The Pattern Library</a>.
+                <br />Icons from <a href="http://fontawesome.io">FontAwesome</a>.
+                <br />JavaScript libs:
+                <a href="https://github.com/lodash/lodash">Lodash</a>,
+                <a href="https://github.com/avp/spectra">Spectra</a>,
+                <a href="https://github.com/ScottHamper/Cookies">Cookies</a>
+            </p>
             <p>All other assets created by the Excalibur.js team.</p>
             <h1>☃</h1>
         </div>

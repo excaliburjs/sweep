@@ -1,6 +1,19 @@
 ﻿body {
   font-family: 'Segoe UI', sans-serif;
 }
+.credits {
+  background: rgba(0, 0, 0, 0.8);
+  padding: 2em;
+  max-width: 480px;
+  margin: 0 auto;
+  color: white;
+}
+.credits a {
+  color: #FF931E;
+}
+.credits a:hover {
+  color: #ffab51;
+}
 div#commit {
   position: absolute;
   top: 10px;
