@@ -131,22 +131,22 @@ function InitSetup() {
    }
 }
 
-game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
-   if (evt.key === ex.Input.Keys.D) {
-      game.isDebug = !game.isDebug;
-   }
+//game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
+//   if (evt.key === ex.Input.Keys.D) {
+//      game.isDebug = !game.isDebug;
+//   }
 
-   if (evt.key === ex.Input.Keys.U) {
-      // shift all rows up 1
-      for (var i = 0; i < grid.rows; i++) {
-         grid.shift(i, i - 1);         
-      }
-      // fill first row
-      grid.fill(grid.rows - 1);
-   }
+//   if (evt.key === ex.Input.Keys.U) {
+//      // shift all rows up 1
+//      for (var i = 0; i < grid.rows; i++) {
+//         grid.shift(i, i - 1);         
+//      }
+//      // fill first row
+//      grid.fill(grid.rows - 1);
+//   }
 
  
-});
+//});
 
 //var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
 //gameOverWidget.addButton(postYourScore);
@@ -268,18 +268,22 @@ function gameOver() {
    document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
 
    // I'm so sorry, I'm so very sorry...so tired
-   var text = document.getElementById("twidget").dataset['text'];
-   document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === GameMode.Timed ? "challenge mode" : "standard mode");
-   var twitterScript = <HTMLScriptElement>document.createElement('script');
-   twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
-   document.getElementById("game-over").appendChild(twitterScript);
+   try {
+      var text = document.getElementById("twidget").dataset['text'];
+      document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === GameMode.Timed ? "challenge mode" : "standard mode");
+      var twitterScript = <HTMLScriptElement>document.createElement('script');
+      twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
+      document.getElementById("game-over").appendChild(twitterScript);
 
-  
-   var social = document.getElementById('social-container');
-   var facebookW = document.getElementById('fidget');
-   facebookW.parentNode.removeChild(facebookW);
-   social.appendChild(facebookW);
 
+      var social = document.getElementById('social-container');
+      var facebookW = document.getElementById('fidget');
+      facebookW.parentNode.removeChild(facebookW);
+      social.appendChild(facebookW);
+   } catch (e) {
+      console.log("Something happened ", e);
+      //swallow
+   }
    //document.getElementById("fidget").attributes.href
 
 
