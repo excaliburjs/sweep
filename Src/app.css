@@ -100,8 +100,8 @@ canvas {
 .modal .modal-body {
   position: relative;
   left: -50%;
-  padding: 20px 40px;
-  min-width: 280px;
+  padding: 20px 20px;
+  min-width: 300px;
 }
 @media (max-width: 480px) {
   .modal .modal-body {
@@ -173,14 +173,14 @@ canvas {
 }
 #game-over .modal-body .scores {
   text-align: left;
-  max-width: 200px;
+  max-width: 280px;
 }
 #game-over .modal-body .scores h2 {
   font-size: 0.8em;
   text-align: left;
   float: left;
   clear: left;
-  margin: 0 0 1.5em 0;
+  margin: 0 0 0.5em 0;
   line-height: 1.5em;
 }
 #game-over .modal-body .scores h2 + p {
@@ -189,6 +189,16 @@ canvas {
   color: #8CB09C;
   font-size: 1.1em;
   font-weight: bold;
+}
+#game-over .modal-body .buttons {
+  text-align: center;
+}
+#game-over .modal-body .buttons .play-again {
+  display: inline-block;
+  padding-right: 10px;
+}
+#game-over .modal-body .buttons .other {
+  display: inline-block;
 }
 #game-over .modal-body hr {
   border: 1px solid #b3a2c2;
@@ -203,6 +213,16 @@ canvas {
 }
 #game-over .modal-body a.try:hover {
   background: #ff7d82;
+}
+#game-over .modal-body a.play-again {
+  color: white;
+  text-decoration: none;
+  background: #FF931E;
+  padding: 1em;
+  display: inline-block;
+}
+#game-over .modal-body a.play-again:hover {
+  background: #ffab51;
 }
 #game-over .modal-body a.share {
   color: white;

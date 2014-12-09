@@ -41,12 +41,12 @@ class MainMenu extends ex.UIActor {
       document.getElementById("dismiss-normal-modal").addEventListener("click", () => {
          removeClass(document.getElementById("tutorial-normal"), "show");
          MainMenu._markTutorialAsDone(GameMode.Standard);
-         MainMenu.LoadStandardMode();
+         MainMenu.LoadStandardMode(true);
       });
       document.getElementById("dismiss-challenge-modal").addEventListener("click", () => {
          removeClass(document.getElementById("tutorial-challenge"), "show");
          MainMenu._markTutorialAsDone(GameMode.Timed);
-         MainMenu.LoadChallengeMode();
+         MainMenu.LoadChallengeMode(true);
       });
 
       this.show();
@@ -124,11 +124,14 @@ class MainMenu extends ex.UIActor {
    
    // todo move loadConfig logic to here so we can manage state better?
 
-   public static LoadStandardMode() {
+   public static LoadStandardMode(skipTutorial = false) {
       ex.Logger.getInstance().info("Loading standard mode");
 
-      if (!MainMenu._hasFinishedTutorial(GameMode.Standard)) {
+      skipTutorial = (typeof skipTutorial === "boolean" && skipTutorial);
+
+      if (!skipTutorial && !MainMenu._hasFinishedTutorial(GameMode.Standard)) {
          // play normal tutorial
+         removeClass(document.getElementById("game-over"), "show");
          addClass(document.getElementById("tutorial-normal"), "show");
       } else {
          loadConfig(Config.loadCasual);
@@ -136,9 +139,13 @@ class MainMenu extends ex.UIActor {
       }
    }
 
-   public static LoadChallengeMode() {
+   public static LoadChallengeMode(skipTutorial = false) {
       ex.Logger.getInstance().info("Loading challenge mode");
-      if (!MainMenu._hasFinishedTutorial(GameMode.Timed)) {
+
+      skipTutorial = (typeof skipTutorial === "boolean" && skipTutorial);
+
+      if (!skipTutorial && !MainMenu._hasFinishedTutorial(GameMode.Timed)) {
+         removeClass(document.getElementById("game-over"), "show");
          addClass(document.getElementById("tutorial-challenge"), "show");
       } else {
          loadConfig(Config.loadSurvivalReverse);

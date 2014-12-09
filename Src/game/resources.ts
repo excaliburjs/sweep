@@ -37,7 +37,8 @@ var Resources = {
    TextureLogo: new ex.Texture("images/logo.png"),
    TextureStandardBtn: new ex.Texture("images/standard.png"),
    TextureChallengeBtn: new ex.Texture("images/challenge.png"),
-   NoMovesTexture: new ex.Texture('images/no-moves.png')
+   NoMovesTexture: new ex.Texture('images/no-moves.png'),
+   TextureSweepIndicator: new ex.Texture("images/sweep-indicator.png")
 };
 
 var Palette = {
@@ -45,8 +46,8 @@ var Palette = {
    GridBackgroundColor: new ex.Color(0, 20, 25, 0.9),
 
    // Beach
-   PieceColor1: ex.Color.fromHex("#174e5e"),
-   PieceColor2: ex.Color.fromHex("#43385a"),
+   PieceColor1: ex.Color.fromHex("#00718D"),
+   PieceColor2: ex.Color.fromHex("#7A5CA7"),
    PieceColor3: ex.Color.fromHex("#4c603a"),
    PieceColor4: ex.Color.fromHex("#c17b55"),
 
