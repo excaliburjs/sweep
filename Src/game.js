@@ -109,7 +109,7 @@ var Config = (function () {
         Config.SweepAltMinThreshold = 10;
         Config.SweepAltMaxThreshold = 50;
     };
-    Config.PieceContainsPadding = 5;
+    Config.PieceContainsPadding = 2;
     Config.PieceWidth = 36;
     Config.PieceHeight = 36;
     Config.CellWidth = 45;
@@ -1363,11 +1363,6 @@ var Stats = (function () {
         var meter = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, 1);
         meter.score = 1;
         meter.enableCapturePointer = true;
-        var label = new ex.Label("MEGA SWEEP", meter.getCenter().x, meter.getCenter().y);
-        var inputLabel = new ex.Label("PRESS S", meter.getCenter().x, meter.getCenter().y + 10);
-        label.textAlign = inputLabel.textAlign = 2 /* Center */;
-        label.color = inputLabel.color = ex.Color.White;
-        label.font = inputLabel.font = "16px";
         meter.anchor.setTo(0, 0);
         meter.on("pointerup", function () {
             sweeper.sweepAll();
@@ -1375,23 +1370,19 @@ var Stats = (function () {
         game.addEventListener('update', function (data) {
             // mega sweep
             if (_this.allMetersFull()) {
-                meter.visible = label.visible = inputLabel.visible = true;
+                meter.visible = true;
             }
             else {
-                meter.visible = label.visible = inputLabel.visible = false;
+                meter.visible = false;
             }
         });
         game.add(meter);
-        game.add(label);
-        game.add(inputLabel);
+        this._meterActors.push(meter);
     };
     Stats.prototype._addMeter = function (piece, x, y) {
         var _this = this;
         var meter = new Meter(x, y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold);
         meter.enableCapturePointer = true;
-        var label = new ex.Label(null, meter.getCenter().x, meter.getCenter().y + 3);
-        label.textAlign = 2 /* Center */;
-        label.color = ex.Color.White;
         meter.on("pointerup", function () {
             sweeper.sweep(piece);
         });
@@ -1399,22 +1390,14 @@ var Stats = (function () {
             meter.score = _this._meters[piece];
             // mega sweep
             if (_this.allMetersFull()) {
-                meter.visible = label.visible = false;
+                meter.visible = false;
             }
             else {
-                meter.visible = label.visible = true;
-                if (_this._meters[piece] === Config.SweepThreshold) {
-                    label.text = "SWEEP";
-                }
-                else {
-                    label.text = "";
-                }
+                meter.visible = true;
             }
         });
         game.add(meter);
-        game.add(label);
         this._meterActors.push(meter);
-        this._meterLabels.push(label);
     };
     Stats.prototype.clearMeters = function () {
         if (this._meterActors) {
@@ -1432,26 +1415,15 @@ var Stats = (function () {
         var _this = this;
         var square = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, this._sweepMeterThreshold);
         square.enableCapturePointer = true;
-        var label = new ex.Label(null, square.getCenter().x, y + 20);
-        label.textAlign = 2 /* Center */;
-        label.color = ex.Color.Black;
         square.on("pointerup", function () {
             sweeper.sweep();
         });
         game.addEventListener('update', function (data) {
             square.score = _this._sweepMeter;
             square.threshold = _this._sweepMeterThreshold;
-            if (_this._sweepMeter === _this._sweepMeterThreshold) {
-                label.text = "'S' TO SWEEP";
-            }
-            else {
-                label.text = Math.floor((_this._sweepMeter / _this._sweepMeterThreshold) * 100) + '%';
-            }
         });
         game.add(square);
-        game.add(label);
         this._meterActors.push(square);
-        this._meterLabels.push(label);
     };
     return Stats;
 })();

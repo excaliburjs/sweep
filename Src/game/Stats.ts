@@ -240,11 +240,6 @@
       var meter = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, 1);
       meter.score = 1;
       meter.enableCapturePointer = true;
-      var label = new ex.Label("MEGA SWEEP", meter.getCenter().x, meter.getCenter().y);
-      var inputLabel = new ex.Label("PRESS S", meter.getCenter().x, meter.getCenter().y + 10);
-      label.textAlign = inputLabel.textAlign = ex.TextAlign.Center;
-      label.color = inputLabel.color = ex.Color.White;
-      label.font = inputLabel.font = "16px";
       meter.anchor.setTo(0, 0);
 
       meter.on("pointerup", () => {
@@ -255,26 +250,22 @@
 
          // mega sweep
          if (this.allMetersFull()) {
-            meter.visible = label.visible = inputLabel.visible = true;
+            meter.visible = true;
 
             // show mega sweep
 
          } else {
-            meter.visible = label.visible = inputLabel.visible = false;
+            meter.visible = false;
          }
 
       });
       game.add(meter);
-      game.add(label);
-      game.add(inputLabel);
+      this._meterActors.push(meter);
    }
 
    private _addMeter(piece: PieceType, x: number, y: number) {
       var meter = new Meter(x, y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold);
       meter.enableCapturePointer = true;
-      var label = new ex.Label(null, meter.getCenter().x, meter.getCenter().y + 3);
-      label.textAlign = ex.TextAlign.Center;
-      label.color = ex.Color.White;
 
       meter.on("pointerup", () => {
          sweeper.sweep(piece);
@@ -284,22 +275,14 @@
 
          // mega sweep
          if (this.allMetersFull()) {
-            meter.visible = label.visible = false;
+            meter.visible = false;
          } else {
-            meter.visible = label.visible = true;
-
-            if (this._meters[piece] === Config.SweepThreshold) {
-               label.text = "SWEEP";
-            } else {
-               label.text = "";
-            }
+            meter.visible = true;
          }
 
       });
       game.add(meter);
-      game.add(label);
       this._meterActors.push(meter);
-      this._meterLabels.push(label);
    }
 
    public clearMeters() {
@@ -313,32 +296,22 @@
             game.remove(this._meterLabels[i]);
          }
       }
+      
    }
 
    private _addSweepMeter(x: number, y: number) {
       var square = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, this._sweepMeterThreshold);
       square.enableCapturePointer = true;
-      var label = new ex.Label(null, square.getCenter().x, y + 20);
-      label.textAlign = ex.TextAlign.Center;
-      label.color = ex.Color.Black;
-
+     
       square.on("pointerup", () => {
          sweeper.sweep();
       });
       game.addEventListener('update', (data?: ex.UpdateEvent) => {
          square.score = this._sweepMeter;
-         square.threshold = this._sweepMeterThreshold;
-
-         if (this._sweepMeter === this._sweepMeterThreshold) {
-            label.text = "'S' TO SWEEP";
-         } else {
-            label.text = Math.floor((this._sweepMeter / this._sweepMeterThreshold) * 100) + '%';
-         }
+         square.threshold = this._sweepMeterThreshold;         
       });
       game.add(square);
-      game.add(label);
       this._meterActors.push(square);
-      this._meterLabels.push(label);
    }
 }
 
