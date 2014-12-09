@@ -127,6 +127,8 @@ class MainMenu extends ex.UIActor {
    public static LoadStandardMode(skipTutorial = false) {
       ex.Logger.getInstance().info("Loading standard mode");
 
+      skipTutorial = (typeof skipTutorial === "boolean" && skipTutorial);
+
       if (!skipTutorial && !MainMenu._hasFinishedTutorial(GameMode.Standard)) {
          // play normal tutorial
          removeClass(document.getElementById("game-over"), "show");
@@ -139,6 +141,9 @@ class MainMenu extends ex.UIActor {
 
    public static LoadChallengeMode(skipTutorial = false) {
       ex.Logger.getInstance().info("Loading challenge mode");
+
+      skipTutorial = (typeof skipTutorial === "boolean" && skipTutorial);
+
       if (!skipTutorial && !MainMenu._hasFinishedTutorial(GameMode.Timed)) {
          removeClass(document.getElementById("game-over"), "show");
          addClass(document.getElementById("tutorial-challenge"), "show");
