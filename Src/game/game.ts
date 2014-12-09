@@ -63,6 +63,15 @@ var loadConfig = (config) => {
 Config.resetDefault();
 InitSetup();
 
+document.getElementById("play-again").addEventListener('click', () => {
+   if (gameMode == GameMode.Standard) {
+      MainMenu.LoadStandardMode();
+   } else if (gameMode == GameMode.Timed) {
+      MainMenu.LoadChallengeMode();
+   }
+});
+document.getElementById("challenge").addEventListener('click', MainMenu.LoadChallengeMode);
+
 //reset the game with the given grid dimensions
 function InitSetup() {
    grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
@@ -257,8 +266,11 @@ function gameOver() {
    twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
    document.getElementById("game-over").appendChild(twitterScript);
 
-   var fbText = (<HTMLAnchorElement>document.getElementById('fidget')).href.replace("SOCIAL_SCORE", stats.getTotalScore().toString()).replace("SOCIAL_MODE", gameMode === GameMode.Timed ? "challenge mode" : "standard mode");
-   (<HTMLAnchorElement>document.getElementById('fidget')).href = fbText;
+  
+   var social = document.getElementById('social-container');
+   var facebookW = document.getElementById('fidget');
+   facebookW.parentNode.removeChild(facebookW);
+   social.appendChild(facebookW);
 
    //document.getElementById("fidget").attributes.href
 

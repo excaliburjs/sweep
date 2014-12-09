@@ -5,6 +5,8 @@ class NoMoves extends ex.UIActor {
       super(-200, game.getHeight() / 2, 200, 100);
       this.color = ex.Color.Azure.clone();
       this.anchor.setTo(.5, .5);
+      this.setCenterDrawing(true);
+      this.addDrawing(Resources.NoMovesTexture);
    }
 
    public play(): ex.Promise<any> {

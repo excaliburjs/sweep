@@ -273,6 +273,7 @@ var Resources = {
     TextureLogo: new ex.Texture("images/logo.png"),
     TextureStandardBtn: new ex.Texture("images/standard.png"),
     TextureChallengeBtn: new ex.Texture("images/challenge.png"),
+    NoMovesTexture: new ex.Texture('images/no-moves.png')
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
@@ -640,16 +641,6 @@ var MainMenu = (function (_super) {
         game.add(this._logo);
         game.add(this._standardButton);
         game.add(this._challengeButton);
-        document.getElementById("dismiss-normal-modal").addEventListener("click", function () {
-            removeClass(document.getElementById("tutorial-normal"), "show");
-            MainMenu._markTutorialAsDone(0 /* Standard */);
-            MainMenu.LoadStandardMode();
-        });
-        document.getElementById("dismiss-challenge-modal").addEventListener("click", function () {
-            removeClass(document.getElementById("tutorial-challenge"), "show");
-            MainMenu._markTutorialAsDone(1 /* Timed */);
-            MainMenu.LoadChallengeMode();
-        });
         this.show();
     };
     MainMenu.prototype.update = function (engine, delta) {
@@ -701,35 +692,28 @@ var MainMenu = (function (_super) {
         this._show = false;
         this._hide = true;
     };
-    MainMenu._markTutorialAsDone = function (gameMode) {
-        Cookies.set("ld-31-tutorial-" + gameMode, "1");
+    MainMenu.prototype.onGameModeSwitch = function () {
+        mainMenu.hide();
+        if (gameMode === 0 /* Standard */ && !this._hasFinishedTutorial(0 /* Standard */)) {
+        }
+        else if (gameMode === 1 /* Timed */ && !this._hasFinishedTutorial(1 /* Timed */)) {
+        }
     };
-    MainMenu._hasFinishedTutorial = function (gameMode) {
-        var c = Cookies.get("ld-31-tutorial-" + gameMode);
-        ex.Logger.getInstance().info("Retrieved tutorial cookie: tutorial-" + gameMode, c);
+    MainMenu.prototype._hasFinishedTutorial = function (gameMode) {
+        var c = Cookies.get("tutorial-" + gameMode);
+        ex.Logger.getInstance().debug("Retrieved tutorial cookie: tutorial-" + gameMode, c);
         return c && c === "1";
     };
     // todo move loadConfig logic to here so we can manage state better?
     MainMenu.LoadStandardMode = function () {
         ex.Logger.getInstance().info("Loading standard mode");
-        if (!MainMenu._hasFinishedTutorial(0 /* Standard */)) {
-            // play normal tutorial
-            addClass(document.getElementById("tutorial-normal"), "show");
-        }
-        else {
-            loadConfig(Config.loadCasual);
-            mainMenu.hide();
-        }
+        loadConfig(Config.loadCasual);
+        mainMenu.onGameModeSwitch();
     };
     MainMenu.LoadChallengeMode = function () {
         ex.Logger.getInstance().info("Loading challenge mode");
-        if (!MainMenu._hasFinishedTutorial(1 /* Timed */)) {
-            addClass(document.getElementById("tutorial-challenge"), "show");
-        }
-        else {
-            loadConfig(Config.loadSurvivalReverse);
-            mainMenu.hide();
-        }
+        loadConfig(Config.loadSurvivalReverse);
+        mainMenu.onGameModeSwitch();
     };
     MainMenu._StandardButtonPos = new ex.Point(42, 170);
     MainMenu._ChallengeButtonPos = new ex.Point(42, 170 + Config.MainMenuButtonHeight + 20);
@@ -1585,6 +1569,8 @@ var NoMoves = (function (_super) {
         _super.call(this, -200, game.getHeight() / 2, 200, 100);
         this.color = ex.Color.Azure.clone();
         this.anchor.setTo(.5, .5);
+        this.setCenterDrawing(true);
+        this.addDrawing(Resources.NoMovesTexture);
     }
     NoMoves.prototype.play = function () {
         var _this = this;
@@ -1696,7 +1682,7 @@ function InitSetup() {
     game.add(sweeper);
     stats.drawScores();
     // hide game over
-    removeClass(document.getElementById("game-over"), "show");
+    document.getElementById("game-over").className = "";
     //add pieces to initial rows
     grid.seed(Config.NumStartingRows);
     if (!muted) {
@@ -1800,7 +1786,7 @@ function gameOver() {
     playGameOver();
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
-    addClass(document.getElementById("game-over"), "show");
+    document.getElementById("game-over").className = "show";
     document.getElementById("game-over-swept").innerHTML = stats.getTotalPiecesSwept().toString();
     document.getElementById("game-over-chain").innerHTML = stats.getTotalChainBonus().toString();
     var enduranceBonus = stats.calculateEnduranceBonus();
@@ -1810,14 +1796,18 @@ function gameOver() {
     if (gameMode == 1 /* Timed */) {
         document.getElementById("try-challenge").className = "hide";
     }
+    document.getElementById("play-again").addEventListener('click', InitSetup);
+    //document.get
     // I'm so sorry, I'm so very sorry...so tired
     var text = document.getElementById("twidget").dataset['text'];
     document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getTotalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
     var twitterScript = document.createElement('script');
     twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
     document.getElementById("game-over").appendChild(twitterScript);
-    var fbText = document.getElementById('fidget').href.replace("SOCIAL_SCORE", stats.getTotalScore().toString()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
-    document.getElementById('fidget').href = fbText;
+    var social = document.getElementById('social-container');
+    var facebookW = document.getElementById('fidget');
+    facebookW.parentNode.removeChild(facebookW);
+    social.appendChild(facebookW);
     //document.getElementById("fidget").attributes.href
     //var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
     //var gameOverWidgetActor = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() - 800, 300, 300, color);
