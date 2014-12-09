@@ -122,7 +122,7 @@ function InitSetup() {
    stats.drawScores();
 
    // hide game over
-   document.getElementById("game-over").className = "";
+   removeClass(document.getElementById("game-over"), "show");
 
    //add pieces to initial rows
    grid.seed(Config.NumStartingRows);
@@ -252,7 +252,7 @@ function gameOver() {
 
    if (turnManager) turnManager.dispose(); // stop game over from happening infinitely in time attack
 
-   document.getElementById("game-over").className = "show";
+   addClass(document.getElementById("game-over"), "show");
 
 
    document.getElementById("game-over-swept").innerHTML = stats.getTotalPiecesSwept().toString();
@@ -274,8 +274,11 @@ function gameOver() {
    twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
    document.getElementById("game-over").appendChild(twitterScript);
 
-   var fbText = (<HTMLAnchorElement>document.getElementById('fidget')).href.replace("SOCIAL_SCORE", stats.getTotalScore().toString()).replace("SOCIAL_MODE", gameMode === GameMode.Timed ? "challenge mode" : "standard mode");
-   (<HTMLAnchorElement>document.getElementById('fidget')).href = fbText;
+  
+   var social = document.getElementById('social-container');
+   var facebookW = document.getElementById('fidget');
+   facebookW.parentNode.removeChild(facebookW);
+   social.appendChild(facebookW);
 
    //document.getElementById("fidget").attributes.href
 
