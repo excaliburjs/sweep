@@ -672,12 +672,14 @@ var MainMenu = (function (_super) {
     MainMenu.prototype._dismissNormalTutorial = function () {
         removeClass(document.getElementById("tutorial-normal"), "show");
         MainMenu._markTutorialAsDone(0 /* Standard */);
-        MainMenu.LoadStandardMode(true);
+        if (gameMode !== 0 /* Standard */)
+            MainMenu.LoadStandardMode(true);
     };
     MainMenu.prototype._dismissChallengeTutorial = function () {
         removeClass(document.getElementById("tutorial-challenge"), "show");
         MainMenu._markTutorialAsDone(1 /* Timed */);
-        MainMenu.LoadChallengeMode(true);
+        if (gameMode !== 1 /* Timed */)
+            MainMenu.LoadChallengeMode(true);
     };
     MainMenu._markTutorialAsDone = function (gameMode) {
         Cookies.set("ld-31-tutorial-" + gameMode, "1", { expires: new Date(2020, 0, 1) });
@@ -687,15 +689,22 @@ var MainMenu = (function (_super) {
         ex.Logger.getInstance().info("Retrieved tutorial cookie: tutorial-" + gameMode, c);
         return c && c === "1";
     };
+    MainMenu.ShowNormalTutorial = function () {
+        // play normal tutorial
+        removeClass(document.getElementById("game-over"), "show");
+        addClass(document.getElementById("tutorial-normal"), "show");
+    };
+    MainMenu.ShowChallengeTutorial = function () {
+        removeClass(document.getElementById("game-over"), "show");
+        addClass(document.getElementById("tutorial-challenge"), "show");
+    };
     // todo move loadConfig logic to here so we can manage state better?
-    MainMenu.LoadStandardMode = function (skipTutorial) {
-        if (skipTutorial === void 0) { skipTutorial = false; }
+    MainMenu.LoadStandardMode = function (skipTutorialCheck) {
+        if (skipTutorialCheck === void 0) { skipTutorialCheck = false; }
         ex.Logger.getInstance().info("Loading standard mode");
-        skipTutorial = (typeof skipTutorial === "boolean" && skipTutorial);
-        if (!skipTutorial && !MainMenu._hasFinishedTutorial(0 /* Standard */)) {
-            // play normal tutorial
-            removeClass(document.getElementById("game-over"), "show");
-            addClass(document.getElementById("tutorial-normal"), "show");
+        skipTutorialCheck = (typeof skipTutorialCheck === "boolean" && skipTutorialCheck);
+        if (!skipTutorialCheck && !MainMenu._hasFinishedTutorial(0 /* Standard */)) {
+            MainMenu.ShowNormalTutorial();
         }
         else {
             loadConfig(Config.loadCasual);
@@ -707,8 +716,7 @@ var MainMenu = (function (_super) {
         ex.Logger.getInstance().info("Loading challenge mode");
         skipTutorial = (typeof skipTutorial === "boolean" && skipTutorial);
         if (!skipTutorial && !MainMenu._hasFinishedTutorial(1 /* Timed */)) {
-            removeClass(document.getElementById("game-over"), "show");
-            addClass(document.getElementById("tutorial-challenge"), "show");
+            MainMenu.ShowChallengeTutorial();
         }
         else {
             loadConfig(Config.loadSurvivalReverse);
@@ -1699,6 +1707,14 @@ var loadConfig = function (config) {
 };
 Config.resetDefault();
 InitSetup();
+document.getElementById("how-to-play").addEventListener("click", function () {
+    if (gameMode === 0 /* Standard */) {
+        MainMenu.ShowNormalTutorial();
+    }
+    else {
+        MainMenu.ShowChallengeTutorial();
+    }
+});
 document.getElementById("play-again").addEventListener('click', function () {
     if (gameMode == 0 /* Standard */) {
         MainMenu.LoadStandardMode();
@@ -1819,9 +1835,18 @@ function muteAll() {
     Resources.ChallengeLoopSound.stop();
     setVolume(0);
 }
+function muteMusic() {
+    Resources.LoopSound.stop();
+    Resources.ChallengeLoopSound.stop();
+}
 document.getElementById("sound").addEventListener('click', function () {
     if (hasClass(this, 'fa-volume-up')) {
-        replaceClass(this, 'fa-volume-up', 'fa-volume-off');
+        replaceClass(this, 'fa-volume-up', 'fa-volume-down');
+        muted = true;
+        muteMusic();
+    }
+    else if (hasClass(this, 'fa-volume-down')) {
+        replaceClass(this, 'fa-volume-down', 'fa-volume-off');
         muted = true;
         muteAll();
     }
@@ -1859,7 +1884,9 @@ function gameOver() {
             analytics('send', 'event', 'ludum-30-stats', GameMode[gameMode], 'time elapsed', { 'eventValue': timeElapsed });
         }
     }
-    playGameOver();
+    if (!muted) {
+        playGameOver();
+    }
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
     addClass(document.getElementById("game-over"), "show");

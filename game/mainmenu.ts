@@ -162,13 +162,13 @@ class MainMenu extends ex.UIActor {
    private _dismissNormalTutorial() {
       removeClass(document.getElementById("tutorial-normal"), "show");
       MainMenu._markTutorialAsDone(GameMode.Standard);
-      MainMenu.LoadStandardMode(true);      
+      if (gameMode !== GameMode.Standard) MainMenu.LoadStandardMode(true);      
    }
 
    private _dismissChallengeTutorial() {
       removeClass(document.getElementById("tutorial-challenge"), "show");
       MainMenu._markTutorialAsDone(GameMode.Timed);
-      MainMenu.LoadChallengeMode(true);
+      if (gameMode !== GameMode.Timed) MainMenu.LoadChallengeMode(true);
    }
 
    private static _markTutorialAsDone(gameMode: GameMode) {
@@ -182,18 +182,27 @@ class MainMenu extends ex.UIActor {
 
       return c && c === "1";
    }
+
+   public static ShowNormalTutorial() {
+      // play normal tutorial
+      removeClass(document.getElementById("game-over"), "show");
+      addClass(document.getElementById("tutorial-normal"), "show");
+   }
+
+   public static ShowChallengeTutorial() {
+      removeClass(document.getElementById("game-over"), "show");
+      addClass(document.getElementById("tutorial-challenge"), "show");
+   }
    
    // todo move loadConfig logic to here so we can manage state better?
 
-   public static LoadStandardMode(skipTutorial = false) {
+   public static LoadStandardMode(skipTutorialCheck = false) {
       ex.Logger.getInstance().info("Loading standard mode");
 
-      skipTutorial = (typeof skipTutorial === "boolean" && skipTutorial);
+      skipTutorialCheck = (typeof skipTutorialCheck === "boolean" && skipTutorialCheck);
 
-      if (!skipTutorial && !MainMenu._hasFinishedTutorial(GameMode.Standard)) {
-         // play normal tutorial
-         removeClass(document.getElementById("game-over"), "show");
-         addClass(document.getElementById("tutorial-normal"), "show");
+      if (!skipTutorialCheck && !MainMenu._hasFinishedTutorial(GameMode.Standard)) {
+         MainMenu.ShowNormalTutorial();
       } else {
          loadConfig(Config.loadCasual);
          mainMenu.hide();
@@ -206,8 +215,7 @@ class MainMenu extends ex.UIActor {
       skipTutorial = (typeof skipTutorial === "boolean" && skipTutorial);
 
       if (!skipTutorial && !MainMenu._hasFinishedTutorial(GameMode.Timed)) {
-         removeClass(document.getElementById("game-over"), "show");
-         addClass(document.getElementById("tutorial-challenge"), "show");
+         MainMenu.ShowChallengeTutorial();
       } else {
          loadConfig(Config.loadSurvivalReverse);
          mainMenu.hide();

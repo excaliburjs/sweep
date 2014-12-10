@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <title>Sweep Stacks (Ludum Dare 31 Game Jam Entry)</title>
     <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css" />
-    <link rel="stylesheet" href="app.min.css?0ff2191fa60861ce9861dec0a9d3357532abb412" type="text/css" />
+    <link rel="stylesheet" href="app.min.css?fd9043092f28b6ae13785596d5a2d510cb5d9a48" type="text/css" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="og:title" content="Sweep Stacks (Ludum 31 Game Jam Entry)"/>
     <meta name="og:url" content="http://excaliburjs.com/ludum-31/"/>
@@ -24,13 +24,16 @@
 </head>
 <body>
     <h1 style="visibility: hidden; position: absolute; top: -1000px; left: -1000px;">Sweep Stacks (Ludum Dare 31 Game Jam Entry)</h1>
-
-    <div id="commit">
-        <a href="https://github.com/excaliburjs/ludum-31/commit/0ff2191fa60861ce9861dec0a9d3357532abb412">@0ff2191fa60861ce9861dec0a9d3357532abb412</a>
+    
+    <div class="ui-buttons">
+        <a id="sound" title="Mute/Unmute Sound" class="ui-button fa fa-fw fa-volume-up"></a>
+        <a id="how-to-play" title="How to Play" class="how-to-play ui-button fa fa-fw fa-question-circle"></a>
+        <a id="credits" title="Credits" class="ui-button fa fa-fw fa-group" href="credits.html"></a>
     </div>
-    <div id="background"></div>
-    <i id="sound" class="fa fa-fw fa-volume-up"></i>
 
+    <a id="commit" href="https://github.com/excaliburjs/ludum-31/commit/fd9043092f28b6ae13785596d5a2d510cb5d9a48">@fd9043092f28b6ae13785596d5a2d510cb5d9a48</a>
+    <div id="background"></div>
+    
 
     <div id="tutorial-normal" class="modal tutorial">
 
@@ -55,6 +58,15 @@
                 <p>
                     <a id="tutorial-normal-next" href="#" class="next">Next</a> <a id="dismiss-normal-modal" href="javascript:void(0)" class="got-it">skip</a>
                 </p>
+                
+                <h2>Controls</h2>
+                
+                <ul class="controls">
+                    <li><strong>Remove Gems:</strong> Drag over 3 or more tiles</li>
+                    <li><strong>Cancel Move:</strong> Right-click or reverse drag</li>
+                    <li><strong>Sweep:</strong> Tap/click meters or press <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>, or <kbd>4</kbd></li>
+                    <li><strong>Mega Sweep:</strong> Tap/click mega meter or press <kbd>S</kbd></li>
+                </ul>
             </div>
         </div>
     </div>
@@ -79,9 +91,16 @@
                 <p>
                     <a id="tutorial-challenge-next" href="#" class="next">Next</a> <a id="dismiss-challenge-modal" href="javascript:void(0)" class="got-it">skip</a>
                 </p>
+                
+                <h2>Controls</h2>
+
+                <ul class="controls">
+                    <li><strong>Remove Gems:</strong> Click or tap single tile</li>
+                    <li><strong>Sweep:</strong> Tap/click meter or press <kbd>S</kbd></li>
+                </ul>
             </div>
         </div>
-    </div>
+    </div>   
 
     <div id="game-over" class="modal">
         <div class="modal-bg"></div>
@@ -145,15 +164,12 @@
     </div>
 
     <canvas id="game"></canvas>
-    <div id="credits" style="position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.8); padding: 0.5em">
-        <a style="color: #FF931E" href="credits.html"><span class="fa fa-fw fa-group"></span></a>
-    </div>
-
+    
     <script src="scripts/lodash.min.js"></script>
     <script src="scripts/spectra.min.js"></script>
     <script src="scripts/cookies.min.js"></script>
-    <script src="Excalibur.js?0ff2191fa60861ce9861dec0a9d3357532abb412"></script>
-    <script src="game.js?0ff2191fa60861ce9861dec0a9d3357532abb412"></script>
+    <script src="Excalibur.js?fd9043092f28b6ae13785596d5a2d510cb5d9a48"></script>
+    <script src="game.js?fd9043092f28b6ae13785596d5a2d510cb5d9a48"></script>
     <script>
         (function (i, s, o, g, r, a, m) {
             i['GoogleAnalyticsObject'] = r;
