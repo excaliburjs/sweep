@@ -18,7 +18,7 @@
       emitter.acceleration = new ex.Vector(0, -500);
       emitter.beginColor = ex.Color.Red;
       emitter.endColor = ex.Color.Yellow;
-      emitter.startSize = 0.5;
+      emitter.startSize = gameScale.x * 0.5;
       emitter.endSize = 0.01;
       emitter.particleSprite = (<ex.Sprite>piece.currentDrawing).clone();
       emitter.particleSprite.transformAboutPoint(new ex.Point(.5, .5));

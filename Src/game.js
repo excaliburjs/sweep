@@ -164,7 +164,7 @@ var Effects = (function () {
         emitter.acceleration = new ex.Vector(0, -500);
         emitter.beginColor = ex.Color.Red;
         emitter.endColor = ex.Color.Yellow;
-        emitter.startSize = 0.5;
+        emitter.startSize = gameScale.x * 0.5;
         emitter.endSize = 0.01;
         emitter.particleSprite = piece.currentDrawing.clone();
         emitter.particleSprite.transformAboutPoint(new ex.Point(.5, .5));
@@ -317,7 +317,9 @@ var Piece = (function (_super) {
         this._type = type || 0 /* Circle */;
         this._originalColor = color;
         this._updateDrawings();
-        this.calculatedAnchor = new ex.Point(18, 18);
+        this.scale.setTo(gameScale.x, gameScale.y);
+        this.calculatedAnchor = new ex.Point(Config.PieceWidth / 2 * this.scale.x, Config.PieceHeight / 2 * this.scale.y);
+        this.setCenterDrawing(true);
     }
     Piece.prototype.getId = function () {
         return this._id;
@@ -399,7 +401,9 @@ var Cell = (function () {
         return this.logicalGrid.getCell(this.x, this.y + 1);
     };
     Cell.prototype.getCenter = function () {
-        return new ex.Point(this.x * Config.CellWidth + (Config.CellWidth / 2) + visualGrid.x, this.y * Config.CellHeight + (Config.CellHeight / 2) + visualGrid.y);
+        var cw = Config.CellWidth * gameScale.x;
+        var ch = Config.CellHeight * gameScale.y;
+        return new ex.Point(this.x * cw + (cw / 2) + visualGrid.x, this.y * ch + (ch / 2) + visualGrid.y);
     };
     return Cell;
 })();
@@ -597,22 +601,16 @@ var VisualGrid = (function (_super) {
         _super.call(this, 0, Config.GridY, Config.CellWidth * logicalGrid.cols, Config.CellHeight * logicalGrid.rows);
         this.logicalGrid = logicalGrid;
         this.anchor.setTo(0, 0);
+        this.scale.setTo(gameScale.x, gameScale.y);
     }
     VisualGrid.prototype.update = function (engine, delta) {
         _super.prototype.update.call(this, engine, delta);
+        this.scale.setTo(gameScale.x, gameScale.y);
     };
     VisualGrid.prototype.draw = function (ctx, delta) {
-        var _this = this;
         _super.prototype.draw.call(this, ctx, delta);
-        this.logicalGrid.cells.forEach(function (c) {
-            ctx.fillStyle = Palette.GridBackgroundColor.toString();
-            ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight + _this.y, Config.CellWidth, Config.CellHeight);
-            if (Config.EnableGridLines) {
-                ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
-                ctx.lineWidth = 1;
-                ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight + _this.y, Config.CellWidth, Config.CellHeight);
-            }
-        });
+        ctx.fillStyle = Palette.GridBackgroundColor.toString();
+        ctx.fillRect(this.x, this.y, this.getWidth(), this.getHeight());
     };
     VisualGrid.prototype.getCellByPos = function (screenX, screenY) {
         return _.find(this.logicalGrid.cells, function (cell) {
@@ -637,8 +635,8 @@ var MainMenu = (function (_super) {
         _super.prototype.onInitialize.call(this, engine);
         this._logo = new ex.UIActor();
         this._logo.addDrawing(Resources.TextureLogo.asSprite());
-        this._logo.currentDrawing.setScaleX(0.7);
-        this._logo.currentDrawing.setScaleY(0.7);
+        this._logo.currentDrawing.setScaleX(0.7 * gameScale.x);
+        this._logo.currentDrawing.setScaleY(0.7 * gameScale.y);
         this._logo.currentDrawing.transformAboutPoint(new ex.Point(0.5, 0.5));
         this._standardButton = new MenuButton(Resources.TextureStandardBtn.asSprite(), MainMenu.LoadStandardMode, this.x, this.y + MainMenu._StandardButtonPos.y);
         this._challengeButton = new MenuButton(Resources.TextureChallengeBtn.asSprite(), MainMenu.LoadChallengeMode, this.x, this.y + MainMenu._ChallengeButtonPos.y);
@@ -703,10 +701,10 @@ var MainMenu = (function (_super) {
         this.y = vgp.y;
         this.setWidth(visualGrid.getWidth());
         this.setHeight(visualGrid.getHeight());
-        this._standardButton.x = this.x + MainMenu._StandardButtonPos.x;
-        this._standardButton.y = this.y + MainMenu._StandardButtonPos.y;
-        this._challengeButton.x = this.x + MainMenu._ChallengeButtonPos.x;
-        this._challengeButton.y = this.y + MainMenu._ChallengeButtonPos.y;
+        this._standardButton.x = this.getCenter().x - (this._standardButton.getWidth() / 2);
+        this._standardButton.y = this.y + MainMenu._StandardButtonPos.y * this._standardButton.scale.y;
+        this._challengeButton.x = this.getCenter().x - (this._challengeButton.getWidth() / 2);
+        this._challengeButton.y = this.y + MainMenu._ChallengeButtonPos.y * this._challengeButton.scale.y;
         if (this._show) {
             this._show = false;
             this._showing = true;
@@ -808,6 +806,8 @@ var MenuButton = (function (_super) {
     function MenuButton(sprite, action, x, y) {
         _super.call(this, x, y, Config.MainMenuButtonWidth, Config.MainMenuButtonHeight);
         this.action = action;
+        this.scale.setTo(ex.Util.clamp(gameScale.x, 0, 1), ex.Util.clamp(gameScale.y, 0, 1));
+        //this.setCenterDrawing(true);
         this.addDrawing(sprite);
         this.off("pointerup", this.action);
         this.on("pointerup", this.action);
@@ -880,7 +880,7 @@ var MatchManager = (function (_super) {
                 this.runInProgress = true;
                 cell.piece.selected = true;
                 cell.piece.setCenterDrawing(true);
-                cell.piece.scaleTo(1.3, 1.3, 1.8, 1.8).scaleTo(1, 1, 1.8, 1.8);
+                cell.piece.scaleTo(gameScale.x * 1.3, gameScale.y * 1.3, 1.8, 1.8).scaleTo(gameScale.x, gameScale.y, 1.8, 1.8);
                 this._run.push(cell.piece);
                 this._playNote();
                 ex.Logger.getInstance().debug("Run started", this._run);
@@ -924,13 +924,13 @@ var MatchManager = (function (_super) {
                     this.eventDispatcher.publish("run", new MatchEvent(_.clone(this._run)));
                     if (!piece.hover) {
                         piece.hover = true;
-                        piece.scaleTo(1.2, 1.2, 1.2, 1.8);
+                        piece.scaleTo(gameScale.x * 1.2, gameScale.y * 1.2, 1.2, 1.8);
                     }
                 }
                 else {
                     if (piece.hover) {
                         piece.hover = false;
-                        piece.scaleTo(1, 1, 1.8, 1.8);
+                        piece.scaleTo(gameScale.x, gameScale.y, 1.8, 1.8);
                     }
                 }
                 // did user go backwards?
@@ -1510,7 +1510,7 @@ var Sweeper = (function (_super) {
             //game.add(this._label);
             game.add(this._emitter);
         }
-        this.y = visualGrid.y + (this._row * Config.CellHeight);
+        this.y = visualGrid.y + (this._row * Config.CellHeight * gameScale.y);
         game.input.keyboard.off("up", Sweeper._handleKeyDown);
         game.input.keyboard.on("up", Sweeper._handleKeyDown);
     };
@@ -1533,10 +1533,9 @@ var Sweeper = (function (_super) {
     Sweeper.prototype.update = function (engine, delta) {
         _super.prototype.update.call(this, engine, delta);
         this.x = visualGrid.x;
-        this._label.x = visualGrid.x - 50;
-        this._label.y = this.y;
         this._emitter.x = visualGrid.x;
         this._emitter.y = this.y;
+        this._emitter.setWidth(visualGrid.getWidth());
     };
     Sweeper.prototype.sweepAll = function (force) {
         if (force === void 0) { force = false; }
@@ -1605,6 +1604,7 @@ var Sweeper = (function (_super) {
                 return;
             cells.forEach(function (cell) {
                 stats.scorePieces([cell.piece]);
+                effects.clearEffect(cell.piece);
                 grid.clearPiece(cell.piece);
             });
             // reset meter
@@ -1612,11 +1612,11 @@ var Sweeper = (function (_super) {
             // advance sweeper
             if (!Config.SweepMovesUp && this._row < Config.SweepMaxRow) {
                 this._row++;
-                this.moveBy(this.x, this.y + Config.CellHeight, 200);
+                this.moveBy(this.x, this.y + Config.CellHeight * gameScale.y, 200);
             }
             else if (Config.SweepMovesUp && this._row > Config.SweepMinRow) {
                 this._row--;
-                this.moveBy(this.x, this.y - Config.CellHeight, 200);
+                this.moveBy(this.x, this.y - Config.CellHeight * gameScale.y, 200);
             }
             turnManager.advanceTurn();
         }
@@ -1656,7 +1656,7 @@ var Mask = (function (_super) {
         var vgWorldPos = game.worldToScreenCoordinates(new ex.Point(visualGrid.x, visualGrid.getBottom()));
         this.x = vgWorldPos.x;
         this.y = vgWorldPos.y;
-        this.setWidth(visualGrid.logicalGrid.cols * Config.CellWidth);
+        this.setWidth(visualGrid.getWidth());
     };
     return Mask;
 })(ex.UIActor);
@@ -1681,6 +1681,7 @@ var Mask = (function (_super) {
 var _this = this;
 var game = new ex.Engine(0, 0, "game", 0 /* FullScreen */);
 game.backgroundColor = ex.Color.Transparent;
+var gameScale = new ex.Point(1, 1);
 var gameMode = 0 /* Standard */;
 var muted = false;
 var loader = new ex.Loader();
@@ -1706,7 +1707,6 @@ var loadConfig = function (config) {
     InitSetup();
 };
 Config.resetDefault();
-InitSetup();
 document.getElementById("how-to-play").addEventListener("click", function () {
     if (gameMode === 0 /* Standard */) {
         MainMenu.ShowNormalTutorial();
@@ -1927,4 +1927,14 @@ function gameOver() {
 // TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {
     playLoop();
+    // set game scale
+    var defaultGridWidth = Config.CellWidth * Config.GridCellsWide;
+    var defaultGridHeight = Config.CellHeight * Config.GridCellsHigh;
+    // scale based on height of viewport
+    // target 85% height
+    var scale = defaultGridHeight / game.getHeight();
+    var scaleDiff = 0.85 - scale;
+    ex.Logger.getInstance().info("Current viewport scale", scale);
+    gameScale.setTo(1 + scaleDiff, 1 + scaleDiff);
+    InitSetup();
 });
