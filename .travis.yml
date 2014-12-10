@@ -3,7 +3,7 @@ node_js:
 - '0.10'
 env:
   global:
-  - GH_REF: github.com/excaliburjs/Ludum-31.git  
+  - GH_REF: github.com/excaliburjs/sweep.git  
   - secure: aUPmAM5i/Z/X8E2hG8+8YKCswTaVxd6mlXFb0DibGFksgraGLpL1WWTuiKRYo/XHnxb83Uq6lM6wbca0RmJLVmo6ZyjR5S1An4PI80Y2GckfEtIJmKVPVTKrPnUTqxF7Gui0JYlV3OHnvMiYqfp7nYlo8Ya08THsNcE33C0E4a4=
 script:
   - chmod ugo+x deploy.sh

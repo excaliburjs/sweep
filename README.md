@@ -1,18 +1,18 @@
-ludum-31
+Sweep Stacks
 ========
 
-[![Build Status](https://api.travis-ci.org/excaliburjs/ludum-31.png)](https://travis-ci.org/excaliburjs/ludum-31)
+[![Build Status](https://api.travis-ci.org/excaliburjs/sweep.png)](https://travis-ci.org/excaliburjs/sweep)
 
-Repository for Ludum Dare 31 Game Jam
+Repository for Sweep Stacks (branched off [ludum-31](https://github.com/excaliburjs/ludum-31))
 
 ## Play
 
-Play the game at http://excaliburjs.com/ludum-31
+Play the game at http://excaliburjs.com/sweep
 
 ## Contributing
 
 Just commit to `master` branch, Travis CI will automatically build and deploy to the `gh-pages` branch.
-You will see the results at http://excaliburjs.com/ludum-31
+You will see the results at http://excaliburjs.com/sweep
 
 ## Working Locally
 
