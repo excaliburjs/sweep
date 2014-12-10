@@ -19,7 +19,7 @@
 
 var game = new ex.Engine(0, 0, "game", ex.DisplayMode.FullScreen);
 game.backgroundColor = ex.Color.Transparent;
-
+var gameScale = new ex.Point(1, 1);
 
 var gameMode = GameMode.Standard;
 var muted = false;
@@ -61,7 +61,7 @@ var loadConfig = (config) => {
 };
 
 Config.resetDefault();
-InitSetup();
+
 
 document.getElementById("how-to-play").addEventListener("click", () => {
    if (gameMode === GameMode.Standard) {
@@ -329,4 +329,19 @@ function gameOver() {
 
 game.start(loader).then(() => {
    playLoop();
+
+   // set game scale
+   var defaultGridWidth = Config.CellWidth * Config.GridCellsWide;
+   var defaultGridHeight = Config.CellHeight * Config.GridCellsHigh;
+   
+   // scale based on height of viewport
+   // target 85% height
+   var scale = defaultGridHeight / game.getHeight();
+   var scaleDiff = 0.85 - scale;
+
+   ex.Logger.getInstance().info("Current viewport scale", scale);
+
+   gameScale.setTo(1 + scaleDiff, 1 + scaleDiff);
+
+   InitSetup();
 });

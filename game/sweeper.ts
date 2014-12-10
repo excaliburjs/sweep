@@ -43,7 +43,7 @@ class Sweeper extends ex.Actor {
          game.add(this._emitter);
       }
 
-      this.y = visualGrid.y + (this._row * Config.CellHeight);
+      this.y = visualGrid.y + (this._row * Config.CellHeight * gameScale.y);
 
       game.input.keyboard.off("up", Sweeper._handleKeyDown);
       game.input.keyboard.on("up", Sweeper._handleKeyDown);
@@ -64,11 +64,11 @@ class Sweeper extends ex.Actor {
 
    public update(engine: ex.Engine, delta: number) {
       super.update(engine, delta);
+
       this.x = visualGrid.x;
-      this._label.x = visualGrid.x - 50;
-      this._label.y = this.y;
       this._emitter.x = visualGrid.x;
       this._emitter.y = this.y;
+      this._emitter.setWidth(visualGrid.getWidth());
    }
 
    public sweepAll(force: boolean = false): void {
@@ -153,6 +153,7 @@ class Sweeper extends ex.Actor {
 
          cells.forEach(cell => {
             stats.scorePieces([cell.piece]);
+            effects.clearEffect(cell.piece);
             grid.clearPiece(cell.piece);
          });
 
@@ -162,10 +163,10 @@ class Sweeper extends ex.Actor {
          // advance sweeper
          if (!Config.SweepMovesUp && this._row < Config.SweepMaxRow) {
             this._row++;
-            this.moveBy(this.x, this.y + Config.CellHeight, 200);
+            this.moveBy(this.x, this.y + Config.CellHeight * gameScale.y, 200);
          } else if (Config.SweepMovesUp && this._row > Config.SweepMinRow) {
             this._row--;
-            this.moveBy(this.x, this.y - Config.CellHeight, 200);
+            this.moveBy(this.x, this.y - Config.CellHeight * gameScale.y, 200);
          }
 
          turnManager.advanceTurn();

@@ -11,6 +11,6 @@
       var vgWorldPos = game.worldToScreenCoordinates(new ex.Point(visualGrid.x, visualGrid.getBottom()));
       this.x = vgWorldPos.x;
       this.y = vgWorldPos.y;
-      this.setWidth(visualGrid.logicalGrid.cols * Config.CellWidth);      
+      this.setWidth(visualGrid.getWidth());      
    }
 } 

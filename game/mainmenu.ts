@@ -27,8 +27,8 @@ class MainMenu extends ex.UIActor {
 
       this._logo = new ex.UIActor();
       this._logo.addDrawing(Resources.TextureLogo.asSprite());
-      this._logo.currentDrawing.setScaleX(0.7);
-      this._logo.currentDrawing.setScaleY(0.7);
+      this._logo.currentDrawing.setScaleX(0.7 * gameScale.x);
+      this._logo.currentDrawing.setScaleY(0.7 * gameScale.y);
       this._logo.currentDrawing.transformAboutPoint(new ex.Point(0.5, 0.5));     
 
       this._standardButton = new MenuButton(Resources.TextureStandardBtn.asSprite(), MainMenu.LoadStandardMode, this.x, this.y + MainMenu._StandardButtonPos.y);
@@ -111,10 +111,10 @@ class MainMenu extends ex.UIActor {
       this.setWidth(visualGrid.getWidth());
       this.setHeight(visualGrid.getHeight());     
       
-      this._standardButton.x = this.x + MainMenu._StandardButtonPos.x;
-      this._standardButton.y = this.y + MainMenu._StandardButtonPos.y;
-      this._challengeButton.x = this.x + MainMenu._ChallengeButtonPos.x;
-      this._challengeButton.y = this.y + MainMenu._ChallengeButtonPos.y;
+      this._standardButton.x = this.getCenter().x - (this._standardButton.getWidth() / 2);
+      this._standardButton.y = this.y + MainMenu._StandardButtonPos.y * this._standardButton.scale.y;
+      this._challengeButton.x = this.getCenter().x - (this._challengeButton.getWidth() / 2);
+      this._challengeButton.y = this.y + MainMenu._ChallengeButtonPos.y * this._challengeButton.scale.y;
 
       if (this._show) {
          this._show = false;
@@ -228,6 +228,8 @@ class MenuButton extends ex.UIActor {
    constructor(sprite: ex.Sprite, public action: () => void, x: number, y: number) {
       super(x, y, Config.MainMenuButtonWidth, Config.MainMenuButtonHeight);
 
+      this.scale.setTo(ex.Util.clamp(gameScale.x, 0, 1), ex.Util.clamp(gameScale.y, 0, 1));
+      //this.setCenterDrawing(true);
       this.addDrawing(sprite);
       this.off("pointerup", this.action);
       this.on("pointerup", this.action);

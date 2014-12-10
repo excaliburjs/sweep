@@ -23,7 +23,12 @@ class Cell {
    }
 
    public getCenter(): ex.Point {
-      return new ex.Point(this.x * Config.CellWidth + (Config.CellWidth / 2) + visualGrid.x, this.y * Config.CellHeight + (Config.CellHeight / 2) + visualGrid.y);
+      var cw = Config.CellWidth * gameScale.x;
+      var ch = Config.CellHeight * gameScale.y;
+
+      return new ex.Point(
+         this.x * cw + (cw / 2) + visualGrid.x,
+         this.y * ch + (ch / 2) + visualGrid.y);
    }
 }
 
@@ -235,29 +240,20 @@ class VisualGrid extends ex.Actor {
    constructor(public logicalGrid: LogicalGrid) {
       super(0, Config.GridY, Config.CellWidth * logicalGrid.cols, Config.CellHeight * logicalGrid.rows);
       this.anchor.setTo(0, 0);
-
+      this.scale.setTo(gameScale.x, gameScale.y);
    }
 
    public update(engine: ex.Engine, delta: number) {
       super.update(engine, delta);
 
+      this.scale.setTo(gameScale.x, gameScale.y);
    }
 
    public draw(ctx: CanvasRenderingContext2D, delta: number) {
       super.draw(ctx, delta);
 
-      this.logicalGrid.cells.forEach(c => {
-
-         ctx.fillStyle = Palette.GridBackgroundColor.toString();
-         ctx.fillRect(c.x * Config.CellWidth, c.y * Config.CellHeight + this.y, Config.CellWidth, Config.CellHeight);
-
-         if (Config.EnableGridLines) {
-            ctx.strokeStyle = Util.darken(Palette.GridBackgroundColor, 0.1);
-            ctx.lineWidth = 1;
-            ctx.strokeRect(c.x * Config.CellWidth, c.y * Config.CellHeight + this.y, Config.CellWidth, Config.CellHeight);
-         }
-
-      });
+      ctx.fillStyle = Palette.GridBackgroundColor.toString();
+      ctx.fillRect(this.x, this.y, this.getWidth(), this.getHeight());
    }
 
    public getCellByPos(screenX: number, screenY: number): Cell {

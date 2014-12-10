@@ -32,8 +32,9 @@ class Piece extends ex.Actor {
       this._type = type || PieceType.Circle;
       this._originalColor = color;
       this._updateDrawings();
-      this.calculatedAnchor = new ex.Point(18, 18);
-
+      this.scale.setTo(gameScale.x, gameScale.y);
+      this.calculatedAnchor = new ex.Point(Config.PieceWidth / 2 * this.scale.x, Config.PieceHeight / 2 * this.scale.y);
+      this.setCenterDrawing(true);
    }
    
    public getId(): number {
@@ -75,8 +76,6 @@ class Piece extends ex.Actor {
       } else {
          this.setDrawing("default");
       }
-
-      
    }
 }
 

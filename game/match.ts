@@ -77,7 +77,7 @@ class MatchManager extends ex.Class {
             this.runInProgress = true;
             cell.piece.selected = true;
             cell.piece.setCenterDrawing(true);
-            cell.piece.scaleTo(1.3, 1.3, 1.8, 1.8).scaleTo(1,1,1.8,1.8);
+            cell.piece.scaleTo(gameScale.x * 1.3, gameScale.y * 1.3, 1.8, 1.8).scaleTo(gameScale.x, gameScale.y, 1.8, 1.8);
             this._run.push(cell.piece);
             this._playNote();
             ex.Logger.getInstance().debug("Run started", this._run);
@@ -138,14 +138,14 @@ class MatchManager extends ex.Class {
 
                if (!piece.hover) {
                   piece.hover = true;
-                  piece.scaleTo(1.2, 1.2, 1.2, 1.8);
+                  piece.scaleTo(gameScale.x * 1.2, gameScale.y * 1.2, 1.2, 1.8);
                }
 
 
             } else {
                if (piece.hover) {
                   piece.hover = false;
-                  piece.scaleTo(1, 1, 1.8, 1.8);
+                  piece.scaleTo(gameScale.x, gameScale.y, 1.8, 1.8);
                }
             }
 
