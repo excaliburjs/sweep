@@ -63,6 +63,14 @@ var loadConfig = (config) => {
 Config.resetDefault();
 InitSetup();
 
+document.getElementById("how-to-play").addEventListener("click", () => {
+   if (gameMode === GameMode.Standard) {
+      MainMenu.ShowNormalTutorial();
+   } else {
+      MainMenu.ShowChallengeTutorial();
+   }
+});
+
 document.getElementById("play-again").addEventListener('click', () => {
    if (gameMode == GameMode.Standard) {
       MainMenu.LoadStandardMode();
@@ -206,9 +214,18 @@ function muteAll() {
    setVolume(0);
 }
 
+function muteMusic() {
+   Resources.LoopSound.stop();
+   Resources.ChallengeLoopSound.stop();
+}
+
 document.getElementById("sound").addEventListener('click', function () {
    if (hasClass(this, 'fa-volume-up')) {
-      replaceClass(this, 'fa-volume-up', 'fa-volume-off');
+      replaceClass(this, 'fa-volume-up', 'fa-volume-down');
+      muted = true;
+      muteMusic();
+   } else if (hasClass(this, 'fa-volume-down')) {
+      replaceClass(this, 'fa-volume-down', 'fa-volume-off');
       muted = true;
       muteAll();
    } else {
@@ -248,7 +265,9 @@ function gameOver() {
       }
    }
 
-   playGameOver();
+   if (!muted) {
+      playGameOver();
+   }
 
    if (turnManager) turnManager.dispose(); // stop game over from happening infinitely in time attack
 
