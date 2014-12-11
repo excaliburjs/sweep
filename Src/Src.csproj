@@ -64,6 +64,7 @@
     <TypeScriptCompile Include="game\Piece.ts" />
     <TypeScriptCompile Include="game\polyline.ts" />
     <TypeScriptCompile Include="game\resources.ts" />
+    <TypeScriptCompile Include="game\sound.ts" />
     <TypeScriptCompile Include="game\Stats.ts" />
     <TypeScriptCompile Include="game\sweeper.ts" />
     <TypeScriptCompile Include="game\transition.ts" />
