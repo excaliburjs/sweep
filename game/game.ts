@@ -16,20 +16,23 @@
 /// <reference path="Effects.ts"/>
 /// <reference path="nomoves.ts"/>
 /// <reference path="mask.ts"/>
+/// <reference path="sound.ts"/>
 
 var game = new ex.Engine(0, 0, "game", ex.DisplayMode.FullScreen);
-game.backgroundColor = ex.Color.Transparent;
 var gameScale = new ex.Point(1, 1);
-
 var gameMode = GameMode.Standard;
-var muted = false;
-
 var loader = new ex.Loader();
+
+// transparent bg
+game.backgroundColor = ex.Color.Transparent;
 
 // load up all resources in dictionary
 _.forIn(Resources, (resource) => {
    loader.addResource(resource);
 });
+
+// init sound
+SoundManager.init();
 
 // game objects
 var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
@@ -61,7 +64,6 @@ var loadConfig = (config) => {
 };
 
 Config.resetDefault();
-
 
 document.getElementById("how-to-play").addEventListener("click", () => {
    if (gameMode === GameMode.Standard) {
@@ -134,31 +136,10 @@ function InitSetup() {
 
    //add pieces to initial rows
    grid.seed(Config.NumStartingRows);
-   if (!muted) {
-      playLoop();
-   }
+
+   // start sound
+   SoundManager.startLoop();   
 }
-
-//game.input.keyboard.on('up', (evt: ex.Input.KeyEvent) => {
-//   if (evt.key === ex.Input.Keys.D) {
-//      game.isDebug = !game.isDebug;
-//   }
-
-//   if (evt.key === ex.Input.Keys.U) {
-//      // shift all rows up 1
-//      for (var i = 0; i < grid.rows; i++) {
-//         grid.shift(i, i - 1);         
-//      }
-//      // fill first row
-//      grid.fill(grid.rows - 1);
-//   }
-
- 
-//});
-
-//var postYourScore = new ex.Actor(gameOverWidget.widget.x + gameOverWidget.widget.getWidth() / 2, gameOverWidget.widget.y + 100, 200, 100, ex.Color.Blue);
-//gameOverWidget.addButton(postYourScore);
-
 
 function hasClass(element, cls) {
    return element.classList.contains(cls);
@@ -179,68 +160,6 @@ function removeClass(element, cls) {
    element.classList.remove(cls);
 }
 
-
-function setVolume(volume: number) {
-   for (var r in Resources) {
-      if (Resources[r] instanceof ex.Sound) {
-         Resources[r].setVolume(volume);
-      }
-   }
-}
-
-function playLoop() {
-   setVolume(1);
-   Resources.LoopSound.stop();
-   Resources.ChallengeLoopSound.stop();
-   // play some sounds
-   if (gameMode === GameMode.Standard) {
-      Resources.KnockSound.setVolume(.5);
-      Resources.TapsSound.setVolume(.2);
-      Resources.SweepSound.setVolume(.4);
-      Resources.MegaSweepSound.setVolume(.4);
-      Resources.LoopSound.setLoop(true);
-      Resources.LoopSound.play();
-   } else {
-
-      Resources.ChallengeLoopSound.setLoop(true);
-      Resources.ChallengeLoopSound.setVolume(.5);
-      Resources.ChallengeLoopSound.play();
-   }
-}
-
-function muteAll() {
-   Resources.LoopSound.stop();
-   Resources.ChallengeLoopSound.stop();
-   setVolume(0);
-}
-
-function muteMusic() {
-   Resources.LoopSound.stop();
-   Resources.ChallengeLoopSound.stop();
-}
-
-document.getElementById("sound").addEventListener('click', function () {
-   if (hasClass(this, 'fa-volume-up')) {
-      replaceClass(this, 'fa-volume-up', 'fa-volume-down');
-      muted = true;
-      muteMusic();
-   } else if (hasClass(this, 'fa-volume-down')) {
-      replaceClass(this, 'fa-volume-down', 'fa-volume-off');
-      muted = true;
-      muteAll();
-   } else {
-      replaceClass(this, 'fa-volume-off', 'fa-volume-up');
-      muted = false;
-      playLoop();
-   }
-});
-
-function playGameOver() {
-   Resources.LoopSound.stop();
-   Resources.ChallengeLoopSound.stop();
-   Resources.GameOverSound.setVolume(.4);
-   Resources.GameOverSound.play();
-}
 
 function gameOver() {
 
@@ -266,9 +185,7 @@ function gameOver() {
       }
    }
 
-   if (!muted) {
-      playGameOver();
-   }
+   SoundManager.playGameOver();
 
    if (turnManager) turnManager.dispose(); // stop game over from happening infinitely in time attack
 
@@ -299,38 +216,15 @@ function gameOver() {
       facebookW.parentNode.removeChild(facebookW);
       social.appendChild(facebookW);
    } catch (e) {
-      console.log("Something happened ", e);
-      //swallow
+      ex.Logger.getInstance().warn("Twitter failed", e);      
    }
-   //document.getElementById("fidget").attributes.href
-
-
-   //var color = new ex.Color(ex.Color.DarkGray.r, ex.Color.DarkGray.g, ex.Color.DarkGray.b, 0.3);
-   //var gameOverWidgetActor = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() - 800, 300, 300, color);
-   //game.addChild(gameOverWidgetActor);
-   //gameOverWidgetActor.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1000);
-
-   //game.addChild(gameOverWidget.widget);
-   ////gameOverWidget.widget.moveTo(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 1000);
-   ////gameOverWidget.moveWidget(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2, 50);
-
-   ////TODO buttons fade in once widget is in place? perhaps button actors are invisible, and the sprite for the widget has the buttons on it
-   //var postScoreButton = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2 - 50, 250, 50, ex.Color.Blue);
-   //gameOverWidget.addButton(postScoreButton);
-
-   //var playAgainButton = new ex.Actor(visualGrid.x + visualGrid.getWidth() / 2, visualGrid.y + visualGrid.getHeight() / 2 + 50, 250, 50, ex.Color.Green);
-   //gameOverWidget.addButton(playAgainButton);
-
-
 }
 
 // TODO clean up pieces that are not in play anymore after update loop
 
 game.start(loader).then(() => {
-   playLoop();
-
+   
    // set game scale
-   var defaultGridWidth = Config.CellWidth * Config.GridCellsWide;
    var defaultGridHeight = Config.CellHeight * Config.GridCellsHigh;
    
    // scale based on height of viewport
