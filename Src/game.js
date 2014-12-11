@@ -1704,6 +1704,7 @@ var SoundManager = (function () {
     SoundManager._startMusic = function () {
         if (SoundManager._CurrentSoundLevel !== 2 /* All */)
             return;
+        SoundManager._stopMusic();
         if (gameMode === 0 /* Standard */) {
             Resources.LoopSound.setLoop(true);
             Resources.LoopSound.play();

@@ -54,6 +54,8 @@ class SoundManager {
    private static _startMusic() {
       if (SoundManager._CurrentSoundLevel !== SoundLevel.All) return;
 
+      SoundManager._stopMusic();
+
       if (gameMode === GameMode.Standard) {
          Resources.LoopSound.setLoop(true);
          Resources.LoopSound.play();
