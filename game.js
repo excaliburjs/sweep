@@ -581,10 +581,6 @@ var MainMenu = (function (_super) {
                 tutNormalIdx = 0;
                 document.getElementById("tutorial-normal-next").innerHTML = "Next";
                 _this._dismissNormalTutorial();
-                if (MainMenu._LoadAfterTutorial) {
-                    MainMenu._LoadAfterTutorial = false;
-                    MainMenu.LoadStandardMode(true);
-                }
                 return;
             }
             if (slides.length - 1 === tutNormalIdx + 1) {
@@ -609,10 +605,6 @@ var MainMenu = (function (_super) {
                 tutChallengeIdx = 0;
                 document.getElementById("tutorial-challenge-next").innerHTML = "Next";
                 _this._dismissChallengeTutorial();
-                if (MainMenu._LoadAfterTutorial) {
-                    MainMenu._LoadAfterTutorial = false;
-                    MainMenu.LoadChallengeMode(true);
-                }
                 return;
             }
             if (slides.length - 1 === tutChallengeIdx + 1) {
@@ -682,12 +674,22 @@ var MainMenu = (function (_super) {
     MainMenu.prototype._dismissNormalTutorial = function () {
         removeClass(document.getElementById("tutorial-normal"), "show");
         MainMenu._markTutorialAsDone(0 /* Standard */);
+        if (MainMenu._LoadAfterTutorial) {
+            MainMenu._LoadAfterTutorial = false;
+            MainMenu.LoadStandardMode(true);
+            return;
+        }
         if (gameMode !== 0 /* Standard */)
             MainMenu.LoadStandardMode(true);
     };
     MainMenu.prototype._dismissChallengeTutorial = function () {
         removeClass(document.getElementById("tutorial-challenge"), "show");
         MainMenu._markTutorialAsDone(1 /* Timed */);
+        if (MainMenu._LoadAfterTutorial) {
+            MainMenu._LoadAfterTutorial = false;
+            MainMenu.LoadChallengeMode(true);
+            return;
+        }
         if (gameMode !== 1 /* Timed */)
             MainMenu.LoadChallengeMode(true);
     };
