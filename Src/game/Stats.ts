@@ -183,7 +183,7 @@
       var meterXPos = visualGrid.x;
       var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
 
-      this._totalScore(visualGrid.x, visualGrid.y - 5);
+      this._totalScore();
 
       var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
       var meterStartX = meterXPos += (visualGrid.getWidth() - totalMeterWidth) / 2;
@@ -224,13 +224,20 @@
       game.add(square);
    }
 
-   private _totalScore(xPos: number, yPos: number) {
+   private _totalScore() {
       var totalScore = 0;
-      var label = new ex.Label(totalScore.toString(), xPos, yPos, "bold 18px Arial");
+      var label = new ex.Label(totalScore.toString(), visualGrid.getCenter().x, visualGrid.y + 72 + 20, "72px Arial");
       label.color = ex.Color.White;
+      label.textAlign = ex.TextAlign.Center;
+      label.opacity = 0.2;
+
       game.addEventListener('update', (data?: ex.UpdateEvent) => {
-         var totalScore = this.getTotalScore();
-         label.text = totalScore.toString();
+
+         label.x = visualGrid.getCenter().x;
+         label.y = visualGrid.y + 72 + 20;
+         
+         
+         label.text = this.getTotalScore().toString();
       });
       game.add(label);
    }
@@ -266,6 +273,8 @@
    private _addMeter(piece: PieceType, x: number, y: number) {
       var meter = new Meter(x, y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold);
       meter.enableCapturePointer = true;
+      
+      // todo add meter bonus drawing
 
       meter.on("pointerup", () => {
          sweeper.sweep(piece);

@@ -1319,7 +1319,7 @@ var Stats = (function () {
         var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
         var meterXPos = visualGrid.x;
         var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
-        this._totalScore(visualGrid.x, visualGrid.y - 5);
+        this._totalScore();
         var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
         var meterStartX = meterXPos += (visualGrid.getWidth() - totalMeterWidth) / 2;
         if (Config.EnableSweepMeters) {
@@ -1354,14 +1354,17 @@ var Stats = (function () {
         game.add(label);
         game.add(square);
     };
-    Stats.prototype._totalScore = function (xPos, yPos) {
+    Stats.prototype._totalScore = function () {
         var _this = this;
         var totalScore = 0;
-        var label = new ex.Label(totalScore.toString(), xPos, yPos, "bold 18px Arial");
+        var label = new ex.Label(totalScore.toString(), visualGrid.getCenter().x, visualGrid.y + 72 + 20, "72px Arial");
         label.color = ex.Color.White;
+        label.textAlign = 2 /* Center */;
+        label.opacity = 0.2;
         game.addEventListener('update', function (data) {
-            var totalScore = _this.getTotalScore();
-            label.text = totalScore.toString();
+            label.x = visualGrid.getCenter().x;
+            label.y = visualGrid.y + 72 + 20;
+            label.text = _this.getTotalScore().toString();
         });
         game.add(label);
     };
@@ -1391,6 +1394,7 @@ var Stats = (function () {
         var _this = this;
         var meter = new Meter(x, y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold);
         meter.enableCapturePointer = true;
+        // todo add meter bonus drawing
         meter.on("pointerup", function () {
             sweeper.sweep(piece);
         });
