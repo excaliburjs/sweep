@@ -653,7 +653,13 @@ var MainMenu = (function (_super) {
             if (slides.length <= 0)
                 return;
             if (slides.length === (tutNormalIdx + 1)) {
+                tutNormalIdx = 0;
+                document.getElementById("tutorial-normal-next").innerHTML = "Next";
                 _this._dismissNormalTutorial();
+                if (MainMenu._LoadAfterTutorial) {
+                    MainMenu._LoadAfterTutorial = false;
+                    MainMenu.LoadStandardMode(true);
+                }
                 return;
             }
             if (slides.length - 1 === tutNormalIdx + 1) {
@@ -675,7 +681,13 @@ var MainMenu = (function (_super) {
             if (slides.length <= 0)
                 return;
             if (slides.length === (tutChallengeIdx + 1)) {
+                tutChallengeIdx = 0;
+                document.getElementById("tutorial-challenge-next").innerHTML = "Next";
                 _this._dismissChallengeTutorial();
+                if (MainMenu._LoadAfterTutorial) {
+                    MainMenu._LoadAfterTutorial = false;
+                    MainMenu.LoadChallengeMode(true);
+                }
                 return;
             }
             if (slides.length - 1 === tutChallengeIdx + 1) {
@@ -777,6 +789,7 @@ var MainMenu = (function (_super) {
         ex.Logger.getInstance().info("Loading standard mode");
         skipTutorialCheck = (typeof skipTutorialCheck === "boolean" && skipTutorialCheck);
         if (!skipTutorialCheck && !MainMenu._hasFinishedTutorial(0 /* Standard */)) {
+            MainMenu._LoadAfterTutorial = true;
             MainMenu.ShowNormalTutorial();
         }
         else {
@@ -789,6 +802,7 @@ var MainMenu = (function (_super) {
         ex.Logger.getInstance().info("Loading challenge mode");
         skipTutorial = (typeof skipTutorial === "boolean" && skipTutorial);
         if (!skipTutorial && !MainMenu._hasFinishedTutorial(1 /* Timed */)) {
+            MainMenu._LoadAfterTutorial = true;
             MainMenu.ShowChallengeTutorial();
         }
         else {
@@ -799,6 +813,7 @@ var MainMenu = (function (_super) {
     MainMenu._StandardButtonPos = new ex.Point(42, 170);
     MainMenu._ChallengeButtonPos = new ex.Point(42, 170 + Config.MainMenuButtonHeight + 20);
     MainMenu._LogoPos = new ex.Point(0, 50);
+    MainMenu._LoadAfterTutorial = false;
     return MainMenu;
 })(ex.UIActor);
 var MenuButton = (function (_super) {
