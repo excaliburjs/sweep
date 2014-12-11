@@ -55,10 +55,6 @@ class MainMenu extends ex.UIActor {
             tutNormalIdx = 0;
             document.getElementById("tutorial-normal-next").innerHTML = "Next";
             this._dismissNormalTutorial();
-            if (MainMenu._LoadAfterTutorial) {
-               MainMenu._LoadAfterTutorial = false;
-               MainMenu.LoadStandardMode(true);
-            }
             return;
          }
 
@@ -88,10 +84,6 @@ class MainMenu extends ex.UIActor {
             tutChallengeIdx = 0;
             document.getElementById("tutorial-challenge-next").innerHTML = "Next";
             this._dismissChallengeTutorial();
-            if (MainMenu._LoadAfterTutorial) {
-               MainMenu._LoadAfterTutorial = false;
-               MainMenu.LoadChallengeMode(true);
-            }
             return;
          }
 
@@ -175,12 +167,22 @@ class MainMenu extends ex.UIActor {
    private _dismissNormalTutorial() {
       removeClass(document.getElementById("tutorial-normal"), "show");
       MainMenu._markTutorialAsDone(GameMode.Standard);
+      if (MainMenu._LoadAfterTutorial) {
+         MainMenu._LoadAfterTutorial = false;
+         MainMenu.LoadStandardMode(true);
+         return;
+      }
       if (gameMode !== GameMode.Standard) MainMenu.LoadStandardMode(true);
    }
 
    private _dismissChallengeTutorial() {
       removeClass(document.getElementById("tutorial-challenge"), "show");
       MainMenu._markTutorialAsDone(GameMode.Timed);
+      if (MainMenu._LoadAfterTutorial) {
+         MainMenu._LoadAfterTutorial = false;
+         MainMenu.LoadChallengeMode(true);
+         return;
+      }
       if (gameMode !== GameMode.Timed) MainMenu.LoadChallengeMode(true);
    }
 
