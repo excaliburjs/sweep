@@ -32,13 +32,20 @@
     </Content>
     <Content Include="credits.html" />
     <Content Include="css\font-awesome.min.css" />
+    <Content Include="Excalibur.js" />
     <Content Include="fonts\fontawesome-webfont.svg" />
+    <Content Include="game.js" />
+    <Content Include="icon.png" />
+    <Content Include="images\bg.png" />
     <Content Include="images\bg2.jpg" />
+    <Content Include="images\bg2.png" />
+    <Content Include="images\bg3.png" />
     <Content Include="images\challenge.png" />
     <Content Include="images\logo.png" />
     <Content Include="images\no-moves.png" />
     <Content Include="images\readme.txt" />
     <Content Include="images\standard.png" />
+    <Content Include="images\sweep-indicator.png" />
     <Content Include="images\sweepstacks.png" />
     <Content Include="images\Tile1.png" />
     <Content Include="images\Tile2.png" />
@@ -85,7 +92,11 @@
     <Content Include="sounds\challengenote4.mp3" />
     <Content Include="sounds\challengenote5.mp3" />
     <Content Include="sounds\challengenote6.mp3" />
+    <Content Include="sounds\gameover.mp3" />
+    <Content Include="sounds\knock.mp3" />
     <Content Include="sounds\loop.mp3" />
+    <Content Include="sounds\match.mp3" />
+    <Content Include="sounds\megasweep.mp3" />
     <Content Include="sounds\note1.mp3" />
     <Content Include="sounds\note2.mp3" />
     <Content Include="sounds\note3.mp3" />
@@ -98,11 +109,18 @@
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="web.config" />
+    <Content Include="sounds\sweep.mp3" />
+    <Content Include="sounds\taps.mp3" />
+    <Content Include="sounds\undo.mp3" />
+    <Content Include="sounds\undo2.mp3" />
+    <Content Include="web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="fonts\fontawesome-webfont.eot" />
     <Content Include="fonts\fontawesome-webfont.ttf" />
     <Content Include="fonts\fontawesome-webfont.woff" />
     <Content Include="fonts\FontAwesome.otf" />
+    <Content Include="manifest.json" />
     <None Include="web.Debug.config">
       <DependentUpon>web.config</DependentUpon>
     </None>
@@ -144,10 +162,13 @@
     <TypeScriptSourceMap>False</TypeScriptSourceMap>
     <TypeScriptOutFile>game.js</TypeScriptOutFile>
     <TypeScriptModuleKind>none</TypeScriptModuleKind>
+    <PublishDatabases>false</PublishDatabases>
+    <FilesToIncludeForPublish>AllFilesInProjectFolder</FilesToIncludeForPublish>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <TypeScriptRemoveComments>true</TypeScriptRemoveComments>
+    <TypeScriptRemoveComments>False</TypeScriptRemoveComments>
     <TypeScriptSourceMap>false</TypeScriptSourceMap>
+    <TypeScriptOutFile>game.js</TypeScriptOutFile>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets')" />
   <PropertyGroup>

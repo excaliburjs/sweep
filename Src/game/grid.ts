@@ -33,7 +33,7 @@ class Cell {
 }
 
 class LogicalGrid extends ex.Class {
-   public cells: Cell[] = [];
+   public cells: Cell[];
    constructor(public rows: number, public cols: number) {
       super();
 
@@ -101,6 +101,7 @@ class LogicalGrid extends ex.Class {
          piece.cell.piece = null;
          piece.cell = null;
          piece.kill();
+         piece.dispose();
       }
    }
    
