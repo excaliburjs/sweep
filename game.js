@@ -223,12 +223,6 @@ var PieceType;
 var PieceTypes = [0 /* Circle */, 2 /* Square */, 1 /* Triangle */, 3 /* Star */];
 var PieceTypeToColor = [Palette.PieceColor1, Palette.PieceColor2, Palette.PieceColor3, Palette.PieceColor4];
 var PieceTypeToTexture = [Resources.TextureTile1, Resources.TextureTile2, Resources.TextureTile3, Resources.TextureTile4];
-var PieceTypeToSprites = [
-    [new ex.Sprite(PieceTypeToTexture[0], 0, 0, Config.PieceWidth, Config.PieceHeight), new ex.Sprite(PieceTypeToTexture[0], Config.PieceWidth, 0, Config.PieceWidth, Config.PieceHeight), new ex.Sprite(PieceTypeToTexture[0], Config.PieceWidth * 2, 0, Config.PieceWidth, Config.PieceHeight)],
-    [new ex.Sprite(PieceTypeToTexture[1], 0, 0, Config.PieceWidth, Config.PieceHeight), new ex.Sprite(PieceTypeToTexture[1], Config.PieceWidth, 0, Config.PieceWidth, Config.PieceHeight), new ex.Sprite(PieceTypeToTexture[1], Config.PieceWidth * 2, 0, Config.PieceWidth, Config.PieceHeight)],
-    [new ex.Sprite(PieceTypeToTexture[2], 0, 0, Config.PieceWidth, Config.PieceHeight), new ex.Sprite(PieceTypeToTexture[2], Config.PieceWidth, 0, Config.PieceWidth, Config.PieceHeight), new ex.Sprite(PieceTypeToTexture[2], Config.PieceWidth * 2, 0, Config.PieceWidth, Config.PieceHeight)],
-    [new ex.Sprite(PieceTypeToTexture[3], 0, 0, Config.PieceWidth, Config.PieceHeight), new ex.Sprite(PieceTypeToTexture[3], Config.PieceWidth, 0, Config.PieceWidth, Config.PieceHeight), new ex.Sprite(PieceTypeToTexture[3], Config.PieceWidth * 2, 0, Config.PieceWidth, Config.PieceHeight)]
-];
 var PieceEvent = (function (_super) {
     __extends(PieceEvent, _super);
     function PieceEvent(cell) {
@@ -263,16 +257,12 @@ var Piece = (function (_super) {
         this._updateDrawings();
     };
     Piece.prototype._updateDrawings = function () {
-        //var tileSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, Config.PieceWidth, Config.PieceHeight);
-        //this.addDrawing("default", tileSprite);
-        this.addDrawing("default", PieceTypeToSprites[this._type][0]);
-        //var highlightSprite = new ex.Sprite(PieceTypeToTexture[this._type], Config.PieceWidth, 0, Config.PieceWidth, Config.PieceHeight);
-        //this.addDrawing("highlight", highlightSprite);
-        this.addDrawing("highlight", PieceTypeToSprites[this._type][1]);
-        //var fadedSprite = new ex.Sprite(PieceTypeToTexture[this._type], Config.PieceWidth * 2, 0, Config.PieceWidth, Config.PieceHeight);
-        //this.addDrawing("faded", fadedSprite);
-        this.addDrawing("faded", PieceTypeToSprites[this._type][2]);
-        this.setDrawing("default");
+        var tileSprite = new ex.Sprite(PieceTypeToTexture[this._type], 0, 0, Config.PieceWidth, Config.PieceHeight);
+        this.addDrawing("default", tileSprite);
+        var highlightSprite = new ex.Sprite(PieceTypeToTexture[this._type], Config.PieceWidth, 0, Config.PieceWidth, Config.PieceHeight);
+        this.addDrawing("highlight", highlightSprite);
+        var fadedSprite = new ex.Sprite(PieceTypeToTexture[this._type], Config.PieceWidth * 2, 0, Config.PieceWidth, Config.PieceHeight);
+        this.addDrawing("faded", fadedSprite);
     };
     Piece.prototype.onInitialize = function (engine) {
         this._updateDrawings();
@@ -290,8 +280,6 @@ var Piece = (function (_super) {
             this.setDrawing("default");
         }
     };
-    Piece.prototype.dispose = function () {
-    };
     return Piece;
 })(ex.Actor);
 var PieceFactory = (function () {
@@ -301,12 +289,12 @@ var PieceFactory = (function () {
         if (x === void 0) { x = 0; }
         if (y === void 0) { y = 0; }
         var index = Math.floor(Math.random() * PieceTypes.length);
-        var piece = new Piece(PieceFactory._maxId++, x, y, PieceTypeToColor[index], index);
+        var piece = new Piece(PieceFactory._maxId++, x, y, PieceTypeToColor[index].clone(), index);
         game.add(piece);
         return piece;
     };
     PieceFactory.getPiece = function (type) {
-        var piece = new Piece(PieceFactory._maxId++, 0, 0, PieceTypeToColor[type], type);
+        var piece = new Piece(PieceFactory._maxId++, 0, 0, PieceTypeToColor[type].clone(), type);
         game.add(piece);
         return piece;
     };
@@ -350,6 +338,7 @@ var LogicalGrid = (function (_super) {
         _super.call(this);
         this.rows = rows;
         this.cols = cols;
+        this.cells = [];
         this.cells = new Array(rows * cols);
         for (var i = 0; i < this.cols; i++) {
             for (var j = 0; j < this.rows; j++) {
@@ -406,7 +395,6 @@ var LogicalGrid = (function (_super) {
             piece.cell.piece = null;
             piece.cell = null;
             piece.kill();
-            piece.dispose();
         }
     };
     LogicalGrid.prototype.getAdjacentPieceGroup = function (piece) {
@@ -1640,7 +1628,7 @@ var Effects = (function () {
         emitter.endColor = ex.Color.Yellow;
         emitter.startSize = gameScale.x * 0.5;
         emitter.endSize = 0.01;
-        emitter.particleSprite = piece.currentDrawing;
+        emitter.particleSprite = piece.currentDrawing.clone();
         emitter.particleSprite.transformAboutPoint(new ex.Point(.5, .5));
         emitter.particleRotationalVelocity = Math.PI / 10;
         emitter.randomRotation = true;
