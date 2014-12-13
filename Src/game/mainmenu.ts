@@ -1,9 +1,9 @@
 ﻿/// <reference path="../scripts/typings/Cookies.d.ts"/>
 
 class MainMenu extends ex.UIActor {
-   
+
    private _logo: ex.Actor;
-   private _standardButton: ex.UIActor;   
+   private _standardButton: ex.UIActor;
    private _challengeButton: ex.UIActor;
    private _muteMusicButton: ex.UIActor;
    private _muteSoundButton: ex.UIActor;
@@ -15,11 +15,12 @@ class MainMenu extends ex.UIActor {
    private static _StandardButtonPos = new ex.Point(42, 170);
    private static _ChallengeButtonPos = new ex.Point(42, 170 + Config.MainMenuButtonHeight + 20);
    private static _LogoPos = new ex.Point(0, 50);
+   private static _LoadAfterTutorial = false;
 
    constructor() {
       super();
 
-      this.color = new ex.Color(0, 0, 0, 0.9);                     
+      this.color = new ex.Color(0, 0, 0, 0.9);
    }
 
    public onInitialize(engine: ex.Engine) {
@@ -29,7 +30,7 @@ class MainMenu extends ex.UIActor {
       this._logo.addDrawing(Resources.TextureLogo.asSprite());
       this._logo.currentDrawing.setScaleX(0.7 * gameScale.x);
       this._logo.currentDrawing.setScaleY(0.7 * gameScale.y);
-      this._logo.currentDrawing.transformAboutPoint(new ex.Point(0.5, 0.5));     
+      this._logo.currentDrawing.transformAboutPoint(new ex.Point(0.5, 0.5));
 
       this._standardButton = new MenuButton(Resources.TextureStandardBtn.asSprite(), MainMenu.LoadStandardMode, this.x, this.y + MainMenu._StandardButtonPos.y);
       this._challengeButton = new MenuButton(Resources.TextureChallengeBtn.asSprite(), MainMenu.LoadChallengeMode, this.x, this.y + MainMenu._ChallengeButtonPos.y);
@@ -51,6 +52,8 @@ class MainMenu extends ex.UIActor {
          if (slides.length <= 0) return;
 
          if (slides.length === (tutNormalIdx + 1)) {
+            tutNormalIdx = 0;
+            document.getElementById("tutorial-normal-next").innerHTML = "Next";
             this._dismissNormalTutorial();
             return;
          }
@@ -67,7 +70,7 @@ class MainMenu extends ex.UIActor {
             slides[i].classList.add("hide");
          }
          slides[tutNormalIdx].classList.remove("hide");
-         
+
          return;
       });
       document.getElementById("tutorial-challenge-next").addEventListener("click", (e) => {
@@ -78,6 +81,8 @@ class MainMenu extends ex.UIActor {
          if (slides.length <= 0) return;
 
          if (slides.length === (tutChallengeIdx + 1)) {
+            tutChallengeIdx = 0;
+            document.getElementById("tutorial-challenge-next").innerHTML = "Next";
             this._dismissChallengeTutorial();
             return;
          }
@@ -109,8 +114,8 @@ class MainMenu extends ex.UIActor {
       this.x = vgp.x;
       this.y = vgp.y;
       this.setWidth(visualGrid.getWidth());
-      this.setHeight(visualGrid.getHeight());     
-      
+      this.setHeight(visualGrid.getHeight());
+
       this._standardButton.x = this.getCenter().x - (this._standardButton.getWidth() / 2);
       this._standardButton.y = this.y + MainMenu._StandardButtonPos.y * this._standardButton.scale.y;
       this._challengeButton.x = this.getCenter().x - (this._challengeButton.getWidth() / 2);
@@ -127,7 +132,7 @@ class MainMenu extends ex.UIActor {
             .callMethod(() => this._showing = false);
       } else if (!this._showing) {
          this._logo.x = this.getCenter().x;
-         this._logo.y = this.y + MainMenu._LogoPos.y;         
+         this._logo.y = this.y + MainMenu._LogoPos.y;
       }
 
       if (this._hide) {
@@ -162,12 +167,22 @@ class MainMenu extends ex.UIActor {
    private _dismissNormalTutorial() {
       removeClass(document.getElementById("tutorial-normal"), "show");
       MainMenu._markTutorialAsDone(GameMode.Standard);
-      if (gameMode !== GameMode.Standard) MainMenu.LoadStandardMode(true);      
+      if (MainMenu._LoadAfterTutorial) {
+         MainMenu._LoadAfterTutorial = false;
+         MainMenu.LoadStandardMode(true);
+         return;
+      }
+      if (gameMode !== GameMode.Standard) MainMenu.LoadStandardMode(true);
    }
 
    private _dismissChallengeTutorial() {
       removeClass(document.getElementById("tutorial-challenge"), "show");
       MainMenu._markTutorialAsDone(GameMode.Timed);
+      if (MainMenu._LoadAfterTutorial) {
+         MainMenu._LoadAfterTutorial = false;
+         MainMenu.LoadChallengeMode(true);
+         return;
+      }
       if (gameMode !== GameMode.Timed) MainMenu.LoadChallengeMode(true);
    }
 
@@ -193,7 +208,7 @@ class MainMenu extends ex.UIActor {
       removeClass(document.getElementById("game-over"), "show");
       addClass(document.getElementById("tutorial-challenge"), "show");
    }
-   
+
    // todo move loadConfig logic to here so we can manage state better?
 
    public static LoadStandardMode(skipTutorialCheck = false) {
@@ -202,6 +217,7 @@ class MainMenu extends ex.UIActor {
       skipTutorialCheck = (typeof skipTutorialCheck === "boolean" && skipTutorialCheck);
 
       if (!skipTutorialCheck && !MainMenu._hasFinishedTutorial(GameMode.Standard)) {
+         MainMenu._LoadAfterTutorial = true;
          MainMenu.ShowNormalTutorial();
       } else {
          loadConfig(Config.loadCasual);
@@ -215,6 +231,7 @@ class MainMenu extends ex.UIActor {
       skipTutorial = (typeof skipTutorial === "boolean" && skipTutorial);
 
       if (!skipTutorial && !MainMenu._hasFinishedTutorial(GameMode.Timed)) {
+         MainMenu._LoadAfterTutorial = true;
          MainMenu.ShowChallengeTutorial();
       } else {
          loadConfig(Config.loadSurvivalReverse);
@@ -224,7 +241,7 @@ class MainMenu extends ex.UIActor {
 }
 
 class MenuButton extends ex.UIActor {
-   
+
    constructor(sprite: ex.Sprite, public action: () => void, x: number, y: number) {
       super(x, y, Config.MainMenuButtonWidth, Config.MainMenuButtonHeight);
 

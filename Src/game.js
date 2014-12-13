@@ -653,6 +653,8 @@ var MainMenu = (function (_super) {
             if (slides.length <= 0)
                 return;
             if (slides.length === (tutNormalIdx + 1)) {
+                tutNormalIdx = 0;
+                document.getElementById("tutorial-normal-next").innerHTML = "Next";
                 _this._dismissNormalTutorial();
                 return;
             }
@@ -675,6 +677,8 @@ var MainMenu = (function (_super) {
             if (slides.length <= 0)
                 return;
             if (slides.length === (tutChallengeIdx + 1)) {
+                tutChallengeIdx = 0;
+                document.getElementById("tutorial-challenge-next").innerHTML = "Next";
                 _this._dismissChallengeTutorial();
                 return;
             }
@@ -745,12 +749,22 @@ var MainMenu = (function (_super) {
     MainMenu.prototype._dismissNormalTutorial = function () {
         removeClass(document.getElementById("tutorial-normal"), "show");
         MainMenu._markTutorialAsDone(0 /* Standard */);
+        if (MainMenu._LoadAfterTutorial) {
+            MainMenu._LoadAfterTutorial = false;
+            MainMenu.LoadStandardMode(true);
+            return;
+        }
         if (gameMode !== 0 /* Standard */)
             MainMenu.LoadStandardMode(true);
     };
     MainMenu.prototype._dismissChallengeTutorial = function () {
         removeClass(document.getElementById("tutorial-challenge"), "show");
         MainMenu._markTutorialAsDone(1 /* Timed */);
+        if (MainMenu._LoadAfterTutorial) {
+            MainMenu._LoadAfterTutorial = false;
+            MainMenu.LoadChallengeMode(true);
+            return;
+        }
         if (gameMode !== 1 /* Timed */)
             MainMenu.LoadChallengeMode(true);
     };
@@ -777,6 +791,7 @@ var MainMenu = (function (_super) {
         ex.Logger.getInstance().info("Loading standard mode");
         skipTutorialCheck = (typeof skipTutorialCheck === "boolean" && skipTutorialCheck);
         if (!skipTutorialCheck && !MainMenu._hasFinishedTutorial(0 /* Standard */)) {
+            MainMenu._LoadAfterTutorial = true;
             MainMenu.ShowNormalTutorial();
         }
         else {
@@ -789,6 +804,7 @@ var MainMenu = (function (_super) {
         ex.Logger.getInstance().info("Loading challenge mode");
         skipTutorial = (typeof skipTutorial === "boolean" && skipTutorial);
         if (!skipTutorial && !MainMenu._hasFinishedTutorial(1 /* Timed */)) {
+            MainMenu._LoadAfterTutorial = true;
             MainMenu.ShowChallengeTutorial();
         }
         else {
@@ -799,6 +815,7 @@ var MainMenu = (function (_super) {
     MainMenu._StandardButtonPos = new ex.Point(42, 170);
     MainMenu._ChallengeButtonPos = new ex.Point(42, 170 + Config.MainMenuButtonHeight + 20);
     MainMenu._LogoPos = new ex.Point(0, 50);
+    MainMenu._LoadAfterTutorial = false;
     return MainMenu;
 })(ex.UIActor);
 var MenuButton = (function (_super) {
@@ -1708,6 +1725,7 @@ var SoundManager = (function () {
     SoundManager._startMusic = function () {
         if (SoundManager._CurrentSoundLevel !== 2 /* All */)
             return;
+        SoundManager._stopMusic();
         if (gameMode === 0 /* Standard */) {
             Resources.LoopSound.setLoop(true);
             Resources.LoopSound.play();
