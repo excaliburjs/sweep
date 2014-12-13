@@ -1,0 +1,19 @@
+﻿{
+  "name": "Sweep Stacks",
+  "icons": [{
+        "src": "icon.png",
+        "sizes": "36x36",
+        "type": "image/png"
+      }, {
+        "src": "icon.png",
+        "sizes": "64x64",
+        "type": "image/png"
+      }, {
+        "src": "icon72.png",
+        "sizes": "72x72",
+        "type": "image/png"
+      }],
+  "start_url": "/index.html",
+  "display": "fullscreen",
+  "orientation": "portrait"
+}

@@ -20,7 +20,7 @@
       emitter.endColor = ex.Color.Yellow;
       emitter.startSize = gameScale.x * 0.5;
       emitter.endSize = 0.01;
-      emitter.particleSprite = (<ex.Sprite>piece.currentDrawing).clone();
+      emitter.particleSprite = (<ex.Sprite>piece.currentDrawing);
       emitter.particleSprite.transformAboutPoint(new ex.Point(.5, .5));
       emitter.particleRotationalVelocity = Math.PI / 10;
       emitter.randomRotation = true;
