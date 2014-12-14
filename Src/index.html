@@ -43,7 +43,15 @@
     window.appInsights = appInsights;
     appInsights.trackPageView();
     </script>
-
+    <script>
+    (function (d) {
+        var config = {
+            kitId: 'mrd7npf',
+            scriptTimeout: 3000
+        },
+        h = d.documentElement, t = setTimeout(function () { h.className = h.className.replace(/\bwf-loading\b/g, "") + " wf-inactive"; }, config.scriptTimeout), tk = d.createElement("script"), f = false, s = d.getElementsByTagName("script")[0], a; h.className += " wf-loading"; tk.src = '//use.typekit.net/' + config.kitId + '.js'; tk.async = true; tk.onload = tk.onreadystatechange = function () { a = this.readyState; if (f || a && a != "complete" && a != "loaded") return; f = true; clearTimeout(t); try { Typekit.load(config) } catch (e) { } }; s.parentNode.insertBefore(tk, s)
+    })(document);
+    </script>
 </head>
 <body>
     <h1 style="visibility: hidden; position: absolute; top: -1000px; left: -1000px;">Sweep Stacks (Ludum Dare 31 Game Jam Entry)</h1>
@@ -147,6 +155,9 @@
                     <h2>ENDURANCE BONUS</h2>
 
                     <p id="game-over-time">0</p>
+                    
+                    <h2 class="feature-levels hide">LEVEL BONUS</h2>
+                    <p id="game-over-level" class="feature-levels hide">0</p>
 
                     <h2>TOTAL SCORE</h2>
 
@@ -191,6 +202,7 @@
     <script src="scripts/lodash.min.js"></script>
     <script src="scripts/spectra.min.js"></script>
     <script src="scripts/cookies.min.js"></script>
+    <script src="scripts/zepto.min.js"></script>
     <script src="Excalibur.js?COMMIT_NUMBER"></script>
     <script src="game.js?COMMIT_NUMBER"></script>
     <script>

@@ -58,7 +58,7 @@ var Config = (function () {
     Config.resetDefault = function () {
         Config.EnableTimer = false;
         Config.AdvanceRowsOnMatch = true;
-        Config.SweepThreshold = 15;
+        Config.SweepThreshold = 18;
         Config.EnableSweepMeters = false;
         Config.EnableSingleTapClear = false;
         Config.ClearSweepMetersAfterSingleUse = true;
@@ -74,6 +74,8 @@ var Config = (function () {
     Config.loadCasual = function () {
         gameMode = 0 /* Standard */;
         Config.EnableSweepMeters = true;
+        Config.EnableLevels = true;
+        Config.SweepScoreMultiplierIncreasesPerLevel = false;
     };
     /**
      * @obsolete
@@ -126,8 +128,15 @@ var Config = (function () {
     Config.PolylineThickness = 5;
     Config.MainMenuButtonWidth = 185;
     Config.MainMenuButtonHeight = 62;
+    Config.StatsScoresMargin = 8;
+    Config.ScoreTopFontSize = 24;
+    Config.ScoreBonusFontSize = 18;
+    Config.ScoreTopDescSize = 14;
+    Config.LevelFontSize = 275;
+    Config.LevelYOffset = -210;
     // easings
     Config.PieceEasingFillDuration = 300;
+    Config.LevelMultiplierEndBonus = 1.05;
     Config.SweepScoreMultiplier = 2;
     Config.ChainThresholdSmall = 8;
     Config.ChainThresholdMedium = 11;
@@ -274,7 +283,8 @@ var Resources = {
     TextureStandardBtn: new ex.Texture("images/standard.png"),
     TextureChallengeBtn: new ex.Texture("images/challenge.png"),
     NoMovesTexture: new ex.Texture('images/no-moves.png'),
-    TextureSweepIndicator: new ex.Texture("images/sweep-indicator.png")
+    TextureSweepIndicator: new ex.Texture("images/sweep-indicator.png"),
+    TextureMegaSweepIndicator: new ex.Texture("images/mega-sweep-indicator.png")
 };
 var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
@@ -1207,6 +1217,7 @@ var Stats = (function () {
         this._longestSquareCombo = 0;
         this._longestStarCombo = 0;
         this._turnNumber = 0;
+        this._level = 1;
         this._circleMultiplier = 1;
         this._triangleMultiplier = 1;
         this._squareMultiplier = 1;
@@ -1253,8 +1264,13 @@ var Stats = (function () {
         this._meters[this._types.indexOf(pieceType)] = 0;
     };
     Stats.prototype.resetAllMeters = function () {
-        for (var i = 0; i < this._meters.length; i++) {
+        Config.EnableLevels && this.allMetersFull() && this._level++;
+        var i;
+        for (i = 0; i < this._meters.length; i++) {
             this._meters[i] = 0;
+        }
+        for (i = 0; i < this._multipliers.length; i++) {
+            this._multipliers[i] = Config.EnableLevels && Config.SweepScoreMultiplierIncreasesPerLevel ? this._level : 1;
         }
     };
     Stats.prototype.allMetersFull = function () {
@@ -1285,15 +1301,15 @@ var Stats = (function () {
     Stats.prototype.scorePieces = function (pieces) {
         var type = this._types.indexOf(pieces[0].getType());
         this._totalPiecesSwept += pieces.length;
-        this._scores[type] += this.scoreMultiplier(pieces.length + this.chainBonus(pieces), type);
         var newScore = this._meters[type] + pieces.length;
         this._meters[type] = Math.min(newScore, Config.SweepThreshold);
         this._sweepMeter = Math.min(this._sweepMeter + pieces.length, this._sweepMeterThreshold);
+        this._scores[type] += this.scoreMultiplier(pieces.length + this.chainBonus(pieces), type);
     };
     Stats.prototype.scoreMultiplier = function (currentScore, type) {
         var modifiedScore = currentScore;
         if (this._meters[type] == Config.SweepThreshold) {
-            this._multipliers[type] = Config.SweepScoreMultiplier;
+            this._multipliers[type] = Config.EnableLevels && Config.SweepScoreMultiplierIncreasesPerLevel ? this._level + 1 : Config.SweepScoreMultiplier;
             modifiedScore = currentScore * Config.SweepScoreMultiplier;
         }
         return modifiedScore;
@@ -1309,6 +1325,16 @@ var Stats = (function () {
             this._finalScore = this.getTotalScore() + enduranceMultiplier;
         }
         return enduranceMultiplier;
+    };
+    Stats.prototype.calculateLevelBonus = function () {
+        var levelMultiplier = Config.LevelMultiplierEndBonus;
+        if (Config.EnableLevels) {
+            var modifiedScore = Math.floor(this._finalScore * levelMultiplier * Math.log(this._level));
+            var diff = modifiedScore - this._finalScore;
+            this._finalScore = modifiedScore;
+            return diff.toString();
+        }
+        return "0";
     };
     Stats.prototype.getFinalScore = function () {
         return this._finalScore;
@@ -1348,7 +1374,14 @@ var Stats = (function () {
         var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
         var meterXPos = visualGrid.x;
         var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
-        this._totalScore();
+        this._addTotalScore();
+        if (gameMode === 0 /* Standard */) {
+            this._addMultipliers();
+            this._addWaves();
+        }
+        if (Config.EnableLevels) {
+            this._addLevel();
+        }
         var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
         var meterStartX = meterXPos += (visualGrid.getWidth() - totalMeterWidth) / 2;
         if (Config.EnableSweepMeters) {
@@ -1383,24 +1416,132 @@ var Stats = (function () {
         game.add(label);
         game.add(square);
     };
-    Stats.prototype._totalScore = function () {
+    Stats.prototype._addTotalScore = function () {
         var _this = this;
         var totalScore = 0;
-        var label = new ex.Label(totalScore.toString(), visualGrid.getCenter().x, visualGrid.y + 72 + 20, "72px Arial");
-        label.color = ex.Color.White;
-        label.textAlign = 2 /* Center */;
-        label.opacity = 0.2;
+        var scoreFontSize = Config.ScoreTopFontSize * gameScale.x;
+        var scoreDescSize = Config.ScoreTopDescSize * gameScale.x;
+        var margin = Config.StatsScoresMargin * gameScale.x;
+        var scoreLabel = new ex.Label(totalScore.toString(), visualGrid.x + margin, visualGrid.y + margin, scoreFontSize.toString() + "px museo-sans, arial");
+        var scoreDescLabel = new ex.Label("score", visualGrid.x + margin, visualGrid.y + (scoreFontSize * 1.1) + margin, scoreDescSize.toString() + "px museo-sans, arial");
+        scoreLabel.color = scoreDescLabel.color = ex.Color.White.clone();
+        scoreLabel.opacity = 0.6;
+        scoreDescLabel.opacity = 0.2;
+        scoreLabel.baseAlign = scoreDescLabel.baseAlign = 0 /* Top */;
         game.addEventListener('update', function (data) {
-            label.x = visualGrid.getCenter().x;
-            label.y = visualGrid.y + 72 + 20;
-            label.text = _this.getTotalScore().toString();
+            margin = Config.StatsScoresMargin * gameScale.x;
+            scoreFontSize = Config.ScoreTopFontSize * gameScale.x;
+            scoreDescSize = Config.ScoreTopDescSize * gameScale.x;
+            scoreLabel.x = visualGrid.x + margin;
+            scoreLabel.y = visualGrid.y + margin;
+            scoreDescLabel.x = visualGrid.x + margin;
+            scoreDescLabel.y = visualGrid.y + margin + (scoreFontSize * 1.1);
+            scoreLabel.font = scoreFontSize.toString() + "px museo-sans, arial";
+            scoreDescLabel.font = scoreDescSize.toString() + "px museo-sans, arial";
+            scoreLabel.text = _this.getTotalScore().toString();
         });
-        game.add(label);
+        game.add(scoreLabel);
+        game.add(scoreDescLabel);
+    };
+    Stats.prototype._addWaves = function () {
+        var _this = this;
+        var centerOffset = -12;
+        var scoreFontSize = Config.ScoreTopFontSize * gameScale.x;
+        var scoreDescSize = Config.ScoreTopDescSize * gameScale.x;
+        var margin = Config.StatsScoresMargin * gameScale.x;
+        var waveLabel = new ex.Label(this._turnNumber.toString(), visualGrid.getCenter().x, visualGrid.y + margin, scoreFontSize.toString() + "px museo-sans, arial");
+        var waveDescLabel = new ex.Label("wave", visualGrid.getCenter().x + margin, visualGrid.y + (scoreFontSize * 1.1) + margin, scoreDescSize.toString() + "px museo-sans, arial");
+        waveLabel.color = waveDescLabel.color = ex.Color.White.clone();
+        waveLabel.opacity = 0.6;
+        waveDescLabel.opacity = 0.2;
+        waveLabel.baseAlign = waveDescLabel.baseAlign = 0 /* Top */;
+        waveLabel.textAlign = waveDescLabel.textAlign = 2 /* Center */;
+        game.addEventListener('update', function (data) {
+            margin = Config.StatsScoresMargin * gameScale.x;
+            scoreFontSize = Config.ScoreTopFontSize * gameScale.x;
+            scoreDescSize = Config.ScoreTopDescSize * gameScale.x;
+            waveLabel.x = visualGrid.getCenter().x;
+            waveLabel.y = visualGrid.y + margin;
+            waveLabel.font = scoreFontSize.toString() + "px museo-sans, arial";
+            waveDescLabel.x = visualGrid.getCenter().x;
+            waveDescLabel.y = visualGrid.y + margin + (scoreFontSize * 1.1);
+            waveDescLabel.font = scoreDescSize.toString() + "px museo-sans, arial";
+            waveLabel.text = _this._turnNumber.toString().toString();
+        });
+        game.add(waveLabel);
+        game.add(waveDescLabel);
+    };
+    Stats.prototype._addMultipliers = function () {
+        var _this = this;
+        var margin = Config.StatsScoresMargin * gameScale.x;
+        var bonusFontSize = Config.ScoreBonusFontSize * gameScale.x;
+        var scoreFontSize = Config.ScoreTopFontSize * gameScale.x;
+        var scoreDescSize = Config.ScoreTopDescSize * gameScale.x;
+        var bonusLabels = [], i, j, bonusLabel;
+        var bonusMargin = (bonusFontSize * 1.1);
+        for (i = 0, j = this._multipliers.length - 1; i < this._multipliers.length; i++, j--) {
+            bonusLabel = new ex.Label(this._turnNumber.toString(), visualGrid.getRight() - margin - (j * bonusMargin), visualGrid.y + margin, bonusFontSize + "px museo-sans, arial");
+            bonusLabel.color = PieceTypeToColor[i].clone();
+            bonusLabel.opacity = 0.6;
+            bonusLabel.baseAlign = 0 /* Top */;
+            bonusLabel.textAlign = 1 /* Right */;
+            bonusLabels.push(bonusLabel);
+            game.add(bonusLabel);
+        }
+        var bonusDescLabel = new ex.Label("bonuses", visualGrid.getRight() - margin, visualGrid.y + (scoreFontSize * 1.1) + margin, scoreDescSize + "px museo-sans, arial");
+        bonusDescLabel.color = ex.Color.White.clone();
+        bonusDescLabel.opacity = 0.2;
+        bonusDescLabel.baseAlign = 0 /* Top */;
+        bonusDescLabel.textAlign = 1 /* Right */;
+        game.addEventListener('update', function (data) {
+            margin = Config.StatsScoresMargin * gameScale.x;
+            bonusFontSize = Config.ScoreBonusFontSize * gameScale.x;
+            scoreFontSize = Config.ScoreTopFontSize * gameScale.x;
+            scoreDescSize = Config.ScoreTopDescSize * gameScale.x;
+            bonusMargin = (bonusFontSize * 1.1);
+            bonusDescLabel.x = visualGrid.getRight() - margin;
+            bonusDescLabel.y = visualGrid.y + margin + (scoreFontSize * 1.1);
+            bonusDescLabel.font = scoreDescSize.toString() + "px museo-sans, arial";
+            for (i = 0, j = _this._multipliers.length - 1; i < _this._multipliers.length; i++, j--) {
+                bonusLabel = bonusLabels[i];
+                bonusLabel.x = visualGrid.getRight() - margin - (j * bonusMargin);
+                bonusLabel.y = visualGrid.y + margin;
+                bonusLabel.text = _this._multipliers[i].toString() + "x";
+                if (_this._multipliers[i] <= 1) {
+                    bonusLabel.opacity = 0.2;
+                    bonusLabel.font = bonusFontSize + "px museo-sans, arial";
+                }
+                else {
+                    bonusLabel.opacity = 0.6;
+                    bonusLabel.font = "normal normal 700 " + bonusFontSize + "px museo-sans, arial";
+                }
+            }
+        });
+        game.add(bonusDescLabel);
+    };
+    Stats.prototype._addLevel = function () {
+        var _this = this;
+        var offset = Config.LevelYOffset * gameScale.y;
+        var levelFontSize = Config.LevelFontSize * gameScale.x;
+        var levelLabel = new ex.Label(this._level.toString(), visualGrid.getCenter().x, visualGrid.getCenter().y + offset, "normal normal 700 " + levelFontSize.toString() + "px museo-sans, arial");
+        levelLabel.color = ex.Color.White.clone();
+        levelLabel.opacity = 0.1;
+        levelLabel.baseAlign = 0 /* Top */;
+        levelLabel.textAlign = 2 /* Center */;
+        game.addEventListener('update', function (data) {
+            offset = Config.LevelYOffset * gameScale.y;
+            levelFontSize = Config.LevelFontSize * gameScale.x;
+            levelLabel.x = visualGrid.getCenter().x;
+            levelLabel.y = visualGrid.getCenter().y + offset;
+            levelLabel.font = "normal normal 700 " + levelFontSize.toString() + "px museo-sans, arial";
+            levelLabel.text = _this._level.toString();
+        });
+        game.add(levelLabel);
     };
     Stats.prototype._addMegaSweep = function (x, y) {
         var _this = this;
         // todo sprite animation
-        var meter = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, 1);
+        var meter = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, 1, Config.EnableLevels ? Resources.TextureMegaSweepIndicator : Resources.TextureSweepIndicator);
         meter.score = 1;
         meter.enableCapturePointer = true;
         meter.anchor.setTo(0, 0);
@@ -1421,9 +1562,8 @@ var Stats = (function () {
     };
     Stats.prototype._addMeter = function (piece, x, y) {
         var _this = this;
-        var meter = new Meter(x, y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold);
+        var meter = new Meter(x, y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold, Resources.TextureSweepIndicator);
         meter.enableCapturePointer = true;
-        // todo add meter bonus drawing
         meter.on("pointerup", function () {
             sweeper.sweep(piece);
         });
@@ -1454,7 +1594,7 @@ var Stats = (function () {
     };
     Stats.prototype._addSweepMeter = function (x, y) {
         var _this = this;
-        var square = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, this._sweepMeterThreshold);
+        var square = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, this._sweepMeterThreshold, Resources.TextureSweepIndicator);
         square.enableCapturePointer = true;
         square.on("pointerup", function () {
             sweeper.sweep();
@@ -1470,12 +1610,12 @@ var Stats = (function () {
 })();
 var Meter = (function (_super) {
     __extends(Meter, _super);
-    function Meter(x, y, width, height, color, threshold) {
+    function Meter(x, y, width, height, color, threshold, sweepIndicator) {
         _super.call(this, x, y, width, height);
         this.threshold = threshold;
         this.color = color;
         this.anchor.setTo(0, 0);
-        this._sweepIndicator = Resources.TextureSweepIndicator.asSprite();
+        this._sweepIndicator = sweepIndicator.asSprite();
     }
     Meter.prototype.onInitialize = function (engine) {
         _super.prototype.onInitialize.call(this, engine);
@@ -1730,6 +1870,18 @@ var SoundManager = (function () {
     SoundManager._setSoundLevel = function (level) {
         if (SoundManager._CurrentSoundLevel === level)
             return;
+        switch (level) {
+            case 2 /* All */:
+                SoundManager._setVolume(1);
+                SoundManager.startLoop();
+                break;
+            case 1 /* FxOnly */:
+                SoundManager._stopMusic();
+                break;
+            default:
+                SoundManager._stopMusic();
+                SoundManager._setVolume(0);
+        }
         SoundManager._setPreference(level);
         SoundManager._setIconState(level);
         ex.Logger.getInstance().info("Set sound level", level);
@@ -1761,8 +1913,9 @@ var SoundManager = (function () {
     };
     SoundManager._getPreference = function () {
         var c = Cookies.get(SoundManager._CookieName);
-        if (typeof c !== "undefined") {
-            return parseInt(c, 10) || 2 /* All */;
+        var n = -1;
+        if (typeof c !== "undefined" && (n = parseInt(c, 10)) >= 0) {
+            return n;
         }
         return 2 /* All */;
     };
@@ -1776,24 +1929,19 @@ var SoundManager = (function () {
         switch (SoundManager._getIconState()) {
             case 2 /* All */:
                 SoundManager._setSoundLevel(1 /* FxOnly */);
-                SoundManager._stopMusic();
                 break;
             case 1 /* FxOnly */:
                 SoundManager._setSoundLevel(0 /* Off */);
-                SoundManager._stopMusic();
-                SoundManager._setVolume(0);
                 break;
             default:
                 SoundManager._setSoundLevel(2 /* All */);
-                SoundManager._setVolume(1);
-                SoundManager.startLoop();
         }
     };
     SoundManager._getIconState = function () {
-        if (hasClass(SoundManager._SoundElement, 'fa-volume-up')) {
+        if ($(SoundManager._SoundElement).hasClass('fa-volume-up')) {
             return 2 /* All */;
         }
-        else if (hasClass(SoundManager._SoundElement, 'fa-volume-down')) {
+        else if ($(SoundManager._SoundElement).hasClass('fa-volume-down')) {
             return 1 /* FxOnly */;
         }
         else {
@@ -1801,15 +1949,18 @@ var SoundManager = (function () {
         }
     };
     SoundManager._setIconState = function (level) {
+        $(SoundManager._SoundElement).removeClass("fa-volume-down");
+        $(SoundManager._SoundElement).removeClass("fa-volume-up");
+        $(SoundManager._SoundElement).removeClass("fa-volume-off");
         switch (level) {
             case 0 /* Off */:
-                replaceClass(SoundManager._SoundElement, 'fa-volume-down', 'fa-volume-off');
+                $(SoundManager._SoundElement).addClass('fa-volume-off');
                 break;
             case 1 /* FxOnly */:
-                replaceClass(SoundManager._SoundElement, 'fa-volume-up', 'fa-volume-down');
+                $(SoundManager._SoundElement).addClass('fa-volume-down');
                 break;
             case 2 /* All */:
-                replaceClass(SoundManager._SoundElement, 'fa-volume-off', 'fa-volume-up');
+                $(SoundManager._SoundElement).addClass('fa-volume-up');
                 break;
         }
     };
@@ -1819,6 +1970,7 @@ var SoundManager = (function () {
 })();
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
+/// <reference path="../scripts/typings/zepto/zepto.d.ts"/>
 /// <reference path="util.ts"/>
 /// <reference path="Config.ts"/>
 /// <reference path="resources.ts"/>
@@ -1927,11 +2079,13 @@ function InitSetup() {
     game.add(sweeper);
     stats.drawScores();
     // hide game over
-    removeClass(document.getElementById("game-over"), "show");
+    $("#game-over").removeClass("show");
     //add pieces to initial rows
     grid.seed(Config.NumStartingRows);
     // start sound
     SoundManager.startLoop();
+    // feature flags
+    Config.EnableLevels && $(".feature-levels").removeClass("hide");
 }
 function hasClass(element, cls) {
     return element.classList.contains(cls);
@@ -1956,6 +2110,7 @@ function gameOver() {
         document.getElementById("challenge").innerHTML = "Try Standard Mode";
     }
     var enduranceBonus = stats.calculateEnduranceBonus();
+    var levelBonus = stats.calculateLevelBonus();
     var totalScore = stats.getFinalScore();
     var longestChain = stats.getLongestChain();
     var turnsTaken = stats.getTurnNumber();
@@ -1975,30 +2130,41 @@ function gameOver() {
     if (turnManager)
         turnManager.dispose(); // stop game over from happening infinitely in time attack
     addClass(document.getElementById("game-over"), "show");
-    document.getElementById("game-over-swept").innerHTML = stats.getTotalPiecesSwept().toString();
-    document.getElementById("game-over-chain").innerHTML = stats.getTotalChainBonus().toString();
-    document.getElementById("game-over-multiplier").innerHTML = (stats.getFinalScore() - enduranceBonus - stats.getTotalChainBonus() - stats.getTotalPiecesSwept()).toString();
-    document.getElementById("game-over-time").innerHTML = enduranceBonus.toString();
-    document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
+    $("#game-over-swept").text(stats.getTotalPiecesSwept().toString());
+    $("#game-over-chain").text(stats.getTotalChainBonus().toString());
+    $("#game-over-multiplier").text((stats.getFinalScore() - enduranceBonus - stats.getTotalChainBonus() - stats.getTotalPiecesSwept()).toString());
+    $("#game-over-time").text(enduranceBonus.toString());
+    $("#game-over-level").text(levelBonus);
+    $("#game-over-total").text(stats.getFinalScore().toString());
     try {
-        var text = document.getElementById("twidget").dataset['text'];
-        document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getFinalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode");
-        var twitterScript = document.createElement('script');
-        twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
-        document.getElementById("game-over").appendChild(twitterScript);
-        var social = document.getElementById('social-container');
-        var facebookW = document.getElementById('fidget');
-        facebookW.parentNode.removeChild(facebookW);
-        social.appendChild(facebookW);
+        appendTwitter();
+        var social = $('#social-container');
+        var facebookW = $('#fidget');
+        facebookW.remove();
+        social.append(facebookW);
     }
     catch (e) {
-        ex.Logger.getInstance().warn("Twitter failed", e);
+        ex.Logger.getInstance().warn("Twitter or Facebook share init failed", e);
     }
+}
+var twitterScript;
+function appendTwitter() {
+    // twitter is silly, can't dynamically update tweet text
+    //
+    var text = $("#twidget").data('text');
+    $("#twidget").data('text', text.replace("SOCIAL_SCORE", stats.getFinalScore()).replace("SOCIAL_MODE", gameMode === 1 /* Timed */ ? "challenge mode" : "standard mode"));
+    if (twitterScript) {
+        $(twitterScript).remove();
+    }
+    twitterScript = document.createElement('script');
+    twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
+    $("#game-over").append(twitterScript);
 }
 // TODO clean up pieces that are not in play anymore after update loop
 game.start(loader).then(function () {
     // set game scale
     var defaultGridHeight = Config.CellHeight * Config.GridCellsHigh;
+    // todo do this on game.on('update')
     // scale based on height of viewport
     // target 85% height
     var scale = defaultGridHeight / game.getHeight();

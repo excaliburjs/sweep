@@ -45,6 +45,7 @@
     <Content Include="images\bg3.png" />
     <Content Include="images\challenge.png" />
     <Content Include="images\logo.png" />
+    <Content Include="images\mega-sweep-indicator.png" />
     <Content Include="images\no-moves.png" />
     <Content Include="images\readme.txt" />
     <Content Include="images\standard.png" />
@@ -87,11 +88,13 @@
     <TypeScriptCompile Include="scripts\typings\Cookies.d.ts" />
     <TypeScriptCompile Include="scripts\typings\lodash\lodash.d.ts" />
     <TypeScriptCompile Include="scripts\typings\Spectra.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\zepto\zepto.d.ts" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="scripts\cookies.min.js" />
     <Content Include="scripts\lodash.min.js" />
     <Content Include="scripts\spectra.min.js" />
+    <Content Include="scripts\zepto.min.js" />
     <Content Include="sounds\challengeloopfixed.mp3" />
     <Content Include="sounds\challengenote1.mp3" />
     <Content Include="sounds\challengenote2.mp3" />

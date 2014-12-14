@@ -45,6 +45,19 @@ class SoundManager {
    private static _setSoundLevel(level: SoundLevel) {
       if (SoundManager._CurrentSoundLevel === level) return;
 
+      switch(level) {
+         case SoundLevel.All:
+            SoundManager._setVolume(1);
+            SoundManager.startLoop();            
+            break;
+         case SoundLevel.FxOnly:
+            SoundManager._stopMusic();
+            break;
+         default:
+            SoundManager._stopMusic();  
+            SoundManager._setVolume(0);     
+      }
+
       SoundManager._setPreference(level);
       SoundManager._setIconState(level);
 
@@ -81,9 +94,10 @@ class SoundManager {
 
    private static _getPreference(): SoundLevel {
       var c = Cookies.get(SoundManager._CookieName);
+      var n = -1;
 
-      if (typeof c !== "undefined") {
-         return parseInt(c, 10) || SoundLevel.All;
+      if (typeof c !== "undefined" && (n = parseInt(c, 10)) >= 0) {
+         return n;
       }
 
       return SoundLevel.All;
@@ -102,26 +116,21 @@ class SoundManager {
       switch(SoundManager._getIconState()) {
          case SoundLevel.All:
             SoundManager._setSoundLevel(SoundLevel.FxOnly);
-            SoundManager._stopMusic();
             break;
          case SoundLevel.FxOnly:
             SoundManager._setSoundLevel(SoundLevel.Off);
-            SoundManager._stopMusic();
-            SoundManager._setVolume(0);
             break;
          default:
             SoundManager._setSoundLevel(SoundLevel.All);
-            SoundManager._setVolume(1);
-            SoundManager.startLoop();         
       }
 
    }
 
    private static _getIconState(): SoundLevel {
       
-      if (hasClass(SoundManager._SoundElement, 'fa-volume-up')) {
+      if ($(SoundManager._SoundElement).hasClass('fa-volume-up')) {
          return SoundLevel.All;
-      } else if (hasClass(SoundManager._SoundElement, 'fa-volume-down')) {
+      } else if ($(SoundManager._SoundElement).hasClass('fa-volume-down')) {
          return SoundLevel.FxOnly;
       } else {
          return SoundLevel.Off;
@@ -130,15 +139,19 @@ class SoundManager {
 
    private static _setIconState(level: SoundLevel) {
 
+      $(SoundManager._SoundElement).removeClass("fa-volume-down");
+      $(SoundManager._SoundElement).removeClass("fa-volume-up");
+      $(SoundManager._SoundElement).removeClass("fa-volume-off");
+
       switch (level) {
          case SoundLevel.Off:
-            replaceClass(SoundManager._SoundElement, 'fa-volume-down', 'fa-volume-off');
+            $(SoundManager._SoundElement).addClass('fa-volume-off');
             break;
          case SoundLevel.FxOnly:
-            replaceClass(SoundManager._SoundElement, 'fa-volume-up', 'fa-volume-down');
+            $(SoundManager._SoundElement).addClass('fa-volume-down');
             break;
          case SoundLevel.All:
-            replaceClass(SoundManager._SoundElement, 'fa-volume-off', 'fa-volume-up');
+            $(SoundManager._SoundElement).addClass('fa-volume-up');
             break;
       }
    }
