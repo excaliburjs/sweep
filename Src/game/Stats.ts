@@ -201,10 +201,6 @@
 
    public drawScores() {
 
-      var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
-      var meterXPos = visualGrid.x;
-      var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
-
       this._addTotalScore();
       
       if (gameMode === GameMode.Standard) {
@@ -215,30 +211,13 @@
          this._addLevel();
       }
 
-      var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
-      var meterStartX = meterXPos += (visualGrid.getWidth() - totalMeterWidth) / 2;
-
       if (Config.EnableSweepMeters) {
-         this._addMeter(0, meterXPos, meterYPos);
-         this._addMeter(1, meterXPos += Config.MeterWidth + Config.MeterMargin, meterYPos);
-         this._addMeter(2, meterXPos += Config.MeterWidth + Config.MeterMargin, meterYPos);
-         this._addMeter(3, meterXPos += Config.MeterWidth + Config.MeterMargin, meterYPos);
-         this._addMegaSweep(meterStartX, meterYPos);
+         this._addMeters();
+         this._addMegaSweep();
       }
       if (Config.EnableSweeper) {
-         this._addSweepMeter(meterStartX, meterYPos);
+         this._addSweepMeter();
       }
-
-      //this._addScore("chain ", this._chains, 0, scoreXPos, yPos += Config.MeterHeight + 20);
-      //this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
-      //this._addScore("chain ", this._chains, 2, scoreXPos, yPos += 20);
-      //this._addScore("chain ", this._chains, 3, scoreXPos, yPos += 20);
-
-      //var lastChainLabel = new ex.Label("last chain " + this._lastChain, scoreXPos, yPos += 30);
-      //game.addEventListener('update', (data?: ex.UpdateEvent) => {
-      //   lastChainLabel.text = "last chain " + this._lastChain;
-      //});
-      //game.currentScene.addChild(lastChainLabel);
    }
 
    private _addScore(description: String, statArray: Array<any>, statIndex: number, xPos: number, yPos: number) {
@@ -388,9 +367,12 @@
       game.add(levelLabel);
    }
 
-   private _addMegaSweep(x: number, y: number) {
+   private _addMegaSweep() {
       // todo sprite animation
-      var meter = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, 1, Config.EnableLevels ? Resources.TextureMegaSweepIndicator : Resources.TextureSweepIndicator);
+      var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
+      var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
+      var meterXPos = visualGrid.x + (visualGrid.getWidth() - totalMeterWidth) / 2;
+      var meter = new Meter(meterXPos, meterYPos, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, 1, Config.EnableLevels ? Resources.TextureMegaSweepIndicator : Resources.TextureSweepIndicator, false);
       meter.score = 1;
       meter.enableCapturePointer = true;
       meter.anchor.setTo(0, 0);
@@ -438,6 +420,43 @@
       this._meterActors.push(meter);
    }
 
+   private _addMeters() {
+      var meters: Meter[] = [], i, meter: Meter;
+
+      var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
+      var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
+      var meterXPos = visualGrid.x + (visualGrid.getWidth() - totalMeterWidth) / 2;
+
+      for (i = 0; i < this._meters.length; i++) {
+         meter = new Meter(meterXPos + (i * Config.MeterWidth) + (i * Config.MeterMargin), meterYPos, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[i], Config.SweepThreshold, Resources.TextureSweepIndicator);
+         meter.enableCapturePointer = true;
+
+         meter.on("pointerup", () => {
+            sweeper.sweep(i);
+         });
+         meters.push(meter);
+         game.add(meter);
+         this._meterActors.push(meter);
+      }
+
+      game.addEventListener('update', (data?: ex.UpdateEvent) => {
+
+         for (i = 0; i < this._meters.length; i++) {
+            meter = meters[i];
+            meter.score = this._meters[i];
+
+            // todo set pos
+
+            // mega sweep
+            if (this.allMetersFull()) {
+               meter.visible = false;
+            } else {
+               meter.visible = true;
+            }
+         }
+      });      
+   }
+
    public clearMeters() {
       if (this._meterActors) {
          for (var i = 0; i < this._meterActors.length; i++) {
@@ -452,8 +471,11 @@
       
    }
 
-   private _addSweepMeter(x: number, y: number) {
-      var square = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, this._sweepMeterThreshold, Resources.TextureSweepIndicator);
+   private _addSweepMeter() {
+      var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
+      var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
+      var meterXPos = visualGrid.x + (visualGrid.getWidth() - totalMeterWidth) / 2;
+      var square = new Meter(meterXPos, meterYPos, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, this._sweepMeterThreshold, Resources.TextureSweepIndicator);
       square.enableCapturePointer = true;
      
       square.on("pointerup", () => {
@@ -472,7 +494,7 @@ class Meter extends ex.UIActor {
    public score: number;
    private _sweepIndicator: ex.Sprite;
 
-   constructor(x: number, y: number, width: number, height: number, color: ex.Color, public threshold: number, sweepIndicator: ex.Texture) {
+   constructor(x: number, y: number, width: number, height: number, color: ex.Color, public threshold: number, sweepIndicator: ex.Texture, public circle = true) {
       super(x, y, width, height);
 
       this.color = color;
@@ -493,21 +515,47 @@ class Meter extends ex.UIActor {
 
       var x = this.getBounds().left;
       var y = this.getBounds().top;
-
-      // border
-      ctx.strokeStyle = Util.darken(this.color, 0.6).toString();
-      ctx.lineWidth = 1;
-      ctx.strokeRect(x, y, this.getWidth(), this.getHeight());
-
-      // bg
-      ctx.fillStyle = new ex.Color(this.color.r, this.color.g, this.color.b, 0.3).toString();
-      ctx.fillRect(x, y, this.getWidth(), this.getHeight());
-
       var percentage = (this.score / this.threshold);
+      
+      if (this.circle) {
+         x = this.getCenter().x;
+         y = this.getCenter().y;
 
-      // fill
-      ctx.fillStyle = this.color.toString();
-      ctx.fillRect(x, y, (this.getWidth() * percentage), this.getHeight());
+         var radius = Config.MeterRadius * gameScale.x;
+         var border = Config.MeterBorderThickness * gameScale.x;
+
+         // bg
+         ctx.beginPath();
+         ctx.arc(x, y, radius, 0, ex.Util.toRadians(360), false);
+         ctx.fillStyle = new ex.Color(this.color.r, this.color.g, this.color.b, 0.3).toString();
+         ctx.fill();
+         ctx.closePath();
+
+         // meter
+         var to = ((1.5 * Math.PI) * percentage) + ex.Util.toRadians(-90);
+         ctx.beginPath();
+         ctx.arc(x, y, radius, ex.Util.toRadians(-90), ex.Util.clamp(to, ex.Util.toRadians(-85), 1.5 * Math.PI), false);
+         ctx.strokeStyle = this.color.toString();
+         ctx.lineWidth = border;
+         ctx.stroke();
+         ctx.closePath();
+
+         // fill
+
+      } else {
+         // border
+         ctx.strokeStyle = Util.darken(this.color, 0.6).toString();
+         ctx.lineWidth = 1;
+         ctx.strokeRect(x, y, this.getWidth(), this.getHeight());
+
+         // bg
+         ctx.fillStyle = new ex.Color(this.color.r, this.color.g, this.color.b, 0.3).toString();
+         ctx.fillRect(x, y, this.getWidth(), this.getHeight());
+         
+         // fill
+         ctx.fillStyle = this.color.toString();
+         ctx.fillRect(x, y, (this.getWidth() * percentage), this.getHeight());
+      }
 
       if (this.score === this.threshold) {
          var centeredX = this.getCenter().x - (this._sweepIndicator.width / 2);
