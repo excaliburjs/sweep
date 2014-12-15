@@ -525,9 +525,15 @@ class Meter extends ex.UIActor {
          var border = Config.MeterBorderThickness * gameScale.x;
 
          // bg
+         var bg;
+         if (this.score === this.threshold) {
+            bg = new ex.Color(this.color.r, this.color.g, this.color.b, 1).toString();
+         } else {
+            bg = new ex.Color(this.color.r, this.color.g, this.color.b, 0.3).toString();
+         }
          ctx.beginPath();
          ctx.arc(x, y, radius, 0, ex.Util.toRadians(360), false);
-         ctx.fillStyle = new ex.Color(this.color.r, this.color.g, this.color.b, 0.3).toString();
+         ctx.fillStyle = bg;
          ctx.fill();
          ctx.closePath();
 
