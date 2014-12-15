@@ -1663,9 +1663,14 @@ var Meter = (function (_super) {
             ctx.fill();
             ctx.closePath();
             // meter
-            var to = ((1.5 * Math.PI) * percentage) + ex.Util.toRadians(-90);
+            var from = 0;
+            var to = ((2 * Math.PI) * percentage);
+            to = ex.Util.clamp(to, ex.Util.toRadians(5), ex.Util.toRadians(360));
+            // shift -90 degrees
+            from -= ex.Util.toRadians(90);
+            to -= ex.Util.toRadians(90);
             ctx.beginPath();
-            ctx.arc(x, y, radius, ex.Util.toRadians(-90), ex.Util.clamp(to, ex.Util.toRadians(-85), 1.5 * Math.PI), false);
+            ctx.arc(x, y, radius, from, to, false);
             ctx.strokeStyle = this.color.toString();
             ctx.lineWidth = border;
             ctx.stroke();
