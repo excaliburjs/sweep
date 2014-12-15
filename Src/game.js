@@ -973,18 +973,24 @@ var MatchManager = (function (_super) {
                         piece.hover = false;
                         piece.scaleTo(gameScale.x, gameScale.y, 1.8, 1.8);
                     }
-                }
-                // did user go backwards?
-                if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
-                    // mark for removal
-                    removePiece = this._run.indexOf(piece) + 1;
-                }
-                if (removePiece > -1) {
-                    // remove from run
-                    this._run[removePiece].selected = false;
-                    this._run.splice(removePiece, 1);
-                    Resources.UndoSound.play();
-                    ex.Logger.getInstance().debug("Run modified", this._run);
+                    //if piece is already in the run, and is not the most recently selected piece, user went backwards
+                    var priorPieceIdx = this._run.indexOf(piece);
+                    if (priorPieceIdx != -1 && this._run.length > 1 && priorPieceIdx != (this._run.length - 1)) {
+                        //remove all pieces in front of this piece from run
+                        var numToRemove = (this._run.length - 1) + priorPieceIdx;
+                        for (var i = 0; i < numToRemove; i++) {
+                            this._run[this._run.length - 1 - i].selected = false;
+                        }
+                        this._run.splice(priorPieceIdx, numToRemove);
+                        if (priorPieceIdx === 0) {
+                            this._run = [];
+                            this.runInProgress = false;
+                            //act like user is clicking beginning cell for the first time
+                            this._handlePointerDown(pe);
+                        }
+                        Resources.UndoSound.play();
+                        ex.Logger.getInstance().debug("Run modified", this._run);
+                    }
                 }
             }
             else {
