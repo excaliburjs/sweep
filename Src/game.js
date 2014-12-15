@@ -1870,6 +1870,8 @@ var SoundManager = (function () {
     SoundManager._setSoundLevel = function (level) {
         if (SoundManager._CurrentSoundLevel === level)
             return;
+        SoundManager._setPreference(level);
+        SoundManager._setIconState(level);
         switch (level) {
             case 2 /* All */:
                 SoundManager._setVolume(1);
@@ -1882,8 +1884,6 @@ var SoundManager = (function () {
                 SoundManager._stopMusic();
                 SoundManager._setVolume(0);
         }
-        SoundManager._setPreference(level);
-        SoundManager._setIconState(level);
         ex.Logger.getInstance().info("Set sound level", level);
     };
     SoundManager._startMusic = function () {
