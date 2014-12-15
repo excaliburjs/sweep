@@ -398,8 +398,8 @@
       this._meterActors.push(meter);
    }
 
-   private _addMeter(piece: PieceType, x: number, y: number) {
-      var meter = new Meter(x, y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold, Resources.TextureSweepIndicator);
+   private _addMeter(piece: PieceType, x: number, y: number, pos: number) {
+      var meter = new Meter(x + (pos * Config.MeterWidth) + (pos * Config.MeterMargin), y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold, Resources.TextureSweepIndicator);
       meter.enableCapturePointer = true;
 
       meter.on("pointerup", () => {
@@ -427,34 +427,9 @@
       var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
       var meterXPos = visualGrid.x + (visualGrid.getWidth() - totalMeterWidth) / 2;
 
-      for (i = 0; i < this._meters.length; i++) {
-         meter = new Meter(meterXPos + (i * Config.MeterWidth) + (i * Config.MeterMargin), meterYPos, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[i], Config.SweepThreshold, Resources.TextureSweepIndicator);
-         meter.enableCapturePointer = true;
-
-         meter.on("pointerup", () => {
-            sweeper.sweep(i);
-         });
-         meters.push(meter);
-         game.add(meter);
-         this._meterActors.push(meter);
-      }
-
-      game.addEventListener('update', (data?: ex.UpdateEvent) => {
-
-         for (i = 0; i < this._meters.length; i++) {
-            meter = meters[i];
-            meter.score = this._meters[i];
-
-            // todo set pos
-
-            // mega sweep
-            if (this.allMetersFull()) {
-               meter.visible = false;
-            } else {
-               meter.visible = true;
-            }
-         }
-      });      
+       for (i = 0; i < this._meters.length; i++) {
+           this._addMeter(PieceTypes[i], meterXPos, meterYPos, i); 
+       }    
    }
 
    public clearMeters() {

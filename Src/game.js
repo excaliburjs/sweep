@@ -1548,9 +1548,9 @@ var Stats = (function () {
         game.add(meter);
         this._meterActors.push(meter);
     };
-    Stats.prototype._addMeter = function (piece, x, y) {
+    Stats.prototype._addMeter = function (piece, x, y, pos) {
         var _this = this;
-        var meter = new Meter(x, y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold, Resources.TextureSweepIndicator);
+        var meter = new Meter(x + (pos * Config.MeterWidth) + (pos * Config.MeterMargin), y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold, Resources.TextureSweepIndicator);
         meter.enableCapturePointer = true;
         meter.on("pointerup", function () {
             sweeper.sweep(piece);
@@ -1569,35 +1569,13 @@ var Stats = (function () {
         this._meterActors.push(meter);
     };
     Stats.prototype._addMeters = function () {
-        var _this = this;
         var meters = [], i, meter;
         var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
         var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
         var meterXPos = visualGrid.x + (visualGrid.getWidth() - totalMeterWidth) / 2;
         for (i = 0; i < this._meters.length; i++) {
-            meter = new Meter(meterXPos + (i * Config.MeterWidth) + (i * Config.MeterMargin), meterYPos, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[i], Config.SweepThreshold, Resources.TextureSweepIndicator);
-            meter.enableCapturePointer = true;
-            meter.on("pointerup", function () {
-                sweeper.sweep(i);
-            });
-            meters.push(meter);
-            game.add(meter);
-            this._meterActors.push(meter);
+            this._addMeter(PieceTypes[i], meterXPos, meterYPos, i);
         }
-        game.addEventListener('update', function (data) {
-            for (i = 0; i < _this._meters.length; i++) {
-                meter = meters[i];
-                meter.score = _this._meters[i];
-                // todo set pos
-                // mega sweep
-                if (_this.allMetersFull()) {
-                    meter.visible = false;
-                }
-                else {
-                    meter.visible = true;
-                }
-            }
-        });
     };
     Stats.prototype.clearMeters = function () {
         if (this._meterActors) {
