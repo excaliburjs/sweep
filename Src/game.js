@@ -911,7 +911,6 @@ var MatchManager = (function (_super) {
         this._notes[index].play();
     };
     MatchManager.prototype._handlePointerDown = function (pe) {
-        this.preventOtherPointerUp = false;
         if (!this.gameOver && !this.inMainMenu) {
             var cell = visualGrid.getCellByPos(pe.x, pe.y);
             if (!cell || this.runInProgress || !cell.piece) {
@@ -951,7 +950,6 @@ var MatchManager = (function (_super) {
                 this.preventOtherPointerUp = true;
                 return;
             }
-            this.preventOtherPointerUp = false;
             var piece = cell.piece;
             if (!piece)
                 return;
@@ -1545,6 +1543,7 @@ var Stats = (function () {
             if (!matcher.preventOtherPointerUp) {
                 sweeper.sweepAll();
             }
+            matcher.preventOtherPointerUp = false;
         });
         game.addEventListener('update', function (data) {
             // mega sweep
@@ -1566,6 +1565,7 @@ var Stats = (function () {
             if (!matcher.preventOtherPointerUp) {
                 sweeper.sweep(piece);
             }
+            matcher.preventOtherPointerUp = false;
         });
         game.addEventListener('update', function (data) {
             meter.score = _this._meters[piece];

@@ -63,9 +63,6 @@ class MatchManager extends ex.Class {
    }
 
    private _handlePointerDown(pe: ex.Input.PointerEvent) {
-
-      this.preventOtherPointerUp = false;
-
       if (!this.gameOver && !this.inMainMenu) {
          var cell = visualGrid.getCellByPos(pe.x, pe.y);
 
@@ -114,8 +111,6 @@ class MatchManager extends ex.Class {
             this.preventOtherPointerUp = true;
             return;
          }
-
-         this.preventOtherPointerUp = false; 
 
          var piece = cell.piece;
 

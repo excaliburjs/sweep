@@ -381,6 +381,7 @@
          if (!matcher.preventOtherPointerUp) {
             sweeper.sweepAll();
          }
+         matcher.preventOtherPointerUp = false;
       });
 
       game.addEventListener('update', (data?: ex.UpdateEvent) => {
@@ -408,6 +409,7 @@
          if (!matcher.preventOtherPointerUp) {
             sweeper.sweep(piece);
          }
+         matcher.preventOtherPointerUp = false;
       });
       game.addEventListener('update', (data?: ex.UpdateEvent) => {
          meter.score = this._meters[piece];
