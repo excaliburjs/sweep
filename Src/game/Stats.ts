@@ -378,7 +378,9 @@
       meter.anchor.setTo(0, 0);
 
       meter.on("pointerup", () => {
-         sweeper.sweepAll();
+         if (!matcher.preventOtherPointerUp) {
+            sweeper.sweepAll();
+         }
       });
 
       game.addEventListener('update', (data?: ex.UpdateEvent) => {
@@ -403,7 +405,9 @@
       meter.enableCapturePointer = true;
 
       meter.on("pointerup", () => {
-         sweeper.sweep(piece);
+         if (!matcher.preventOtherPointerUp) {
+            sweeper.sweep(piece);
+         }
       });
       game.addEventListener('update', (data?: ex.UpdateEvent) => {
          meter.score = this._meters[piece];
@@ -446,6 +450,7 @@
       
    }
 
+   //sweep meter for challenge mode
    private _addSweepMeter() {
       var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
       var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
@@ -454,7 +459,7 @@
       square.enableCapturePointer = true;
      
       square.on("pointerup", () => {
-         sweeper.sweep();
+            sweeper.sweep();
       });
       game.addEventListener('update', (data?: ex.UpdateEvent) => {
          square.score = this._sweepMeter;

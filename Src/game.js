@@ -880,6 +880,7 @@ var MatchManager = (function (_super) {
         this._run = [];
         this.gameOver = false;
         this.inMainMenu = true;
+        this.preventOtherPointerUp = false;
         this.dispose = function () {
             game.input.pointers.primary.off("down");
             game.input.pointers.primary.off("up");
@@ -910,6 +911,7 @@ var MatchManager = (function (_super) {
         this._notes[index].play();
     };
     MatchManager.prototype._handlePointerDown = function (pe) {
+        this.preventOtherPointerUp = false;
         if (!this.gameOver && !this.inMainMenu) {
             var cell = visualGrid.getCellByPos(pe.x, pe.y);
             if (!cell || this.runInProgress || !cell.piece) {
@@ -943,8 +945,13 @@ var MatchManager = (function (_super) {
             if (!this.runInProgress)
                 return;
             var cell = visualGrid.getCellByPos(pe.x, pe.y);
-            if (!cell)
+            //run is in progress but we are not a cell. If we mouse up at this point we only
+            //want the run to end and nothing else to happen
+            if (!cell) {
+                this.preventOtherPointerUp = true;
                 return;
+            }
+            this.preventOtherPointerUp = false;
             var piece = cell.piece;
             if (!piece)
                 return;
@@ -1535,7 +1542,9 @@ var Stats = (function () {
         meter.enableCapturePointer = true;
         meter.anchor.setTo(0, 0);
         meter.on("pointerup", function () {
-            sweeper.sweepAll();
+            if (!matcher.preventOtherPointerUp) {
+                sweeper.sweepAll();
+            }
         });
         game.addEventListener('update', function (data) {
             // mega sweep
@@ -1554,7 +1563,9 @@ var Stats = (function () {
         var meter = new Meter(x + (pos * Config.MeterWidth) + (pos * Config.MeterMargin), y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold, Resources.TextureSweepIndicator);
         meter.enableCapturePointer = true;
         meter.on("pointerup", function () {
-            sweeper.sweep(piece);
+            if (!matcher.preventOtherPointerUp) {
+                sweeper.sweep(piece);
+            }
         });
         game.addEventListener('update', function (data) {
             meter.score = _this._meters[piece];
@@ -1590,6 +1601,7 @@ var Stats = (function () {
             }
         }
     };
+    //sweep meter for challenge mode
     Stats.prototype._addSweepMeter = function () {
         var _this = this;
         var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
