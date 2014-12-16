@@ -952,7 +952,7 @@ var MatchManager = (function (_super) {
                 var removePiece = -1;
                 var containsBounds = new ex.BoundingBox(piece.getBounds().left + Config.PieceContainsPadding, piece.getBounds().top + Config.PieceContainsPadding, piece.getBounds().right - Config.PieceContainsPadding, piece.getBounds().bottom - Config.PieceContainsPadding);
                 // if piece contains screen coords and we don't already have it in the run
-                if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
+                if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && !piece.selected) {
                     // if the two pieces aren't neighbors or aren't the same type, invalid move
                     if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) || piece.getType() !== this._run[this._run.length - 1].getType()))
                         return;
@@ -977,17 +977,11 @@ var MatchManager = (function (_super) {
                     var priorPieceIdx = this._run.indexOf(piece);
                     if (priorPieceIdx != -1 && this._run.length > 1 && priorPieceIdx != (this._run.length - 1)) {
                         //remove all pieces in front of this piece from run
-                        var numToRemove = (this._run.length - 1) + priorPieceIdx;
+                        var numToRemove = (this._run.length) - priorPieceIdx - 1;
                         for (var i = 0; i < numToRemove; i++) {
                             this._run[this._run.length - 1 - i].selected = false;
                         }
-                        this._run.splice(priorPieceIdx, numToRemove);
-                        if (priorPieceIdx === 0) {
-                            this._run = [];
-                            this.runInProgress = false;
-                            //act like user is clicking beginning cell for the first time
-                            this._handlePointerDown(pe);
-                        }
+                        this._run.splice(priorPieceIdx + 1, numToRemove);
                         Resources.UndoSound.play();
                         ex.Logger.getInstance().debug("Run modified", this._run);
                     }
