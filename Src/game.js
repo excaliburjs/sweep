@@ -190,6 +190,7 @@ var Effects = (function () {
     };
     return Effects;
 })();
+/// <reference path="../scripts/typings/Spectra.d.ts"/>
 var Util = (function () {
     function Util() {
     }

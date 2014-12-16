@@ -1,4 +1,6 @@
-﻿class Util {
+﻿/// <reference path="../scripts/typings/Spectra.d.ts"/>
+
+class Util {
 
    public static darken(color: ex.Color, amount: number) {
       var r = Math.floor(color.r - (color.r * amount));
