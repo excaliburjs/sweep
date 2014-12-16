@@ -45,6 +45,9 @@ class SoundManager {
    private static _setSoundLevel(level: SoundLevel) {
       if (SoundManager._CurrentSoundLevel === level) return;
 
+      SoundManager._setPreference(level);
+      SoundManager._setIconState(level);
+
       switch(level) {
          case SoundLevel.All:
             SoundManager._setVolume(1);
@@ -57,9 +60,6 @@ class SoundManager {
             SoundManager._stopMusic();  
             SoundManager._setVolume(0);     
       }
-
-      SoundManager._setPreference(level);
-      SoundManager._setIconState(level);
 
       ex.Logger.getInstance().info("Set sound level", level);
    }

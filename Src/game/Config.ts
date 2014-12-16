@@ -17,6 +17,8 @@ class Config {
    static MeterWidth: number = 45;
    static MeterHeight: number = 27;
    static MeterMargin: number = 8;
+   static MeterRadius: number = 12;
+   static MeterBorderThickness: number = 3;
    static EnableGridLines = false;
    static PolylineThickness = 5;
    static MainMenuButtonWidth = 185;
@@ -43,6 +45,7 @@ class Config {
    static SweepThreshold: number;
    static EnableSweepMeters: boolean;
    static ClearSweepMetersAfterSingleUse: boolean;
+   
 
    //
    // leveling

@@ -124,6 +124,8 @@ var Config = (function () {
     Config.MeterWidth = 45;
     Config.MeterHeight = 27;
     Config.MeterMargin = 8;
+    Config.MeterRadius = 12;
+    Config.MeterBorderThickness = 3;
     Config.EnableGridLines = false;
     Config.PolylineThickness = 5;
     Config.MainMenuButtonWidth = 185;
@@ -188,6 +190,7 @@ var Effects = (function () {
     };
     return Effects;
 })();
+/// <reference path="../scripts/typings/Spectra.d.ts"/>
 var Util = (function () {
     function Util() {
     }
@@ -950,7 +953,7 @@ var MatchManager = (function (_super) {
                 var removePiece = -1;
                 var containsBounds = new ex.BoundingBox(piece.getBounds().left + Config.PieceContainsPadding, piece.getBounds().top + Config.PieceContainsPadding, piece.getBounds().right - Config.PieceContainsPadding, piece.getBounds().bottom - Config.PieceContainsPadding);
                 // if piece contains screen coords and we don't already have it in the run
-                if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
+                if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && !piece.selected) {
                     // if the two pieces aren't neighbors or aren't the same type, invalid move
                     if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) || piece.getType() !== this._run[this._run.length - 1].getType()))
                         return;
@@ -971,18 +974,18 @@ var MatchManager = (function (_super) {
                         piece.hover = false;
                         piece.scaleTo(gameScale.x, gameScale.y, 1.8, 1.8);
                     }
-                }
-                // did user go backwards?
-                if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.length > 1 && this._run.indexOf(piece) === this._run.length - 2) {
-                    // mark for removal
-                    removePiece = this._run.indexOf(piece) + 1;
-                }
-                if (removePiece > -1) {
-                    // remove from run
-                    this._run[removePiece].selected = false;
-                    this._run.splice(removePiece, 1);
-                    Resources.UndoSound.play();
-                    ex.Logger.getInstance().debug("Run modified", this._run);
+                    //if piece is already in the run, and is not the most recently selected piece, user went backwards
+                    var priorPieceIdx = this._run.indexOf(piece);
+                    if (priorPieceIdx != -1 && this._run.length > 1 && priorPieceIdx != (this._run.length - 1)) {
+                        //remove all pieces in front of this piece from run
+                        var numToRemove = (this._run.length) - priorPieceIdx - 1;
+                        for (var i = 0; i < numToRemove; i++) {
+                            this._run[this._run.length - 1 - i].selected = false;
+                        }
+                        this._run.splice(priorPieceIdx + 1, numToRemove);
+                        Resources.UndoSound.play();
+                        ex.Logger.getInstance().debug("Run modified", this._run);
+                    }
                 }
             }
             else {
@@ -1371,9 +1374,6 @@ var Stats = (function () {
         return this._multipliers;
     };
     Stats.prototype.drawScores = function () {
-        var scoreXPos = visualGrid.x + visualGrid.getWidth() + Config.ScoreXBuffer;
-        var meterXPos = visualGrid.x;
-        var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
         this._addTotalScore();
         if (gameMode === 0 /* Standard */) {
             this._addMultipliers();
@@ -1382,27 +1382,13 @@ var Stats = (function () {
         if (Config.EnableLevels) {
             this._addLevel();
         }
-        var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
-        var meterStartX = meterXPos += (visualGrid.getWidth() - totalMeterWidth) / 2;
         if (Config.EnableSweepMeters) {
-            this._addMeter(0, meterXPos, meterYPos);
-            this._addMeter(1, meterXPos += Config.MeterWidth + Config.MeterMargin, meterYPos);
-            this._addMeter(2, meterXPos += Config.MeterWidth + Config.MeterMargin, meterYPos);
-            this._addMeter(3, meterXPos += Config.MeterWidth + Config.MeterMargin, meterYPos);
-            this._addMegaSweep(meterStartX, meterYPos);
+            this._addMeters();
+            this._addMegaSweep();
         }
         if (Config.EnableSweeper) {
-            this._addSweepMeter(meterStartX, meterYPos);
+            this._addSweepMeter();
         }
-        //this._addScore("chain ", this._chains, 0, scoreXPos, yPos += Config.MeterHeight + 20);
-        //this._addScore("chain ", this._chains, 1, scoreXPos, yPos += 20);
-        //this._addScore("chain ", this._chains, 2, scoreXPos, yPos += 20);
-        //this._addScore("chain ", this._chains, 3, scoreXPos, yPos += 20);
-        //var lastChainLabel = new ex.Label("last chain " + this._lastChain, scoreXPos, yPos += 30);
-        //game.addEventListener('update', (data?: ex.UpdateEvent) => {
-        //   lastChainLabel.text = "last chain " + this._lastChain;
-        //});
-        //game.currentScene.addChild(lastChainLabel);
     };
     Stats.prototype._addScore = function (description, statArray, statIndex, xPos, yPos) {
         var square = new ex.Actor(xPos, yPos, 15, 15, PieceTypeToColor[statIndex]);
@@ -1538,10 +1524,13 @@ var Stats = (function () {
         });
         game.add(levelLabel);
     };
-    Stats.prototype._addMegaSweep = function (x, y) {
+    Stats.prototype._addMegaSweep = function () {
         var _this = this;
         // todo sprite animation
-        var meter = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, 1, Config.EnableLevels ? Resources.TextureMegaSweepIndicator : Resources.TextureSweepIndicator);
+        var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
+        var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
+        var meterXPos = visualGrid.x + (visualGrid.getWidth() - totalMeterWidth) / 2;
+        var meter = new Meter(meterXPos, meterYPos, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, 1, Config.EnableLevels ? Resources.TextureMegaSweepIndicator : Resources.TextureSweepIndicator, false);
         meter.score = 1;
         meter.enableCapturePointer = true;
         meter.anchor.setTo(0, 0);
@@ -1560,9 +1549,9 @@ var Stats = (function () {
         game.add(meter);
         this._meterActors.push(meter);
     };
-    Stats.prototype._addMeter = function (piece, x, y) {
+    Stats.prototype._addMeter = function (piece, x, y, pos) {
         var _this = this;
-        var meter = new Meter(x, y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold, Resources.TextureSweepIndicator);
+        var meter = new Meter(x + (pos * Config.MeterWidth) + (pos * Config.MeterMargin), y, Config.MeterWidth, Config.MeterHeight, PieceTypeToColor[piece], Config.SweepThreshold, Resources.TextureSweepIndicator);
         meter.enableCapturePointer = true;
         meter.on("pointerup", function () {
             sweeper.sweep(piece);
@@ -1580,6 +1569,15 @@ var Stats = (function () {
         game.add(meter);
         this._meterActors.push(meter);
     };
+    Stats.prototype._addMeters = function () {
+        var meters = [], i, meter;
+        var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
+        var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
+        var meterXPos = visualGrid.x + (visualGrid.getWidth() - totalMeterWidth) / 2;
+        for (i = 0; i < this._meters.length; i++) {
+            this._addMeter(PieceTypes[i], meterXPos, meterYPos, i);
+        }
+    };
     Stats.prototype.clearMeters = function () {
         if (this._meterActors) {
             for (var i = 0; i < this._meterActors.length; i++) {
@@ -1592,9 +1590,12 @@ var Stats = (function () {
             }
         }
     };
-    Stats.prototype._addSweepMeter = function (x, y) {
+    Stats.prototype._addSweepMeter = function () {
         var _this = this;
-        var square = new Meter(x, y, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, this._sweepMeterThreshold, Resources.TextureSweepIndicator);
+        var totalMeterWidth = (PieceTypes.length * Config.MeterWidth) + ((PieceTypes.length - 1) * Config.MeterMargin);
+        var meterYPos = visualGrid.y + visualGrid.getHeight() + Config.MeterMargin;
+        var meterXPos = visualGrid.x + (visualGrid.getWidth() - totalMeterWidth) / 2;
+        var square = new Meter(meterXPos, meterYPos, (Config.MeterWidth * 4) + (Config.MeterMargin * 3), Config.MeterHeight, Palette.MegaSweepColor, this._sweepMeterThreshold, Resources.TextureSweepIndicator);
         square.enableCapturePointer = true;
         square.on("pointerup", function () {
             sweeper.sweep();
@@ -1610,9 +1611,11 @@ var Stats = (function () {
 })();
 var Meter = (function (_super) {
     __extends(Meter, _super);
-    function Meter(x, y, width, height, color, threshold, sweepIndicator) {
+    function Meter(x, y, width, height, color, threshold, sweepIndicator, circle) {
+        if (circle === void 0) { circle = true; }
         _super.call(this, x, y, width, height);
         this.threshold = threshold;
+        this.circle = circle;
         this.color = color;
         this.anchor.setTo(0, 0);
         this._sweepIndicator = sweepIndicator.asSprite();
@@ -1626,17 +1629,51 @@ var Meter = (function (_super) {
     Meter.prototype.draw = function (ctx, delta) {
         var x = this.getBounds().left;
         var y = this.getBounds().top;
-        // border
-        ctx.strokeStyle = Util.darken(this.color, 0.6).toString();
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x, y, this.getWidth(), this.getHeight());
-        // bg
-        ctx.fillStyle = new ex.Color(this.color.r, this.color.g, this.color.b, 0.3).toString();
-        ctx.fillRect(x, y, this.getWidth(), this.getHeight());
         var percentage = (this.score / this.threshold);
-        // fill
-        ctx.fillStyle = this.color.toString();
-        ctx.fillRect(x, y, (this.getWidth() * percentage), this.getHeight());
+        if (this.circle) {
+            x = this.getCenter().x;
+            y = this.getCenter().y;
+            var radius = Config.MeterRadius * gameScale.x;
+            var border = Config.MeterBorderThickness * gameScale.x;
+            // bg
+            var bg;
+            if (this.score === this.threshold) {
+                bg = new ex.Color(this.color.r, this.color.g, this.color.b, 1).toString();
+            }
+            else {
+                bg = new ex.Color(this.color.r, this.color.g, this.color.b, 0.3).toString();
+            }
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, ex.Util.toRadians(360), false);
+            ctx.fillStyle = bg;
+            ctx.fill();
+            ctx.closePath();
+            // meter
+            var from = 0;
+            var to = ((2 * Math.PI) * percentage);
+            to = ex.Util.clamp(to, ex.Util.toRadians(5), ex.Util.toRadians(360));
+            // shift -90 degrees
+            from -= ex.Util.toRadians(90);
+            to -= ex.Util.toRadians(90);
+            ctx.beginPath();
+            ctx.arc(x, y, radius, from, to, false);
+            ctx.strokeStyle = this.color.toString();
+            ctx.lineWidth = border;
+            ctx.stroke();
+            ctx.closePath();
+        }
+        else {
+            // border
+            ctx.strokeStyle = Util.darken(this.color, 0.6).toString();
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, this.getWidth(), this.getHeight());
+            // bg
+            ctx.fillStyle = new ex.Color(this.color.r, this.color.g, this.color.b, 0.3).toString();
+            ctx.fillRect(x, y, this.getWidth(), this.getHeight());
+            // fill
+            ctx.fillStyle = this.color.toString();
+            ctx.fillRect(x, y, (this.getWidth() * percentage), this.getHeight());
+        }
         if (this.score === this.threshold) {
             var centeredX = this.getCenter().x - (this._sweepIndicator.width / 2);
             var centeredY = this.getCenter().y - (this._sweepIndicator.height / 2);
@@ -1870,6 +1907,8 @@ var SoundManager = (function () {
     SoundManager._setSoundLevel = function (level) {
         if (SoundManager._CurrentSoundLevel === level)
             return;
+        SoundManager._setPreference(level);
+        SoundManager._setIconState(level);
         switch (level) {
             case 2 /* All */:
                 SoundManager._setVolume(1);
@@ -1882,8 +1921,6 @@ var SoundManager = (function () {
                 SoundManager._stopMusic();
                 SoundManager._setVolume(0);
         }
-        SoundManager._setPreference(level);
-        SoundManager._setIconState(level);
         ex.Logger.getInstance().info("Set sound level", level);
     };
     SoundManager._startMusic = function () {
