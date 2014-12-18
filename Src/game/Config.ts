@@ -109,7 +109,7 @@ class Config {
       gameMode = GameMode.Standard;
 
       Config.EnableSweepMeters = true;
-      Config.EnableLevels = true;
+      Config.EnableLevels = false;
       Config.SweepScoreMultiplierIncreasesPerLevel = false;
    }
 

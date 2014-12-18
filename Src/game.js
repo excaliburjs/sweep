@@ -74,7 +74,7 @@ var Config = (function () {
     Config.loadCasual = function () {
         gameMode = 0 /* Standard */;
         Config.EnableSweepMeters = true;
-        Config.EnableLevels = true;
+        Config.EnableLevels = false;
         Config.SweepScoreMultiplierIncreasesPerLevel = false;
     };
     /**
@@ -1337,7 +1337,7 @@ var Stats = (function () {
     Stats.prototype.calculateLevelBonus = function () {
         var levelMultiplier = Config.LevelMultiplierEndBonus;
         if (Config.EnableLevels) {
-            var modifiedScore = Math.floor(this._finalScore * levelMultiplier * Math.log(this._level));
+            var modifiedScore = Math.floor(this._finalScore * levelMultiplier * Math.log(this._level + 2));
             var diff = modifiedScore - this._finalScore;
             this._finalScore = modifiedScore;
             return diff.toString();
