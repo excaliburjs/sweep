@@ -18,10 +18,11 @@ class MatchManager extends ex.Class {
       /*Resources.ChallengeNote7Sound,
       Resources.ChallengeNote8Sound*/]
 
-   private _run: Piece[] = [];   
+   private _run: Piece[] = [];
 
    public gameOver: boolean = false;
    public inMainMenu: boolean = true;
+   public preventOtherPointerUp: boolean = false;
    public dispose = function () {
       game.input.pointers.primary.off("down");
       game.input.pointers.primary.off("up");
@@ -61,7 +62,7 @@ class MatchManager extends ex.Class {
       this._notes[index].play();
    }
 
-   private _handlePointerDown(pe: PointerEvent) {
+   private _handlePointerDown(pe: ex.Input.PointerEvent) {
       if (!this.gameOver && !this.inMainMenu) {
          var cell = visualGrid.getCellByPos(pe.x, pe.y);
 
@@ -90,12 +91,12 @@ class MatchManager extends ex.Class {
             this._run.length = 0;
          }
 
-      // darken/highlight
+         // darken/highlight
          // draw line?
       }
    }
 
-   private _handlePointerMove(pe: PointerEvent) {
+   private _handlePointerMove(pe: ex.Input.PointerEvent) {
       if (!this.gameOver && !this.inMainMenu) {
          // add piece to run if valid
          // draw line?
@@ -104,13 +105,18 @@ class MatchManager extends ex.Class {
 
          var cell = visualGrid.getCellByPos(pe.x, pe.y);
 
-         if (!cell) return;
+         //run is in progress but we are not a cell. If we mouse up at this point we only
+         //want the run to end and nothing else to happen
+         if (!cell) {
+            this.preventOtherPointerUp = true;
+            return;
+         }
 
          var piece = cell.piece;
 
          if (!piece) return;
          piece.setCenterDrawing(true);
-         
+
          if (!Config.EnableSingleTapClear) {
             var removePiece = -1;
             var containsBounds = new ex.BoundingBox(
@@ -120,7 +126,7 @@ class MatchManager extends ex.Class {
                piece.getBounds().bottom - Config.PieceContainsPadding);
 
             // if piece contains screen coords and we don't already have it in the run
-            if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && this._run.indexOf(piece) < 0) {
+            if (containsBounds.contains(new ex.Point(pe.x, pe.y)) && !piece.selected) {
 
                // if the two pieces aren't neighbors or aren't the same type, invalid move
                if (this._run.length > 0 && (!this.areNeighbors(piece, this._run[this._run.length - 1]) ||
@@ -147,26 +153,28 @@ class MatchManager extends ex.Class {
                   piece.hover = false;
                   piece.scaleTo(gameScale.x, gameScale.y, 1.8, 1.8);
                }
-            }
 
-            // did user go backwards?
-            if (containsBounds.contains(new ex.Point(pe.x, pe.y)) &&
-               this._run.length > 1 &&
-               this._run.indexOf(piece) === this._run.length - 2) {
-               // mark for removal
-              
-               removePiece = this._run.indexOf(piece) + 1;
-            }
+               //if piece is already in the run, and is not the most recently selected piece, user went backwards
+               var priorPieceIdx = this._run.indexOf(piece);
+               if (priorPieceIdx != -1 && this._run.length > 1 && priorPieceIdx != (this._run.length - 1)) {
+                  //remove all pieces in front of this piece from run
+                  var numToRemove = (this._run.length) - priorPieceIdx - 1;
 
-            if (removePiece > -1) {
-               // remove from run
-               this._run[removePiece].selected = false;
-               this._run.splice(removePiece, 1);
-               Resources.UndoSound.play();
-               ex.Logger.getInstance().debug("Run modified", this._run);
+                  for (var i = 0; i < numToRemove; i++) {
+                     this._run[this._run.length - 1 - i].selected = false;
+                  }
+
+                  this._run.splice(priorPieceIdx + 1, numToRemove);
+
+                  Resources.UndoSound.play();
+                  ex.Logger.getInstance().debug("Run modified", this._run);
+
+                  //if the user went all the way back to the first item in the chain, start everything over
+
+               }
             }
          } else {
-            
+
          }
       }
    }
@@ -202,10 +210,10 @@ class MatchManager extends ex.Class {
       }
    }
 
-   public areNeighbors(piece1: Piece, piece2: Piece): boolean {      
+   public areNeighbors(piece1: Piece, piece2: Piece): boolean {
       var cell1 = _.find(grid.cells, { piece: piece1 });
       var cell2 = _.find(grid.cells, { piece: piece2 });
-      
+
       return grid.areNeighbors(cell1, cell2);
    }
 

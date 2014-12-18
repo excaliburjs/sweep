@@ -17,10 +17,18 @@ class Config {
    static MeterWidth: number = 45;
    static MeterHeight: number = 27;
    static MeterMargin: number = 8;
+   static MeterRadius: number = 12;
+   static MeterBorderThickness: number = 3;
    static EnableGridLines = false;
    static PolylineThickness = 5;
    static MainMenuButtonWidth = 185;
    static MainMenuButtonHeight = 62;
+   static StatsScoresMargin = 8;
+   static ScoreTopFontSize = 24;
+   static ScoreBonusFontSize = 18;
+   static ScoreTopDescSize = 14;
+   static LevelFontSize = 275;
+   static LevelYOffset = -210;
 
    // easings
    static PieceEasingFillDuration = 300;
@@ -37,8 +45,16 @@ class Config {
    static SweepThreshold: number;
    static EnableSweepMeters: boolean;
    static ClearSweepMetersAfterSingleUse: boolean;
+   
 
-   static SweepScoreMultiplier: number = 2;
+   //
+   // leveling
+   //
+   static EnableLevels: boolean;
+   static SweepScoreMultiplierIncreasesPerLevel: boolean;
+   static LevelMultiplierEndBonus = 1.05;
+
+   static SweepScoreMultiplier: number = 2;   
 
    static ChainThresholdSmall: number = 8;
    static ChainThresholdMedium: number = 11;
@@ -74,7 +90,7 @@ class Config {
    static resetDefault() {
       Config.EnableTimer = false;
       Config.AdvanceRowsOnMatch = true;
-      Config.SweepThreshold = 15;
+      Config.SweepThreshold = 18;
       Config.EnableSweepMeters = false;
       Config.EnableSingleTapClear = false;
       Config.ClearSweepMetersAfterSingleUse = true;
@@ -93,6 +109,8 @@ class Config {
       gameMode = GameMode.Standard;
 
       Config.EnableSweepMeters = true;
+      Config.EnableLevels = false;
+      Config.SweepScoreMultiplierIncreasesPerLevel = false;
    }
 
    /**

@@ -1,5 +1,6 @@
 /// <reference path="../Excalibur.d.ts"/>
 /// <reference path="../scripts/typings/lodash/lodash.d.ts"/>
+/// <reference path="../scripts/typings/zepto/zepto.d.ts"/>
 /// <reference path="util.ts"/>
 /// <reference path="Config.ts"/>
 /// <reference path="resources.ts"/>
@@ -132,13 +133,16 @@ function InitSetup() {
    stats.drawScores();
 
    // hide game over
-   removeClass(document.getElementById("game-over"), "show");
+   $("#game-over").removeClass("show");
 
    //add pieces to initial rows
    grid.seed(Config.NumStartingRows);
 
    // start sound
-   SoundManager.startLoop();   
+   SoundManager.startLoop();
+
+   // feature flags
+   Config.EnableLevels && $(".feature-levels").removeClass("hide");   
 }
 
 function hasClass(element, cls) {
@@ -170,6 +174,7 @@ function gameOver() {
    }
 
    var enduranceBonus = stats.calculateEnduranceBonus();
+   var levelBonus = stats.calculateLevelBonus();
    var totalScore = stats.getFinalScore();
    var longestChain = stats.getLongestChain();
    var turnsTaken = stats.getTurnNumber();
@@ -190,34 +195,46 @@ function gameOver() {
    if (turnManager) turnManager.dispose(); // stop game over from happening infinitely in time attack
 
    addClass(document.getElementById("game-over"), "show");
+   
+   $("#game-over-swept").text(stats.getTotalPiecesSwept().toString());
 
+   $("#game-over-chain").text(stats.getTotalChainBonus().toString());   
 
-   document.getElementById("game-over-swept").innerHTML = stats.getTotalPiecesSwept().toString();
+   $("#game-over-multiplier").text((stats.getFinalScore() - enduranceBonus - stats.getTotalChainBonus() - stats.getTotalPiecesSwept()).toString());
 
-   document.getElementById("game-over-chain").innerHTML = stats.getTotalChainBonus().toString();   
+   $("#game-over-time").text(enduranceBonus.toString());
 
-   document.getElementById("game-over-multiplier").innerHTML = (stats.getFinalScore() - enduranceBonus - stats.getTotalChainBonus() - stats.getTotalPiecesSwept()).toString();
+   $("#game-over-level").text(levelBonus);
 
-   document.getElementById("game-over-time").innerHTML = enduranceBonus.toString();
+   $("#game-over-total").text(stats.getFinalScore().toString());
 
-   document.getElementById("game-over-total").innerHTML = stats.getFinalScore().toString();
-
-   // I'm so sorry, I'm so very sorry...so tired
    try {
-      var text = document.getElementById("twidget").dataset['text'];
-      document.getElementById("twidget").dataset['text'] = text.replace("SOCIAL_SCORE", stats.getFinalScore()).replace("SOCIAL_MODE", gameMode === GameMode.Timed ? "challenge mode" : "standard mode");
-      var twitterScript = <HTMLScriptElement>document.createElement('script');
-      twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
-      document.getElementById("game-over").appendChild(twitterScript);
 
+      appendTwitter();
 
-      var social = document.getElementById('social-container');
-      var facebookW = document.getElementById('fidget');
-      facebookW.parentNode.removeChild(facebookW);
-      social.appendChild(facebookW);
+      var social = $('#social-container');
+      var facebookW = $('#fidget');
+      facebookW.remove();
+      social.append(facebookW);
    } catch (e) {
-      ex.Logger.getInstance().warn("Twitter failed", e);      
+      ex.Logger.getInstance().warn("Twitter or Facebook share init failed", e);      
    }
+}
+
+var twitterScript;
+function appendTwitter() {
+   // twitter is silly, can't dynamically update tweet text
+   //
+   var text = $("#twidget").data('text');
+   $("#twidget").data('text', text.replace("SOCIAL_SCORE", stats.getFinalScore()).replace("SOCIAL_MODE", gameMode === GameMode.Timed ? "challenge mode" : "standard mode"));
+
+   if (twitterScript) {
+      $(twitterScript).remove();
+   }
+
+   twitterScript = <HTMLScriptElement>document.createElement('script');
+   twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
+   $("#game-over").append(twitterScript);
 }
 
 // TODO clean up pieces that are not in play anymore after update loop
@@ -227,6 +244,7 @@ game.start(loader).then(() => {
    // set game scale
    var defaultGridHeight = Config.CellHeight * Config.GridCellsHigh;
    
+   // todo do this on game.on('update')
    // scale based on height of viewport
    // target 85% height
    var scale = defaultGridHeight / game.getHeight();
