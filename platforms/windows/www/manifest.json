@@ -1,0 +1,30 @@
+﻿{
+  "name": "Sweep Stacks",
+  "icons": [{
+        "src": "touch-icon-iphone.png",
+        "sizes": "60x60",
+        "type": "image/png"
+      }, {
+        "src": "touch-icon-ipad.png",
+        "sizes": "72x72",
+        "type": "image/png",
+        "density": "1.5"
+      }, {
+        "src": "icon-128.png",
+        "sizes": "128x128",
+        "type": "image/png"
+      }, {
+        "src": "touch-icon-ipad-retina.png",
+        "sizes": "144x144",
+        "type": "image/png",
+        "density": "3.0"
+      }, {
+        "src": "icon-192.png",
+        "sizes": "192x192",
+        "type": "image/png",
+        "density": "4.0"
+      }],
+  "start_url": "index.html",
+  "display": "fullscreen",
+  "orientation": "portrait"
+}

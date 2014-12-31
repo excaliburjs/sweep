@@ -1,0 +1,199 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.Default.props') And $(SkipTsCompile) != '1'" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <ProjectGuid>{680139CC-6274-431D-9E3C-748649DB814C}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <OutputPath>bin</OutputPath>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <UseIISExpress>true</UseIISExpress>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="app.css.map">
+      <DependentUpon>app.css</DependentUpon>
+    </Content>
+    <None Include="app.less" />
+    <Content Include="app.css">
+      <DependentUpon>app.less</DependentUpon>
+    </Content>
+    <Content Include="app.min.css">
+      <DependentUpon>app.css</DependentUpon>
+    </Content>
+    <Content Include="apple-touch-icon-57x57.png" />
+    <Content Include="credits.html" />
+    <Content Include="css\font-awesome.min.css" />
+    <Content Include="Excalibur.js" />
+    <Content Include="favicon.png" />
+    <Content Include="fonts\fontawesome-webfont.svg" />
+    <Content Include="game.js" />
+    <Content Include="icon-192.png" />
+    <Content Include="icon-128.png" />
+    <Content Include="icon.png" />
+    <Content Include="images\bg.png" />
+    <Content Include="images\bg2.jpg" />
+    <Content Include="images\bg2.png" />
+    <Content Include="images\bg3.png" />
+    <Content Include="images\challenge.png" />
+    <Content Include="images\logo.png" />
+    <Content Include="images\mega-sweep-indicator.png" />
+    <Content Include="images\no-moves.png" />
+    <Content Include="images\readme.txt" />
+    <Content Include="images\standard.png" />
+    <Content Include="images\sweep-indicator.png" />
+    <Content Include="images\sweepstacks.png" />
+    <Content Include="images\Tile1.png" />
+    <Content Include="images\Tile2.png" />
+    <Content Include="images\Tile3.png" />
+    <Content Include="images\Tile4.png" />
+    <Content Include="images\tiles\large.png" />
+    <Content Include="images\tiles\medium.png" />
+    <Content Include="images\tiles\small.png" />
+    <Content Include="images\tiles\wide.png" />
+    <Content Include="images\tutorial-challenge-1.png" />
+    <Content Include="images\tutorial-challenge-2.png" />
+    <Content Include="images\tutorial-standard-1.png" />
+    <Content Include="images\tutorial-standard-2.png" />
+    <Content Include="images\tutorial-standard-3.png" />
+    <Content Include="index.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="game\background.ts" />
+    <TypeScriptCompile Include="game\Config.ts" />
+    <TypeScriptCompile Include="game\Effects.ts" />
+    <TypeScriptCompile Include="game\game.ts" />
+    <TypeScriptCompile Include="game\grid.ts" />
+    <TypeScriptCompile Include="game\mainmenu.ts" />
+    <TypeScriptCompile Include="game\mask.ts" />
+    <TypeScriptCompile Include="game\match.ts" />
+    <TypeScriptCompile Include="game\nomoves.ts" />
+    <TypeScriptCompile Include="game\Piece.ts" />
+    <TypeScriptCompile Include="game\polyline.ts" />
+    <TypeScriptCompile Include="game\resources.ts" />
+    <TypeScriptCompile Include="game\sound.ts" />
+    <TypeScriptCompile Include="game\Stats.ts" />
+    <TypeScriptCompile Include="game\sweeper.ts" />
+    <TypeScriptCompile Include="game\transition.ts" />
+    <TypeScriptCompile Include="game\turn.ts" />
+    <TypeScriptCompile Include="game\util.ts" />
+    <TypeScriptCompile Include="scripts\typings\Cookies.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\lodash\lodash.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\Spectra.d.ts" />
+    <TypeScriptCompile Include="scripts\typings\zepto\zepto.d.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="scripts\cookies.min.js" />
+    <Content Include="scripts\lodash.min.js" />
+    <Content Include="scripts\spectra.min.js" />
+    <Content Include="scripts\zepto.min.js" />
+    <Content Include="sounds\challengeloopfixed.mp3" />
+    <Content Include="sounds\challengenote1.mp3" />
+    <Content Include="sounds\challengenote2.mp3" />
+    <Content Include="sounds\challengenote3.mp3" />
+    <Content Include="sounds\challengenote4.mp3" />
+    <Content Include="sounds\challengenote5.mp3" />
+    <Content Include="sounds\challengenote6.mp3" />
+    <Content Include="sounds\gameover.mp3" />
+    <Content Include="sounds\knock.mp3" />
+    <Content Include="sounds\loop.mp3" />
+    <Content Include="sounds\match.mp3" />
+    <Content Include="sounds\megasweep.mp3" />
+    <Content Include="sounds\note1.mp3" />
+    <Content Include="sounds\note2.mp3" />
+    <Content Include="sounds\note3.mp3" />
+    <Content Include="sounds\note4.mp3" />
+    <Content Include="sounds\note5.mp3" />
+    <Content Include="sounds\note6.mp3" />
+    <Content Include="sounds\note7.mp3" />
+    <Content Include="sounds\note8.mp3" />
+    <Content Include="sounds\readme.txt" />
+    <Content Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="sounds\sweep.mp3" />
+    <Content Include="sounds\taps.mp3" />
+    <Content Include="sounds\undo.mp3" />
+    <Content Include="sounds\undo2.mp3" />
+    <Content Include="touch-icon-ipad-retina.png" />
+    <Content Include="touch-icon-ipad.png" />
+    <Content Include="touch-icon-iphone-retina.png" />
+    <Content Include="touch-icon-iphone.png" />
+    <Content Include="web.config">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="fonts\fontawesome-webfont.eot" />
+    <Content Include="fonts\fontawesome-webfont.ttf" />
+    <Content Include="fonts\fontawesome-webfont.woff" />
+    <Content Include="fonts\FontAwesome.otf" />
+    <Content Include="manifest.json" />
+    <None Include="web.Debug.config">
+      <DependentUpon>web.config</DependentUpon>
+    </None>
+    <None Include="web.Release.config">
+      <DependentUpon>web.config</DependentUpon>
+    </None>
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">12.0</VisualStudioVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RootNamespace>Ludum31</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyName>Ludum31</AssemblyName>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\WebApplications\Microsoft.WebApplication.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\WebApplications\Microsoft.WebApplication.targets')" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>False</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>61478</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:61478/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <TypeScriptRemoveComments>false</TypeScriptRemoveComments>
+    <TypeScriptSourceMap>False</TypeScriptSourceMap>
+    <TypeScriptOutFile>game.js</TypeScriptOutFile>
+    <TypeScriptModuleKind>none</TypeScriptModuleKind>
+    <PublishDatabases>false</PublishDatabases>
+    <FilesToIncludeForPublish>AllFilesInProjectFolder</FilesToIncludeForPublish>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <TypeScriptRemoveComments>False</TypeScriptRemoveComments>
+    <TypeScriptSourceMap>false</TypeScriptSourceMap>
+    <TypeScriptOutFile>game.js</TypeScriptOutFile>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets') And $(SkipTsCompile) != '1'" />
+  <PropertyGroup>
+    <PreBuildEvent>copy $(SolutionDir)Excalibur\dist\Excalibur.js $(ProjectDir)
+copy $(SolutionDir)Excalibur\dist\Excalibur.d.ts $(ProjectDir)</PreBuildEvent>
+  </PropertyGroup>
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
+</Project>

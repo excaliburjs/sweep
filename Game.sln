@@ -3,13 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Src", "Src\Src.csproj", "{680139CC-6274-431D-9E3C-748649DB814C}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CA1EC458-E74A-4F98-81AA-1920CEA889A8}"
 	ProjectSection(SolutionItems) = preProject
+		.deployment = .deployment
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		.gitmodules = .gitmodules
 		.travis.yml = .travis.yml
+		config.xml = config.xml
 		deploy.cmd = deploy.cmd
 		deploy.sh = deploy.sh
+		Game.sln.DotSettings = Game.sln.DotSettings
+		Gruntfile.js = Gruntfile.js
 		package.json = package.json
 		README.md = README.md
 		WebEssentials-Settings.json = WebEssentials-Settings.json
@@ -22,6 +27,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{BBF610
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 		.nuget\packages.config = .nuget\packages.config
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Src", "www\Src.csproj", "{680139CC-6274-431D-9E3C-748649DB814C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
