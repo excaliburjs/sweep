@@ -17,11 +17,20 @@
        under the License.
 */
 
-var utils = require('./utils');
+var wscript_shell = WScript.CreateObject("WScript.Shell");
 
-utils.getOSVersion().then(function (version) {
-    console.log(version);
-}, function (err) {
-    console.error(err);
-    process.exit(2);
-});
+// log to stdout or stderr
+function Log(msg, error) {
+    if (error) {
+        WScript.StdErr.WriteLine(msg);
+    }
+    else {
+        WScript.StdOut.WriteLine(msg);
+    }
+}
+
+function getWindowsVersion() {
+	var version =  wscript_shell.RegRead("HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\CurrentVersion");
+	Log(version);
+}
+getWindowsVersion();

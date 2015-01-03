@@ -196,19 +196,6 @@ namespace WPCordovaClassLib
                     Debug.WriteLine("Unable to parse BackgroundColor value '{0}'. Error: {1}", bgColor, ex.Message);
                 }
             }
-
-            string disallowOverscroll = configHandler.GetPreference("disallowoverscroll");
-            if (!String.IsNullOrEmpty(disallowOverscroll))
-            {
-                try
-                {
-                    this.DisableBouncyScrolling = bool.Parse(disallowOverscroll);
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine("Unable to parse DisallowOverscroll value '{0}'. Error: {1}", disallowOverscroll, ex.Message);
-                }
-            }
         }
 
         /*
@@ -390,29 +377,17 @@ namespace WPCordovaClassLib
             }
 
             Debug.WriteLine("CordovaBrowser_LoadCompleted");
-
-            string version = "?";
-            System.Windows.Resources.StreamResourceInfo streamInfo = Application.GetResourceStream(new Uri("VERSION", UriKind.Relative));
-            if (streamInfo != null)
-            {
-                using(StreamReader sr = new StreamReader(streamInfo.Stream))
-                {
-                    version = sr.ReadLine();
-                }
-            }
-            Debug.WriteLine("Apache Cordova native platform version " + version + " is starting");
-
             string[] autoloadPlugs = this.configHandler.AutoloadPlugins;
             foreach (string plugName in autoloadPlugs)
             {
-                nativeExecution.AutoLoadCommand(plugName);
+                //nativeExecution.ProcessCommand(commandCallParams);
             }
 
             // send js code to fire ready event
             string nativeReady = "(function(){ cordova.require('cordova/channel').onNativeReady.fire()})();";
             try
             {
-                CordovaBrowser.InvokeScript("eval", new string[] { nativeReady });
+                CordovaBrowser.InvokeScript("execScript", new string[] { nativeReady });
             }
             catch (Exception /*ex*/)
             {
@@ -422,7 +397,7 @@ namespace WPCordovaClassLib
             string appExitHandler = "(function(){navigator.app = navigator.app || {}; navigator.app.exitApp= function(){cordova.exec(null,null,'CoreEvents','__exitApp',[]); }})();";
             try
             {
-                CordovaBrowser.InvokeScript("eval", new string[] { appExitHandler });
+                CordovaBrowser.InvokeScript("execScript", new string[] { appExitHandler });
             }
             catch (Exception /*ex*/)
             {
@@ -526,17 +501,7 @@ namespace WPCordovaClassLib
 
         private void CordovaBrowser_Unloaded(object sender, RoutedEventArgs e)
         {
-            IBrowserDecorator console;
-            if (browserDecorators.TryGetValue("ConsoleLog", out console))
-            {
-                ((ConsoleHelper)console).DetachHandler();
-            }
 
-            PhoneApplicationService service = PhoneApplicationService.Current;
-            service.Activated -= new EventHandler<Microsoft.Phone.Shell.ActivatedEventArgs>(AppActivated);
-            service.Launching -= new EventHandler<LaunchingEventArgs>(AppLaunching);
-            service.Deactivated -= new EventHandler<DeactivatedEventArgs>(AppDeactivated);
-            service.Closing -= new EventHandler<ClosingEventArgs>(AppClosing);
         }
 
         private void CordovaBrowser_NavigationFailed(object sender, System.Windows.Navigation.NavigationFailedEventArgs e)

@@ -21,11 +21,17 @@ package org.apache.cordova;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 
+import org.apache.cordova.Config;
+import org.apache.cordova.CordovaInterface;
+import org.apache.cordova.LOG;
+import org.apache.cordova.PluginManager;
+import org.apache.cordova.PluginResult;
+
+import android.app.Activity;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
@@ -33,6 +39,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -42,15 +50,20 @@ import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
-import android.webkit.WebBackForwardList;
-import android.webkit.WebHistoryItem;
-import android.webkit.WebChromeClient;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebSettings.LayoutAlgorithm;
-import android.webkit.WebViewClient;
+//import android.webkit.WebBackForwardList;
+//import android.webkit.WebHistoryItem;
+//import android.webkit.WebChromeClient;
+//import android.webkit.WebSettings;
+//import android.webkit.WebView;
+//import android.webkit.WebSettings.LayoutAlgorithm;
 import android.widget.FrameLayout;
+
+import org.xwalk.core.XWalkNavigationHistory;
+import org.xwalk.core.XWalkNavigationItem;
+import org.xwalk.core.XWalkPreferences;
+import org.xwalk.core.XWalkView;
 
 /*
  * This class is our web view.
@@ -58,12 +71,13 @@ import android.widget.FrameLayout;
  * @see <a href="http://developer.android.com/guide/webapps/webview.html">WebView guide</a>
  * @see <a href="http://developer.android.com/reference/android/webkit/WebView.html">WebView</a>
  */
-public class CordovaWebView extends WebView {
+public class CordovaWebView extends XWalkView {
 
     public static final String TAG = "CordovaWebView";
-    public static final String CORDOVA_VERSION = "3.6.4";
+    public static final String CORDOVA_VERSION = "3.5.1";
 
-    private HashSet<Integer> boundKeyCodes = new HashSet<Integer>();
+    private ArrayList<Integer> keyDownCodes = new ArrayList<Integer>();
+    private ArrayList<Integer> keyUpCodes = new ArrayList<Integer>();
 
     public PluginManager pluginManager;
     private boolean paused;
@@ -74,26 +88,26 @@ public class CordovaWebView extends WebView {
     /** Activities and other important classes **/
     private CordovaInterface cordova;
     CordovaWebViewClient viewClient;
+    @SuppressWarnings("unused")
     private CordovaChromeClient chromeClient;
+
+    private String url;
 
     // Flag to track that a loadUrl timeout occurred
     int loadUrlTimeout = 0;
 
+    private boolean bound;
+
+    private boolean handleButton = false;
+    
     private long lastMenuEventTime = 0;
 
-    CordovaBridge bridge;
+    NativeToJsMessageQueue jsMessageQueue;
+    ExposedJsApi exposedJsApi;
 
-    /** custom view created by the browser (a video player for example) */
-    private View mCustomView;
-    private WebChromeClient.CustomViewCallback mCustomViewCallback;
+    private ActivityResult mResult = null;
 
     private CordovaResourceApi resourceApi;
-    private Whitelist internalWhitelist;
-    private Whitelist externalWhitelist;
-
-    // The URL passed to loadUrl(), not necessarily the URL of the current page.
-    String loadedUrl;
-    private CordovaPreferences preferences;
 
     class ActivityResult {
         
@@ -116,172 +130,194 @@ public class CordovaWebView extends WebView {
             ViewGroup.LayoutParams.MATCH_PARENT,
             Gravity.CENTER);
     
+    /**
+     * Constructor.
+     *
+     * @param context
+     */
     public CordovaWebView(Context context) {
-        this(context, null);
+        super(context, (Activity)null);
+        if (CordovaInterface.class.isInstance(context))
+        {
+            this.cordova = (CordovaInterface) context;
+        }
+        else
+        {
+            Log.d(TAG, "Your activity must implement CordovaInterface to work");
+        }
+        this.loadConfiguration();
+        this.setup();
     }
 
+    /**
+     * Constructor.
+     *
+     * @param context
+     * @param attrs
+     */
     public CordovaWebView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        if (CordovaInterface.class.isInstance(context))
+        {
+            this.cordova = (CordovaInterface) context;
+        }
+        else
+        {
+            Log.d(TAG, "Your activity must implement CordovaInterface to work");
+        }
+        this.setWebChromeClient(new CordovaChromeClient(this.cordova, this));
+        this.initWebViewClient(this.cordova);
+        this.loadConfiguration();
+        this.setup();
     }
 
-    @Deprecated
+    /**
+     * Constructor.
+     *
+     * @param context
+     * @param attrs
+     * @param defStyle
+     *
+     */
     public CordovaWebView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
+        super(context, attrs);
+        if (CordovaInterface.class.isInstance(context))
+        {
+            this.cordova = (CordovaInterface) context;
+        }
+        else
+        {
+            Log.d(TAG, "Your activity must implement CordovaInterface to work");
+        }
+        this.setWebChromeClient(new CordovaChromeClient(this.cordova, this));
+        this.loadConfiguration();
+        this.setup();
     }
 
+    /**
+     * Constructor.
+     *
+     * @param context
+     * @param attrs
+     * @param defStyle
+     * @param privateBrowsing
+     */
     @TargetApi(11)
-    @Deprecated
     public CordovaWebView(Context context, AttributeSet attrs, int defStyle, boolean privateBrowsing) {
-        super(context, attrs, defStyle, privateBrowsing);
-    }
-
-    // Use two-phase init so that the control will work with XML layouts.
-    public void init(CordovaInterface cordova, CordovaWebViewClient webViewClient, CordovaChromeClient webChromeClient,
-            List<PluginEntry> pluginEntries, Whitelist internalWhitelist, Whitelist externalWhitelist,
-            CordovaPreferences preferences) {
-        if (this.cordova != null) {
-            throw new IllegalStateException();
+        super(context, attrs);
+        if (CordovaInterface.class.isInstance(context))
+        {
+            this.cordova = (CordovaInterface) context;
         }
-        this.cordova = cordova;
-        this.viewClient = webViewClient;
-        this.chromeClient = webChromeClient;
-        this.internalWhitelist = internalWhitelist;
-        this.externalWhitelist = externalWhitelist;
-        this.preferences = preferences;
-        super.setWebChromeClient(webChromeClient);
-        super.setWebViewClient(webViewClient);
-
-        pluginManager = new PluginManager(this, this.cordova, pluginEntries);
-        bridge = new CordovaBridge(pluginManager, new NativeToJsMessageQueue(this, cordova));
-        resourceApi = new CordovaResourceApi(this.getContext(), pluginManager);
-
-        pluginManager.addService("App", "org.apache.cordova.App");
-        initWebViewSettings();
-        exposeJsInterface();
+        else
+        {
+            Log.d(TAG, "Your activity must implement CordovaInterface to work");
+        }
+        this.setWebChromeClient(new CordovaChromeClient(this.cordova));
+        this.initWebViewClient(this.cordova);
+        this.loadConfiguration();
+        this.setup();
     }
 
-    @SuppressWarnings("deprecation")
-    private void initIfNecessary() {
-        if (pluginManager == null) {
-            Log.w(TAG, "CordovaWebView.init() was not called. This will soon be required.");
-            // Before the refactor to a two-phase init, the Context needed to implement CordovaInterface. 
-            CordovaInterface cdv = (CordovaInterface)getContext();
-            if (!Config.isInitialized()) {
-                Config.init(cdv.getActivity());
-            }
-            init(cdv, makeWebViewClient(cdv), makeWebChromeClient(cdv), Config.getPluginEntries(), Config.getWhitelist(), Config.getExternalWhitelist(), Config.getPreferences());
+    /**
+     * set the WebViewClient, but provide special case handling for IceCreamSandwich.
+     */
+    private void initWebViewClient(CordovaInterface cordova) {
+        if(android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB ||
+                android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.JELLY_BEAN_MR1)
+        {
+            this.setWebViewClient(new CordovaWebViewClient(this.cordova, this));
+        }
+        else
+        {
+            this.setWebViewClient(new IceCreamCordovaWebViewClient(this.cordova, this));
         }
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
+    /**
+     * Initialize webview.
+     */
     @SuppressWarnings("deprecation")
-    private void initWebViewSettings() {
-        this.setInitialScale(0);
+    @SuppressLint("NewApi")
+    private void setup() {
+        // this.setInitialScale(0);
         this.setVerticalScrollBarEnabled(false);
-        // TODO: The Activity is the one that should call requestFocus().
         if (shouldRequestFocusOnInit()) {
-			this.requestFocusFromTouch();
-		}
-		// Enable JavaScript
-        WebSettings settings = this.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setJavaScriptCanOpenWindowsAutomatically(true);
-        settings.setLayoutAlgorithm(LayoutAlgorithm.NORMAL);
-        
-        // Set the nav dump for HTC 2.x devices (disabling for ICS, deprecated entirely for Jellybean 4.2)
-        try {
-            Method gingerbread_getMethod =  WebSettings.class.getMethod("setNavDump", new Class[] { boolean.class });
-            
-            String manufacturer = android.os.Build.MANUFACTURER;
-            Log.d(TAG, "CordovaWebView is running on device made by: " + manufacturer);
-            if(android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB &&
-                    android.os.Build.MANUFACTURER.contains("HTC"))
-            {
-                gingerbread_getMethod.invoke(settings, true);
-            }
-        } catch (NoSuchMethodException e) {
-            Log.d(TAG, "We are on a modern version of Android, we will deprecate HTC 2.3 devices in 2.8");
-        } catch (IllegalArgumentException e) {
-            Log.d(TAG, "Doing the NavDump failed with bad arguments");
-        } catch (IllegalAccessException e) {
-            Log.d(TAG, "This should never happen: IllegalAccessException means this isn't Android anymore");
-        } catch (InvocationTargetException e) {
-            Log.d(TAG, "This should never happen: InvocationTargetException means this isn't Android anymore.");
+            this.requestFocusFromTouch();
         }
+
+        // Enable JavaScript
+        //XWalkSettings settings = this.getSettings();
+        //if (settings == null) return;
+        // wang16: covered by XWalkPreferences setting in static code.
+        //settings.setJavaScriptEnabled(true);
+        //settings.setJavaScriptCanOpenWindowsAutomatically(true);
+        // nhu: N/A
+        //settings.setLayoutAlgorithm(LayoutAlgorithm.NORMAL);
 
         //We don't save any form data in the application
-        settings.setSaveFormData(false);
-        settings.setSavePassword(false);
+        // nhu: N/A
+        //settings.setSaveFormData(false);
+        //settings.setSavePassword(false);
         
-        // Jellybean rightfully tried to lock this down. Too bad they didn't give us a whitelist
-        // while we do this
-        if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1)
-            Level16Apis.enableUniversalAccess(settings);
+        // wang16: covered by XWalkPreferences setting in static code.
+        //settings.setAllowUniversalAccessFromFileURLs(true);
         // Enable database
         // We keep this disabled because we use or shim to get around DOM_EXCEPTION_ERROR_16
-        String databasePath = getContext().getApplicationContext().getDir("database", Context.MODE_PRIVATE).getPath();
-        settings.setDatabaseEnabled(true);
-        settings.setDatabasePath(databasePath);
+        String databasePath = this.cordova.getActivity().getApplicationContext().getDir("database", Context.MODE_PRIVATE).getPath();
+        //settings.setDatabaseEnabled(true);
+        //TODO: bring it back when it's ready in the XWalk.
+        //settings.setDatabasePath(databasePath);
         
         
         //Determine whether we're in debug or release mode, and turn on Debugging!
-        ApplicationInfo appInfo = getContext().getApplicationContext().getApplicationInfo();
-        if ((appInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0 &&
-            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-            enableRemoteDebugging();
-        }
-        
-        settings.setGeolocationDatabasePath(databasePath);
-
-        // Enable DOM storage
-        settings.setDomStorageEnabled(true);
-
-        // Enable built-in geolocation
-        settings.setGeolocationEnabled(true);
-        
-        // Enable AppCache
-        // Fix for CB-2282
-        settings.setAppCacheMaxSize(5 * 1048576);
-        settings.setAppCachePath(databasePath);
-        settings.setAppCacheEnabled(true);
-        
-        // Fix for CB-1405
-        // Google issue 4641
-        settings.getUserAgentString();
-        
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(Intent.ACTION_CONFIGURATION_CHANGED);
-        if (this.receiver == null) {
-            this.receiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    getSettings().getUserAgentString();
-                }
-            };
-            getContext().registerReceiver(this.receiver, intentFilter);
-        }
-        // end CB-1405
-    }
-
-    @TargetApi(Build.VERSION_CODES.KITKAT)
-    private void enableRemoteDebugging() {
         try {
-            WebView.setWebContentsDebuggingEnabled(true);
+            final String packageName = this.cordova.getActivity().getPackageName();
+            final PackageManager pm = this.cordova.getActivity().getPackageManager();
+            ApplicationInfo appInfo;
+            
+            appInfo = pm.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
+            
+            if((appInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+                enableRemoteDebugging();
+            }
         } catch (IllegalArgumentException e) {
             Log.d(TAG, "You have one job! To turn on Remote Web Debugging! YOU HAVE FAILED! ");
             e.printStackTrace();
-        }
-    }
+        } catch (NameNotFoundException e) {
+            Log.d(TAG, "This should never happen: Your application's package can't be found.");
+            e.printStackTrace();
+        }  
+        
+        //settings.setGeolocationDatabasePath(databasePath);
 
-    public CordovaChromeClient makeWebChromeClient(CordovaInterface cordova) {
-        return new CordovaChromeClient(cordova, this);
-    }
+        // Enable DOM storage
+        // wang16: default value in xwalk is true.
+        //settings.setDomStorageEnabled(true);
 
-    public CordovaWebViewClient makeWebViewClient(CordovaInterface cordova) {
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            return new CordovaWebViewClient(cordova, this);
-        }
-        return new IceCreamCordovaWebViewClient(cordova, this);
+        // Enable built-in geolocation
+        // wang16: default value in xwalk is true.
+        //settings.setGeolocationEnabled(true);
+        
+        // Enable AppCache
+        // Fix for CB-2282
+        // nhu: N/A
+        //settings.setAppCacheMaxSize(5 * 1048576);
+        String pathToCache = this.cordova.getActivity().getApplicationContext().getDir("database", Context.MODE_PRIVATE).getPath();
+        // wang16: setAppCachePath is not implemented in xwalk indeed.
+        //settings.setAppCachePath(pathToCache);
+        // wang16: default value in xwalk is true.
+        //settings.setAppCacheEnabled(true);
+
+        pluginManager = new PluginManager(this, this.cordova);
+        jsMessageQueue = new NativeToJsMessageQueue(this, cordova);
+        exposedJsApi = new ExposedJsApi(pluginManager, jsMessageQueue);
+        resourceApi = new CordovaResourceApi(this.getContext(), pluginManager);
+        exposeJsInterface();
+    }
+    
+    public void enableRemoteDebugging() {
+        XWalkPreferences.setValue(XWalkPreferences.REMOTE_DEBUGGING, true);
     }
 
 	/**
@@ -295,39 +331,39 @@ public class CordovaWebView extends WebView {
 	}
 
     private void exposeJsInterface() {
-        if ((Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1)) {
+        int SDK_INT = Build.VERSION.SDK_INT;
+        if ((SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1)) {
             Log.i(TAG, "Disabled addJavascriptInterface() bridge since Android version is old.");
             // Bug being that Java Strings do not get converted to JS strings automatically.
             // This isn't hard to work-around on the JS side, but it's easier to just
             // use the prompt bridge instead.
             return;            
         } 
-        this.addJavascriptInterface(new ExposedJsApi(bridge), "_cordovaNative");
+        this.addJavascriptInterface(exposedJsApi, "_cordovaNative");
     }
 
-    @Override
-    public void setWebViewClient(WebViewClient client) {
-        this.viewClient = (CordovaWebViewClient)client;
-        super.setWebViewClient(client);
+    /**
+     * Set the WebViewClient.
+     *
+     * @param client
+     */
+    public void setWebViewClient(CordovaWebViewClient client) {
+        this.viewClient = client;
+        super.setResourceClient(client);
     }
 
-    @Override
-    public void setWebChromeClient(WebChromeClient client) {
-        this.chromeClient = (CordovaChromeClient)client;
-        super.setWebChromeClient(client);
+    /**
+     * Set the WebChromeClient.
+     *
+     * @param client
+     */
+    public void setWebChromeClient(CordovaChromeClient client) {
+        this.chromeClient = client;
+        super.setUIClient(client);
     }
     
     public CordovaChromeClient getWebChromeClient() {
         return this.chromeClient;
-    }
-
-    
-    public Whitelist getWhitelist() {
-        return this.internalWhitelist;
-    }
-
-    public Whitelist getExternalWhitelist() {
-        return this.externalWhitelist;
     }
 
     /**
@@ -336,13 +372,17 @@ public class CordovaWebView extends WebView {
      * @param url
      */
     @Override
-    public void loadUrl(String url) {
+    public void load(String url, String content) {
         if (url.equals("about:blank") || url.startsWith("javascript:")) {
             this.loadUrlNow(url);
         }
         else {
             this.loadUrlIntoView(url);
         }
+    }
+
+    public void loadUrl(String url) {
+        load(url, null);
     }
 
     /**
@@ -376,11 +416,11 @@ public class CordovaWebView extends WebView {
     public void loadUrlIntoView(final String url, boolean recreatePlugins) {
         LOG.d(TAG, ">>> loadUrl(" + url + ")");
 
-        initIfNecessary();
-
         if (recreatePlugins) {
-            this.loadedUrl = url;
-            this.pluginManager.init();
+            this.url = url;
+            if (this.pluginManager != null) {
+                this.pluginManager.init();
+            }
         }
 
         // Create a timeout timer for loadUrl
@@ -394,7 +434,7 @@ public class CordovaWebView extends WebView {
                 me.stopLoading();
                 LOG.e(TAG, "CordovaWebView: TIMEOUT ERROR!");
                 if (viewClient != null) {
-                    viewClient.onReceivedError(me, -6, "The connection to the server was unsuccessful.", url);
+                    viewClient.onReceivedLoadError(me, -6, "The connection to the server was unsuccessful.", url);
                 }
             }
         };
@@ -435,8 +475,8 @@ public class CordovaWebView extends WebView {
         if (LOG.isLoggable(LOG.DEBUG) && !url.startsWith("javascript:")) {
             LOG.d(TAG, ">>> loadUrlNow()");
         }
-        if (url.startsWith("file://") || url.startsWith("javascript:") || internalWhitelist.isUrlWhiteListed(url)) {
-            super.loadUrl(url);
+        if (url.startsWith("file://") || url.startsWith("javascript:") || Config.isUrlWhiteListed(url)) {
+            super.load(url, null);
         }
     }
 
@@ -451,7 +491,7 @@ public class CordovaWebView extends WebView {
 
         // If not first page of app, then load immediately
         // Add support for browser history if we use it.
-        if ((url.startsWith("javascript:")) || this.canGoBack()) {
+        if ((url.startsWith("javascript:")) || this.getNavigationHistory().canGoBack()) {
         }
 
         // If first page, then show splashscreen
@@ -469,7 +509,7 @@ public class CordovaWebView extends WebView {
     
     @Override
     public void stopLoading() {
-        viewClient.isCurrentlyLoading = false;
+        chromeClient.isCurrentlyLoading = false;
         super.stopLoading();
     }
     
@@ -483,27 +523,12 @@ public class CordovaWebView extends WebView {
     
     /**
      * Send JavaScript statement back to JavaScript.
-     * Deprecated (https://issues.apache.org/jira/browse/CB-6851)
-     * Instead of executing snippets of JS, you should use the exec bridge
-     * to create a Java->JS communication channel.
-     * To do this:
-     * 1. Within plugin.xml (to have your JS run before deviceready):
-     *    <js-module><runs/></js-module>
-     * 2. Within your .js (call exec on start-up):
-     *    require('cordova/channel').onCordovaReady.subscribe(function() {
-     *      require('cordova/exec')(win, null, 'Plugin', 'method', []);
-     *      function win(message) {
-     *        ... process message from java here ...
-     *      }
-     *    });
-     * 3. Within your .java:
-     *    PluginResult dataResult = new PluginResult(PluginResult.Status.OK, CODE);
-     *    dataResult.setKeepCallback(true);
-     *    savedCallbackContext.sendPluginResult(dataResult);
+     * (This is a convenience method)
+     *
+     * @param statement
      */
-    @Deprecated
     public void sendJavascript(String statement) {
-        this.bridge.getMessageQueue().addJavaScript(statement);
+        this.jsMessageQueue.addJavaScript(statement);
     }
 
     /**
@@ -514,7 +539,7 @@ public class CordovaWebView extends WebView {
      * @param callbackId
      */
     public void sendPluginResult(PluginResult result, String callbackId) {
-        this.bridge.getMessageQueue().addPluginResult(result, callbackId);
+        this.jsMessageQueue.addPluginResult(result, callbackId);
     }
 
     /**
@@ -536,10 +561,13 @@ public class CordovaWebView extends WebView {
      * @return true if we went back, false if we are already at top
      */
     public boolean backHistory() {
+
         // Check webview first to see if there is a history
         // This is needed to support curPage#diffLink, since they are added to appView's history, but not our history url array (JQMobile behavior)
-        if (super.canGoBack()) {
-            super.goBack();
+        if (super.getNavigationHistory().canGoBack()) {
+            printBackForwardList();
+            
+            super.getNavigationHistory().navigate(XWalkNavigationHistory.Direction.BACKWARD, 1);
             return true;
         }
         return false;
@@ -561,14 +589,14 @@ public class CordovaWebView extends WebView {
 
         // If clearing history
         if (clearHistory) {
-            this.clearHistory();
+            this.getNavigationHistory().clear();
         }
 
         // If loading into our webview
         if (!openExternal) {
 
             // Make sure url is in whitelist
-            if (url.startsWith("file://") || internalWhitelist.isUrlWhiteListed(url)) {
+            if (url.startsWith("file://") || Config.isUrlWhiteListed(url)) {
                 // TODO: What about params?
                 // Load new URL
                 this.loadUrl(url);
@@ -594,6 +622,21 @@ public class CordovaWebView extends WebView {
     }
 
     /**
+     * Check configuration parameters from Config.
+     * Approved list of URLs that can be loaded into Cordova
+     *      <access origin="http://server regexp" subdomains="true" />
+     * Log level: ERROR, WARN, INFO, DEBUG, VERBOSE (default=ERROR)
+     *      <log level="DEBUG" />
+     */
+    private void loadConfiguration() {
+ 
+        if ("true".equals(this.getProperty("Fullscreen", "false"))) {
+            this.cordova.getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+            this.cordova.getActivity().getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
+    }
+
+    /**
      * Get string property for activity.
      *
      * @param name
@@ -613,17 +656,23 @@ public class CordovaWebView extends WebView {
         return p.toString();
     }
 
+    /*
+     * onKeyDown
+     */
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event)
     {
-        if(boundKeyCodes.contains(keyCode))
+        if(keyDownCodes.contains(keyCode))
         {
             if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
+                    // only override default behavior is event bound
+                    LOG.d(TAG, "Down Key Hit");
                     this.loadUrl("javascript:cordova.fireDocumentEvent('volumedownbutton');");
                     return true;
             }
             // If volumeup key
             else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+                    LOG.d(TAG, "Up Key Hit");
                     this.loadUrl("javascript:cordova.fireDocumentEvent('volumeupbutton');");
                     return true;
             }
@@ -634,7 +683,7 @@ public class CordovaWebView extends WebView {
         }
         else if(keyCode == KeyEvent.KEYCODE_BACK)
         {
-            return !(this.startOfHistory()) || isButtonPlumbedToJs(KeyEvent.KEYCODE_BACK);
+            return !(this.startOfHistory()) || this.bound;
         }
         else if(keyCode == KeyEvent.KEYCODE_MENU)
         {
@@ -651,22 +700,28 @@ public class CordovaWebView extends WebView {
                 return super.onKeyDown(keyCode, event);
             }
         }
+        
         return super.onKeyDown(keyCode, event);
     }
+    
 
     @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event)
+    public boolean dispatchKeyEvent(KeyEvent event)
     {
+        if (event.getAction() != KeyEvent.ACTION_UP) {
+            return super.dispatchKeyEvent(event);
+        }
+        int keyCode = event.getKeyCode();
         // If back key
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             // A custom view is currently displayed  (e.g. playing a video)
-            if(mCustomView != null) {
-                this.hideCustomView();
+            if (this.hasEnteredFullscreen()) {
+                this.leaveFullscreen();
                 return true;
             } else {
                 // The webview is currently displayed
                 // If back key is bound, then send event to JavaScript
-                if (isButtonPlumbedToJs(KeyEvent.KEYCODE_BACK)) {
+                if (this.bound) {
                     this.loadUrl("javascript:cordova.fireDocumentEvent('backbutton');");
                     return true;
                 } else {
@@ -676,6 +731,13 @@ public class CordovaWebView extends WebView {
                         return true;
                     }
                     // If not, then invoke default behavior
+                    else {
+                        //this.activityState = ACTIVITY_EXITING;
+                    	//return false;
+                    	// If they hit back button when app is initializing, app should exit instead of hang until initialization (CB2-458)
+                    	this.cordova.getActivity().finish();
+                    	return false;
+                    }
                 }
             }
         }
@@ -685,67 +747,64 @@ public class CordovaWebView extends WebView {
                 this.loadUrl("javascript:cordova.fireDocumentEvent('menubutton');");
             }
             this.lastMenuEventTime = event.getEventTime();
-            return super.onKeyUp(keyCode, event);
+            return super.dispatchKeyEvent(event);
         }
         // If search key
         else if (keyCode == KeyEvent.KEYCODE_SEARCH) {
             this.loadUrl("javascript:cordova.fireDocumentEvent('searchbutton');");
             return true;
         }
+        else if(keyUpCodes.contains(keyCode))
+        {
+            //What the hell should this do?
+            return super.dispatchKeyEvent(event);
+        }
 
         //Does webkit change this behavior?
-        return super.onKeyUp(keyCode, event);
+        return super.dispatchKeyEvent(event);
     }
 
-    public void setButtonPlumbedToJs(int keyCode, boolean override) {
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_VOLUME_DOWN:
-            case KeyEvent.KEYCODE_VOLUME_UP:
-            case KeyEvent.KEYCODE_BACK:
-                // TODO: Why are search and menu buttons handled separately?
-                if (override) {
-                    boundKeyCodes.add(keyCode);
-                } else {
-                    boundKeyCodes.remove(keyCode);
-                }
-                return;
-            default:
-                throw new IllegalArgumentException("Unsupported keycode: " + keyCode);
-        }
+    @Override
+    public void pauseTimers() {
+        // This is called by XWalkViewInternal.onActivityStateChange().
+        // We don't want them paused by default though.
     }
 
-    @Deprecated // Use setButtonPlumbedToJs() instead.
+    public void pauseTimersForReal() {
+        super.pauseTimers();
+    }
+
     public void bindButton(boolean override)
     {
-        setButtonPlumbedToJs(KeyEvent.KEYCODE_BACK, override);
+        this.bound = override;
     }
 
-    @Deprecated // Use setButtonPlumbedToJs() instead.
     public void bindButton(String button, boolean override) {
+        // TODO Auto-generated method stub
         if (button.compareTo("volumeup")==0) {
-            setButtonPlumbedToJs(KeyEvent.KEYCODE_VOLUME_UP, override);
+          keyDownCodes.add(KeyEvent.KEYCODE_VOLUME_UP);
         }
         else if (button.compareTo("volumedown")==0) {
-            setButtonPlumbedToJs(KeyEvent.KEYCODE_VOLUME_DOWN, override);
+          keyDownCodes.add(KeyEvent.KEYCODE_VOLUME_DOWN);
         }
-    }
+      }
 
-    @Deprecated // Use setButtonPlumbedToJs() instead.
     public void bindButton(int keyCode, boolean keyDown, boolean override) {
-        setButtonPlumbedToJs(keyCode, override);
+       if(keyDown)
+       {
+           keyDownCodes.add(keyCode);
+       }
+       else
+       {
+           keyUpCodes.add(keyCode);
+       }
     }
 
-    @Deprecated // Use isButtonPlumbedToJs
     public boolean isBackButtonBound()
     {
-        return isButtonPlumbedToJs(KeyEvent.KEYCODE_BACK);
+        return this.bound;
     }
-
-    public boolean isButtonPlumbedToJs(int keyCode)
-    {
-        return boundKeyCodes.contains(keyCode);
-    }
-
+    
     public void handlePause(boolean keepRunning)
     {
         LOG.d(TAG, "Handle the pause");
@@ -760,7 +819,7 @@ public class CordovaWebView extends WebView {
         // If app doesn't want to run in background
         if (!keepRunning) {
             // Pause JavaScript timers (including setInterval)
-            this.pauseTimers();
+            this.pauseTimersForReal();
         }
         paused = true;
    
@@ -793,23 +852,27 @@ public class CordovaWebView extends WebView {
         if (this.pluginManager != null) {
             this.pluginManager.onDestroy();
         }
-        
+
         // unregister the receiver
         if (this.receiver != null) {
             try {
-                getContext().unregisterReceiver(this.receiver);
+                this.cordova.getActivity().unregisterReceiver(this.receiver);
             } catch (Exception e) {
                 Log.e(TAG, "Error unregistering configuration receiver: " + e.getMessage(), e);
             }
         }
+        this.onDestroy();
     }
     
-    public void onNewIntent(Intent intent)
+    @Override
+    public boolean onNewIntent(Intent intent)
     {
+        if (super.onNewIntent(intent)) return true;
         //Forward to plugins
         if (this.pluginManager != null) {
             this.pluginManager.onNewIntent(intent);
         }
+        return false;
     }
     
     public boolean isPaused()
@@ -817,26 +880,16 @@ public class CordovaWebView extends WebView {
         return paused;
     }
 
-    @Deprecated // This never did anything.
     public boolean hadKeyEvent() {
-        return false;
+        return handleButton;
     }
 
-    // Wrapping these functions in their own class prevents warnings in adb like:
-    // VFY: unable to resolve virtual method 285: Landroid/webkit/WebSettings;.setAllowUniversalAccessFromFileURLs
-    @TargetApi(16)
-    private static class Level16Apis {
-        static void enableUniversalAccess(WebSettings settings) {
-            settings.setAllowUniversalAccessFromFileURLs(true);
-        }
-    }
-    
     public void printBackForwardList() {
-        WebBackForwardList currentList = this.copyBackForwardList();
-        int currentSize = currentList.getSize();
+        XWalkNavigationHistory currentList = this.getNavigationHistory();
+        int currentSize = currentList.size();
         for(int i = 0; i < currentSize; ++i)
         {
-            WebHistoryItem item = currentList.getItemAtIndex(i);
+            XWalkNavigationItem item = currentList.getItemAt(i);
             String url = item.getUrl();
             LOG.d(TAG, "The URL at index: " + Integer.toString(i) + " is " + url );
         }
@@ -846,8 +899,8 @@ public class CordovaWebView extends WebView {
     //Can Go Back is BROKEN!
     public boolean startOfHistory()
     {
-        WebBackForwardList currentList = this.copyBackForwardList();
-        WebHistoryItem item = currentList.getItemAtIndex(0);
+        XWalkNavigationHistory currentList = this.getNavigationHistory();
+        XWalkNavigationItem item = currentList.getItemAt(0);
         if( item!=null){	// Null-fence in case they haven't called loadUrl yet (CB-2458)
 	        String url = item.getUrl();
 	        String currentUrl = this.getUrl();
@@ -858,77 +911,34 @@ public class CordovaWebView extends WebView {
         return false;
     }
 
-    public void showCustomView(View view, WebChromeClient.CustomViewCallback callback) {
-        // This code is adapted from the original Android Browser code, licensed under the Apache License, Version 2.0
-        Log.d(TAG, "showing Custom View");
-        // if a view already exists then immediately terminate the new one
-        if (mCustomView != null) {
-            callback.onCustomViewHidden();
-            return;
-        }
-        
-        // Store the view and its callback for later (to kill it properly)
-        mCustomView = view;
-        mCustomViewCallback = callback;
-        
-        // Add the custom view to its container.
-        ViewGroup parent = (ViewGroup) this.getParent();
-        parent.addView(view, COVER_SCREEN_GRAVITY_CENTER);
-        
-        // Hide the content view.
-        this.setVisibility(View.GONE);
-        
-        // Finally show the custom view container.
-        parent.setVisibility(View.VISIBLE);
-        parent.bringToFront();
-    }
-
-    public void hideCustomView() {
-        // This code is adapted from the original Android Browser code, licensed under the Apache License, Version 2.0
-        Log.d(TAG, "Hiding Custom View");
-        if (mCustomView == null) return;
-
-        // Hide the custom view.
-        mCustomView.setVisibility(View.GONE);
-        
-        // Remove the custom view from its container.
-        ViewGroup parent = (ViewGroup) this.getParent();
-        parent.removeView(mCustomView);
-        mCustomView = null;
-        mCustomViewCallback.onCustomViewHidden();
-        
-        // Show the content view.
-        this.setVisibility(View.VISIBLE);
-    }
-    
-    /**
-     * if the video overlay is showing then we need to know 
-     * as it effects back button handling
-     * 
-     * @return true if custom view is showing
-     */
-    public boolean isCustomViewShowing() {
-        return mCustomView != null;
-    }
-    
-    public WebBackForwardList restoreState(Bundle savedInstanceState)
+    @Override
+    public boolean restoreState(Bundle savedInstanceState)
     {
-        WebBackForwardList myList = super.restoreState(savedInstanceState);
+        boolean result = super.restoreState(savedInstanceState);
         Log.d(TAG, "WebView restoration crew now restoring!");
         //Initialize the plugin manager once more
-        this.pluginManager.init();
-        return myList;
+        if (this.pluginManager != null) {
+            this.pluginManager.init();
+        }
+        return result;
     }
 
-    @Deprecated // This never did anything
     public void storeResult(int requestCode, int resultCode, Intent intent) {
+        mResult = new ActivityResult(requestCode, resultCode, intent);
     }
     
     public CordovaResourceApi getResourceApi() {
         return resourceApi;
     }
 
-    public CordovaPreferences getPreferences() {
-        return preferences;
+    static {
+        // XWalkPreferencesInternal.ENABLE_JAVASCRIPT
+        XWalkPreferences.setValue("enable-javascript", true);
+        // XWalkPreferencesInternal.JAVASCRIPT_CAN_OPEN_WINDOW
+        XWalkPreferences.setValue("javascript-can-open-window", true);
+        // XWalkPreferencesInternal.ALLOW_UNIVERSAL_ACCESS_FROM_FILE
+        XWalkPreferences.setValue("allow-universal-access-from-file", true);
+        // XWalkPreferencesInternal.SUPPORT_MULTIPLE_WINDOWS
+        XWalkPreferences.setValue("support-multiple-windows", false);
     }
 }

@@ -1,18 +1,4 @@
-﻿/*  
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-    
-    http://www.apache.org/licenses/LICENSE-2.0
-    
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
-
-using Microsoft.Phone.Controls;
+﻿using Microsoft.Phone.Controls;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -32,30 +18,9 @@ namespace WPCordovaClassLib.CordovaLib
 
         public void InjectScript()
         {
+
+
             string script = @"(function(win, doc) {
-
-    if (!win.__XHRShimAliases) {
-        win.__XHRShimAliases = {};
-    }
-
-    win.__onXHRLocalCallback = function (responseCode, responseText, reqId) {
-        if (win.__XHRShimAliases[reqId]){
-            var alias = win.__XHRShimAliases[reqId];
-            if (alias){
-                delete win.__XHRShimAliases[reqId];
-                if (responseCode == '200'){
-                    alias.onResult && alias.onResult(responseText);
-                    Object.defineProperty(alias, 'responseXML', {
-                        get: function () {
-                            return new DOMParser().parseFromString(this.responseText, 'text/xml');
-                        }
-                    });
-                } else {
-                    alias.onError && alias.onError(responseText);
-                }
-            }
-        }
-    };
 
     var docDomain = null;
     try {
@@ -230,10 +195,7 @@ namespace WPCordovaClassLib.CordovaLib
                     var alias = this;
 
                     var root = window.location.href.split('#')[0];   // remove hash
-                    
-                    var rootPath = root.substr(0,root.lastIndexOf('/')) + '/';
-                    // Removing unwanted slashes after x-wmapp0 from the basePath, URI cannot process x-wmapp0: /www or //www
-                    var basePath = rootPath.replace(/:\/+/gi, ':');
+                    var basePath = root.substr(0,root.lastIndexOf('/')) + '/';
 
                     //console.log( 'Stripping protocol if present and removing leading / characters' );
                     var resolvedUrl =
@@ -259,17 +221,32 @@ namespace WPCordovaClassLib.CordovaLib
                         resolvedUrl = basePath + resolvedUrl; // consider it relative
                     }
 
-                    // Generate unique request ID
-                    var reqId = new Date().getTime().toString() + Math.random();
-
                     var funk = function () {
-                        __XHRShimAliases[reqId] = alias;
+                        window.__onXHRLocalCallback = function (responseCode, responseText) {
+                            alias.status = responseCode;
+                            if (responseCode == '200') {
+                                alias.responseText = responseText;
+                                Object.defineProperty(alias, 'responseXML', {
+                                    get: function () {
+                                        return new DOMParser().parseFromString(this.responseText, 'text/xml');
+                                    }
+                                });
+                            }
+                            else {
+                                alias.onerror && alias.onerror(responseCode);
+                            }
 
+                            alias.changeReadyState(XHRShim.DONE);
+                        }
                         alias.changeReadyState(XHRShim.LOADING);
-                        window.external.Notify('XHRLOCAL/' + reqId + '/' + resolvedUrl);
-                    };
-
-                    this.isAsync ? setTimeout(funk, 0) : funk();
+                        window.external.Notify('XHRLOCAL/' + resolvedUrl);
+                    }
+                    if (this.isAsync) {
+                        setTimeout(funk, 0);
+                    }
+                    else {
+                        funk();
+                    }
                 }
             },
             status: 404
@@ -278,62 +255,48 @@ namespace WPCordovaClassLib.CordovaLib
 })(window, document); ";
 
 
-            Browser.InvokeScript("eval", new string[] { script });
+            Browser.InvokeScript("execScript", new string[] { script });
         }
 
         public bool HandleCommand(string commandStr)
         {
             if (commandStr.IndexOf("XHRLOCAL") == 0)
             {
-                var reqStr = commandStr.Replace("XHRLOCAL/", "").Split(new char[] {'/'}, 2);
-                string reqId = reqStr[0];
-                string url = reqStr[1];
+                string url = commandStr.Replace("XHRLOCAL/", "");
 
                 Uri uri = new Uri(url, UriKind.RelativeOrAbsolute);
-                try
+
+                using (IsolatedStorageFile isoFile = IsolatedStorageFile.GetUserStoreForApplication())
                 {
-                    using (IsolatedStorageFile isoFile = IsolatedStorageFile.GetUserStoreForApplication())
+                    if (isoFile.FileExists(uri.AbsolutePath))
                     {
-                        if (isoFile.FileExists(uri.AbsolutePath))
+                        using (TextReader reader = new StreamReader(isoFile.OpenFile(uri.AbsolutePath, FileMode.Open, FileAccess.Read)))
                         {
-                            using (TextReader reader = new StreamReader(isoFile.OpenFile(uri.AbsolutePath, FileMode.Open, FileAccess.Read)))
-                            {
-                                string text = reader.ReadToEnd();
-                                Browser.InvokeScript("__onXHRLocalCallback", new string[] { "200", text, reqId });
-                                return true;
-                            }
+                            string text = reader.ReadToEnd();
+                            Browser.InvokeScript("__onXHRLocalCallback", new string[] { "200", text });
+                            return true;
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine("ERROR: Exception in HandleCommand: " + ex);
                 }
 
                 Uri relUri = new Uri(uri.AbsolutePath, UriKind.Relative);
 
                 var resource = Application.GetResourceStream(relUri);
-                try
+
+                if (resource == null)
                 {
-                    if (resource == null)
+                    // 404 ?
+                    Browser.InvokeScript("__onXHRLocalCallback", new string[] { "404" });
+                    return true;
+                }
+                else
+                {
+                    using (StreamReader streamReader = new StreamReader(resource.Stream))
                     {
-                        // 404 ?
-                        Browser.InvokeScript("__onXHRLocalCallback", new string[] { "404", string.Empty, reqId });
+                        string text = streamReader.ReadToEnd();
+                        Browser.InvokeScript("__onXHRLocalCallback", new string[] { "200", text });
                         return true;
                     }
-                    else
-                    {
-                        using (StreamReader streamReader = new StreamReader(resource.Stream))
-                        {
-                            string text = streamReader.ReadToEnd();
-                            Browser.InvokeScript("__onXHRLocalCallback", new string[] { "200", text, reqId });
-                            return true;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine("ERROR: Exception in HandleCommand: " + ex);
                 }
             }
 
