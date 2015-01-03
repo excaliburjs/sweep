@@ -2038,60 +2038,72 @@ var SoundManager = (function () {
 /// <reference path="mask.ts"/>
 /// <reference path="sound.ts"/>
 var _this = this;
-var game = new ex.Engine(0, 0, "game", 0 /* FullScreen */);
-var gameScale = new ex.Point(1, 1);
-var gameMode = 0 /* Standard */;
-var loader = new ex.Loader();
-// transparent bg
-game.backgroundColor = ex.Color.Transparent;
-// load up all resources in dictionary
-_.forIn(Resources, function (resource) {
-    loader.addResource(resource);
-});
-// init sound
-SoundManager.init();
-// game objects
-var grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
-var mainMenu = new MainMenu();
-var polyline = new PolyLine();
-var noMoves = new NoMoves();
-var mask = new Mask();
-game.add(mainMenu);
-game.add(polyline);
-game.add(noMoves);
-game.add(mask);
-var visualGrid, turnManager, matcher, transitionManager, sweeper, stats, background, noMoves, effects;
-// game modes
-var loadConfig = function (config) {
+var visualGrid, grid, mainMenu, polyline, turnManager, matcher, transitionManager, sweeper, stats, background, noMoves, mask, effects, game, gameScale, gameMode, loader;
+//GAME STARTUP
+Zepto(function ($) {
+    console.log(window.innerHeight);
+    game = new ex.Engine(0, 0, "game", 0 /* FullScreen */);
+    gameScale = new ex.Point(1, 1);
+    gameMode = 0 /* Standard */;
+    loader = new ex.Loader();
+    // transparent bg
+    game.backgroundColor = ex.Color.Transparent;
+    // load up all resources in dictionary
+    _.forIn(Resources, function (resource) {
+        loader.addResource(resource);
+    });
+    // init sound
+    SoundManager.init();
+    // game objects
+    grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
+    mainMenu = new MainMenu();
+    polyline = new PolyLine();
+    noMoves = new NoMoves();
+    mask = new Mask();
+    game.add(mainMenu);
+    game.add(polyline);
+    game.add(noMoves);
+    game.add(mask);
     Config.resetDefault();
-    config.call(_this);
-    InitSetup();
-};
-Config.resetDefault();
-document.getElementById("how-to-play").addEventListener("click", function () {
-    if (gameMode === 0 /* Standard */) {
-        MainMenu.ShowNormalTutorial();
-    }
-    else {
-        MainMenu.ShowChallengeTutorial();
-    }
+    document.getElementById("how-to-play").addEventListener("click", function () {
+        if (gameMode === 0 /* Standard */) {
+            MainMenu.ShowNormalTutorial();
+        }
+        else {
+            MainMenu.ShowChallengeTutorial();
+        }
+    });
+    document.getElementById("play-again").addEventListener('click', function () {
+        if (gameMode == 0 /* Standard */) {
+            MainMenu.LoadStandardMode();
+        }
+        else if (gameMode == 1 /* Timed */) {
+            MainMenu.LoadChallengeMode();
+        }
+    });
+    document.getElementById("challenge").addEventListener('click', function () {
+        if (gameMode == 0 /* Standard */) {
+            MainMenu.LoadChallengeMode();
+        }
+        else if (gameMode == 1 /* Timed */) {
+            MainMenu.LoadStandardMode();
+        }
+    });
+    game.start(loader).then(function () {
+        // set game scale
+        var defaultGridHeight = Config.CellHeight * Config.GridCellsHigh;
+        // todo do this on game.on('update')
+        // scale based on height of viewport
+        // target 85% height
+        var scale = defaultGridHeight / game.getHeight();
+        var scaleDiff = 0.85 - scale;
+        ex.Logger.getInstance().info("Current viewport scale", scale);
+        gameScale.setTo(1 + scaleDiff, 1 + scaleDiff);
+        InitSetup();
+    });
+    // TODO clean up pieces that are not in play anymore after update loop
 });
-document.getElementById("play-again").addEventListener('click', function () {
-    if (gameMode == 0 /* Standard */) {
-        MainMenu.LoadStandardMode();
-    }
-    else if (gameMode == 1 /* Timed */) {
-        MainMenu.LoadChallengeMode();
-    }
-});
-document.getElementById("challenge").addEventListener('click', function () {
-    if (gameMode == 0 /* Standard */) {
-        MainMenu.LoadChallengeMode();
-    }
-    else if (gameMode == 1 /* Timed */) {
-        MainMenu.LoadStandardMode();
-    }
-});
+//GLOBAL FUNCTIONS
 //reset the game with the given grid dimensions
 function InitSetup() {
     grid = new LogicalGrid(Config.GridCellsHigh, Config.GridCellsWide);
@@ -2136,6 +2148,13 @@ function InitSetup() {
     // feature flags
     Config.EnableLevels && $(".feature-levels").removeClass("hide");
 }
+;
+// game modes
+var loadConfig = function (config) {
+    Config.resetDefault();
+    config.call(_this);
+    InitSetup();
+};
 function hasClass(element, cls) {
     return element.classList.contains(cls);
 }
@@ -2209,16 +2228,3 @@ function appendTwitter() {
     twitterScript.innerText = "!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } } (document, 'script', 'twitter-wjs');";
     $("#game-over").append(twitterScript);
 }
-// TODO clean up pieces that are not in play anymore after update loop
-game.start(loader).then(function () {
-    // set game scale
-    var defaultGridHeight = Config.CellHeight * Config.GridCellsHigh;
-    // todo do this on game.on('update')
-    // scale based on height of viewport
-    // target 85% height
-    var scale = defaultGridHeight / game.getHeight();
-    var scaleDiff = 0.85 - scale;
-    ex.Logger.getInstance().info("Current viewport scale", scale);
-    gameScale.setTo(1 + scaleDiff, 1 + scaleDiff);
-    InitSetup();
-});

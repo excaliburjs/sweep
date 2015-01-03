@@ -2,225 +2,228 @@
 
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <title>Sweep Stacks</title>
-    <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css" />
-    <link rel="stylesheet" href="app.min.css?COMMIT_NUMBER" type="text/css"/>
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" sizes="192x192" href="icon-192.png">
-    <link rel="icon" sizes="128x128" href="icon-192.png">
-    <link rel="apple-touch-icon" href="touch-icon-iphone.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="touch-icon-ipad.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="touch-icon-iphone-retina.png">
-    <link rel="apple-touch-icon" sizes="128x128" href="icon-128.png">
-    <link rel="apple-touch-icon-precomposed" sizes="128x128" href="icon-128.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="touch-icon-ipad-retina.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
-    <meta name="application-name" content="Sweep Stacks" />
-    <meta name="msapplication-TileColor" content="#00728D" />
-    <meta name="msapplication-square70x70logo" content="images/tiles/small.png" />
-    <meta name="msapplication-square150x150logo" content="images/tiles/medium.png" />
-    <meta name="msapplication-wide310x150logo" content="images/tiles/wide.png" />
-    <meta name="msapplication-square310x310logo" content="images/tiles/large.png" />
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="HandheldFriendly" content="True">
-    <meta name="MobileOptimized" content="320">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, minimal-ui">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Sweep Stacks">
-    <meta property="og:title" content="Sweep Stacks"/>
-    <meta property="og:url" content="http://excaliburjs.com/sweep/"/>
-    <meta property="og:image" content="http://excaliburjs.com/sweep/images/logo.png"/>
-    <meta property="og:description" content="Clear the colored tiles by dragging in ANY direction and don't let them reach the top. Sweep those stacks!" />
+   <meta charset="utf-8" />
+   <title>Sweep Stacks</title>
+   <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css" />
+   <link rel="stylesheet" href="app.min.css?COMMIT_NUMBER" type="text/css" />
+   <link rel="manifest" href="manifest.json">
+   <link rel="icon" sizes="192x192" href="icon-192.png">
+   <link rel="icon" sizes="128x128" href="icon-192.png">
+   <link rel="apple-touch-icon" href="touch-icon-iphone.png">
+   <link rel="apple-touch-icon" sizes="76x76" href="touch-icon-ipad.png">
+   <link rel="apple-touch-icon" sizes="120x120" href="touch-icon-iphone-retina.png">
+   <link rel="apple-touch-icon" sizes="128x128" href="icon-128.png">
+   <link rel="apple-touch-icon-precomposed" sizes="128x128" href="icon-128.png">
+   <link rel="apple-touch-icon" sizes="152x152" href="touch-icon-ipad-retina.png">
+   <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+   <meta name="application-name" content="Sweep Stacks" />
+   <meta name="msapplication-TileColor" content="#00728D" />
+   <meta name="msapplication-square70x70logo" content="images/tiles/small.png" />
+   <meta name="msapplication-square150x150logo" content="images/tiles/medium.png" />
+   <meta name="msapplication-wide310x150logo" content="images/tiles/wide.png" />
+   <meta name="msapplication-square310x310logo" content="images/tiles/large.png" />
+   <meta name="mobile-web-app-capable" content="yes">
+   <meta name="HandheldFriendly" content="True">
+   <meta name="MobileOptimized" content="320">
+   <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1, user-scalable=no, minimal-ui">
+   <meta name="apple-mobile-web-app-capable" content="yes">
+   <meta name="apple-mobile-web-app-title" content="Sweep Stacks">
+   <meta property="og:title" content="Sweep Stacks" />
+   <meta property="og:url" content="http://excaliburjs.com/sweep/" />
+   <meta property="og:image" content="http://excaliburjs.com/sweep/images/logo.png" />
+   <meta property="og:description" content="Clear the colored tiles by dragging in ANY direction and don't let them reach the top. Sweep those stacks!" />
 
-    <script type="text/javascript">
-    var appInsights = window.appInsights || function (config) {
-        function s(config) { t[config] = function () { var i = arguments; t.queue.push(function () { t[config].apply(t, i) }) } } var t = { config: config }, r = document, f = window, e = "script", o = r.createElement(e), i, u; for (o.src = config.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js", r.getElementsByTagName(e)[0].parentNode.appendChild(o), t.cookie = r.cookie, t.queue = [], i = ["Event", "Exception", "Metric", "PageView", "Trace"]; i.length;) s("track" + i.pop()); return config.disableExceptionTracking || (i = "onerror", s("_" + i), u = f[i], f[i] = function (config, r, f, e, o) { var s = u && u(config, r, f, e, o); return s !== !0 && t["_" + i](config, r, f, e, o), s }), t
-    }({
-        instrumentationKey: "5013d746-988c-45aa-834c-a94efc37b072"
-    });
+   <script type="text/javascript">
+      var appInsights = window.appInsights || function (config) {
+         function s(config) { t[config] = function () { var i = arguments; t.queue.push(function () { t[config].apply(t, i) }) } } var t = { config: config }, r = document, f = window, e = "script", o = r.createElement(e), i, u; for (o.src = config.url || "//az416426.vo.msecnd.net/scripts/a/ai.0.js", r.getElementsByTagName(e)[0].parentNode.appendChild(o), t.cookie = r.cookie, t.queue = [], i = ["Event", "Exception", "Metric", "PageView", "Trace"]; i.length;) s("track" + i.pop()); return config.disableExceptionTracking || (i = "onerror", s("_" + i), u = f[i], f[i] = function (config, r, f, e, o) { var s = u && u(config, r, f, e, o); return s !== !0 && t["_" + i](config, r, f, e, o), s }), t
+      }({
+         instrumentationKey: "5013d746-988c-45aa-834c-a94efc37b072"
+      });
 
-    window.appInsights = appInsights;
-    appInsights.trackPageView();
-    </script>
-    <script>
-    (function (d) {
-        var config = {
+      window.appInsights = appInsights;
+      appInsights.trackPageView();
+   </script>
+   <script>
+      (function (d) {
+         var config = {
             kitId: 'mrd7npf',
             scriptTimeout: 3000
-        },
-        h = d.documentElement, t = setTimeout(function () { h.className = h.className.replace(/\bwf-loading\b/g, "") + " wf-inactive"; }, config.scriptTimeout), tk = d.createElement("script"), f = false, s = d.getElementsByTagName("script")[0], a; h.className += " wf-loading"; tk.src = '//use.typekit.net/' + config.kitId + '.js'; tk.async = true; tk.onload = tk.onreadystatechange = function () { a = this.readyState; if (f || a && a != "complete" && a != "loaded") return; f = true; clearTimeout(t); try { Typekit.load(config) } catch (e) { } }; s.parentNode.insertBefore(tk, s)
-    })(document);
-    </script>
+         },
+         h = d.documentElement, t = setTimeout(function () { h.className = h.className.replace(/\bwf-loading\b/g, "") + " wf-inactive"; }, config.scriptTimeout), tk = d.createElement("script"), f = false, s = d.getElementsByTagName("script")[0], a; h.className += " wf-loading"; tk.src = '//use.typekit.net/' + config.kitId + '.js'; tk.async = true; tk.onload = tk.onreadystatechange = function () { a = this.readyState; if (f || a && a != "complete" && a != "loaded") return; f = true; clearTimeout(t); try { Typekit.load(config) } catch (e) { } }; s.parentNode.insertBefore(tk, s)
+      })(document);
+   </script>
 </head>
-<body style="transform:translate3d(0,0,0)">
-    <h1 style="visibility: hidden; position: absolute; top: -1000px; left: -1000px;">Sweep Stacks (Ludum Dare 31 Game Jam Entry)</h1>
-    
-    <div class="ui-buttons">
-        <a id="sound" title="Mute/Unmute Sound" class="ui-button fa fa-fw fa-volume-up"></a>
-        <a id="how-to-play" title="How to Play" class="how-to-play ui-button fa fa-fw fa-question-circle"></a>
-        <a id="credits" title="Credits" class="ui-button fa fa-fw fa-group" href="credits.html"></a>
-    </div>
+<body style="overflow: hidden">
+   <h1 style="visibility: hidden; position: absolute; top: -1000px; left: -1000px;">Sweep Stacks (Ludum Dare 31 Game Jam Entry)</h1>
 
-    <a id="commit" href="https://github.com/excaliburjs/sweep/commit/COMMIT_NUMBER">@COMMIT_NUMBER</a>
-    <div id="background"></div>
-    
+   <div class="ui-buttons">
+      <a id="sound" title="Mute/Unmute Sound" class="ui-button fa fa-fw fa-volume-up"></a>
+      <a id="how-to-play" title="How to Play" class="how-to-play ui-button fa fa-fw fa-question-circle"></a>
+      <a id="credits" title="Credits" class="ui-button fa fa-fw fa-group" href="credits.html"></a>
+   </div>
 
-    <div id="tutorial-normal" class="modal tutorial">
+   <a id="commit" href="https://github.com/excaliburjs/sweep/commit/COMMIT_NUMBER">@COMMIT_NUMBER</a>
+   <div id="background"></div>
 
-        <div class="modal-bg"></div>
-        <div class="modal-content">
-            <div class="modal-body">
 
-                <h1>Standard Mode</h1>
+   <div id="tutorial-normal" class="modal tutorial">
 
-                <div class="slides">
-                    <div id="tutorial-normal-1" class="slide">
-                        <img src="images/tutorial-standard-1.png" alt="Swipe in all directions to clear tiles" />
-                    </div>
-                    <div id="tutorial-normal-2" class="slide">
-                        <img src="images/tutorial-standard-2.png" alt="Clearing tiles fills sweep meter" />
-                    </div>
-                    <div id="tutorial-normal-3" class="slide">
-                        <img src="images/tutorial-standard-3.png" alt="Tap or press 1-4 when your meters are full to sweep same-color tiles" />
-                    </div>
-                </div>
+      <div class="modal-bg"></div>
+      <div class="modal-content">
+         <div class="modal-body">
 
-                <p>
-                    <a id="tutorial-normal-next" href="#" class="next">Next</a> <a id="dismiss-normal-modal" href="javascript:void(0)" class="got-it">skip</a>
-                </p>
-                
-                <h2>Controls</h2>
-                
-                <ul class="controls">
-                    <li><strong>Remove Gems:</strong> Drag over 3 or more tiles</li>
-                    <li><strong>Cancel Move:</strong> Right-click or reverse drag</li>
-                    <li><strong>Sweep:</strong> Tap/click meters or press <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>, or <kbd>4</kbd></li>
-                    <li><strong>Mega Sweep:</strong> Tap/click mega meter or press <kbd>S</kbd></li>
-                </ul>
+            <h1>Standard Mode</h1>
+
+            <div class="slides">
+               <div id="tutorial-normal-1" class="slide">
+                  <img src="images/tutorial-standard-1.png" alt="Swipe in all directions to clear tiles" />
+               </div>
+               <div id="tutorial-normal-2" class="slide">
+                  <img src="images/tutorial-standard-2.png" alt="Clearing tiles fills sweep meter" />
+               </div>
+               <div id="tutorial-normal-3" class="slide">
+                  <img src="images/tutorial-standard-3.png" alt="Tap or press 1-4 when your meters are full to sweep same-color tiles" />
+               </div>
             </div>
-        </div>
-    </div>
 
-    <div id="tutorial-challenge" class="modal tutorial">
+            <p>
+               <a id="tutorial-normal-next" href="#" class="next">Next</a> <a id="dismiss-normal-modal" href="javascript:void(0)" class="got-it">skip</a>
+            </p>
 
-        <div class="modal-bg"></div>
-        <div class="modal-content">
-            <div class="modal-body">
+            <h2>Controls</h2>
 
-                <h1>Challenge Mode</h1>
+            <ul class="controls">
+               <li><strong>Remove Gems:</strong> Drag over 3 or more tiles</li>
+               <li><strong>Cancel Move:</strong> Right-click or reverse drag</li>
+               <li><strong>Sweep:</strong> Tap/click meters or press <kbd>1</kbd>, <kbd>2</kbd>, <kbd>3</kbd>, or <kbd>4</kbd></li>
+               <li><strong>Mega Sweep:</strong> Tap/click mega meter or press <kbd>S</kbd></li>
+            </ul>
+         </div>
+      </div>
+   </div>
 
-                <div class="slides">
-                    <div id="tutorial-challenge-1" class="slide">
-                        <img src="images/tutorial-challenge-1.png" alt="Tap a tile to clear any same-color tiles connected to it" />
-                    </div>
-                    <div id="tutorial-challenge-2" class="slide">
-                        <img src="images/tutorial-challenge-2.png" alt="When your sweep meter is full, press S to sweep all tiles above the line" />
-                    </div>
-                </div>
+   <div id="tutorial-challenge" class="modal tutorial">
 
-                <p>
-                    <a id="tutorial-challenge-next" href="#" class="next">Next</a> <a id="dismiss-challenge-modal" href="javascript:void(0)" class="got-it">skip</a>
-                </p>
-                
-                <h2>Controls</h2>
+      <div class="modal-bg"></div>
+      <div class="modal-content">
+         <div class="modal-body">
 
-                <ul class="controls">
-                    <li><strong>Remove Gems:</strong> Click or tap single tile</li>
-                    <li><strong>Sweep:</strong> Tap/click meter or press <kbd>S</kbd></li>
-                </ul>
+            <h1>Challenge Mode</h1>
+
+            <div class="slides">
+               <div id="tutorial-challenge-1" class="slide">
+                  <img src="images/tutorial-challenge-1.png" alt="Tap a tile to clear any same-color tiles connected to it" />
+               </div>
+               <div id="tutorial-challenge-2" class="slide">
+                  <img src="images/tutorial-challenge-2.png" alt="When your sweep meter is full, press S to sweep all tiles above the line" />
+               </div>
             </div>
-        </div>
-    </div>   
 
-    <div id="game-over" class="modal">
-        <div class="modal-bg"></div>
-        <div class="modal-content">
-            <div class="modal-body">
-                <h1>SWEPT SOME STACKS</h1>
+            <p>
+               <a id="tutorial-challenge-next" href="#" class="next">Next</a> <a id="dismiss-challenge-modal" href="javascript:void(0)" class="got-it">skip</a>
+            </p>
 
-                <div class="scores">
-                    <h2>SWEPT</h2>
+            <h2>Controls</h2>
 
-                    <p id="game-over-swept">0</p>
+            <ul class="controls">
+               <li><strong>Remove Gems:</strong> Click or tap single tile</li>
+               <li><strong>Sweep:</strong> Tap/click meter or press <kbd>S</kbd></li>
+            </ul>
+         </div>
+      </div>
+   </div>
 
-                    <h2>CHAIN BONUS</h2>
+   <div id="game-over" class="modal">
+      <div class="modal-bg"></div>
+      <div class="modal-content">
+         <div class="modal-body">
+            <h1>SWEPT SOME STACKS</h1>
 
-                    <p id="game-over-chain">0</p>
+            <div class="scores">
+               <h2>SWEPT</h2>
 
-                    <h2>MULTIPLIER BONUS</h2>
+               <p id="game-over-swept">0</p>
 
-                    <p id="game-over-multiplier">0</p>
+               <h2>CHAIN BONUS</h2>
 
-                    <h2>ENDURANCE BONUS</h2>
+               <p id="game-over-chain">0</p>
 
-                    <p id="game-over-time">0</p>
-                    
-                    <h2 class="feature-levels hide">LEVEL BONUS</h2>
-                    <p id="game-over-level" class="feature-levels hide">0</p>
+               <h2>MULTIPLIER BONUS</h2>
 
-                    <h2>TOTAL SCORE</h2>
+               <p id="game-over-multiplier">0</p>
 
-                    <p id="game-over-total">0</p>
-                </div>
+               <h2>ENDURANCE BONUS</h2>
 
-                <hr />
-                <h4>BRAG!</h4>
-                <p id="social-container">
-                    <a id="twidget" href="https://twitter.com/share" class="twitter-share-button" data-text="I scored SOCIAL_SCORE in Sweep Stacks in SOCIAL_MODE!" data-via="ExcaliburJS" data-hashtags="LDJam">Tweet</a>
-                    <div id="facebook-sucks">
-                        <div style="top: -5px" id="fidget" class="fb-share-button" data-href="http://excaliburjs.com/sweep/" data-layout="button_count"></div>
-                        <div id="fb-root"></div>
-                        <script>
-                            (function (d, s, id) {
-                                var js, fjs = d.getElementsByTagName(s)[0];
-                                if (d.getElementById(id)) return;
-                                js = d.createElement(s);
-                                js.id = id;
-                                js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
-                                fjs.parentNode.insertBefore(js, fjs);
-                            }(document, 'script', 'facebook-jssdk'));
-                        </script>
-                    </div>
+               <p id="game-over-time">0</p>
 
-                </p>
-                <div id="try-challenge" class="buttons">
-                    <p class="play-again">
-                        <a href="#" class="play-again" id="play-again">Play Again</a>
-                    </p>
-                    <p class="other">
-                        <a href="#" class="try" id="challenge">Try Challenge Mode!</a>
-                    </p>
-                </div>
+               <h2 class="feature-levels hide">LEVEL BONUS</h2>
+               <p id="game-over-level" class="feature-levels hide">0</p>
 
+               <h2>TOTAL SCORE</h2>
+
+               <p id="game-over-total">0</p>
             </div>
-        </div>
-    </div>
 
-    <canvas id="game"></canvas>
-    
-    <script src="scripts/lodash.min.js"></script>
-    <script src="scripts/spectra.min.js"></script>
-    <script src="scripts/cookies.min.js"></script>
-    <script src="scripts/zepto.min.js"></script>
-    <script src="Excalibur.js?COMMIT_NUMBER"></script>
-    <script src="game.js?COMMIT_NUMBER"></script>
-    <script>
-        (function (i, s, o, g, r, a, m) {
-            i['GoogleAnalyticsObject'] = r;
-            i[r] = i[r] || function () {
-                (i[r].q = i[r].q || []).push(arguments)
-            }, i[r].l = 1 * new Date();
-            a = s.createElement(o),
-                m = s.getElementsByTagName(o)[0];
-            a.async = 1;
-            a.src = g;
-            m.parentNode.insertBefore(a, m)
-        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+            <hr />
+            <h4>BRAG!</h4>
+            <p id="social-container">
+               <a id="twidget" href="https://twitter.com/share" class="twitter-share-button" data-text="I scored SOCIAL_SCORE in Sweep Stacks in SOCIAL_MODE!" data-via="ExcaliburJS" data-hashtags="LDJam">Tweet</a>
+               <div id="facebook-sucks">
+                  <div style="top: -5px" id="fidget" class="fb-share-button" data-href="http://excaliburjs.com/sweep/" data-layout="button_count"></div>
+                  <div id="fb-root"></div>
+                  <script>
+                     (function (d, s, id) {
+                        var js, fjs = d.getElementsByTagName(s)[0];
+                        if (d.getElementById(id)) return;
+                        js = d.createElement(s);
+                        js.id = id;
+                        js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.0";
+                        fjs.parentNode.insertBefore(js, fjs);
+                     }(document, 'script', 'facebook-jssdk'));
+                  </script>
+               </div>
 
-        ga('create', 'UA-46390208-1', 'auto');
-        ga('send', 'pageview');
+            </p>
+            <div id="try-challenge" class="buttons">
+               <p class="play-again">
+                  <a href="#" class="play-again" id="play-again">Play Again</a>
+               </p>
+               <p class="other">
+                  <a href="#" class="try" id="challenge">Try Challenge Mode!</a>
+               </p>
+            </div>
 
-    </script>
+         </div>
+      </div>
+   </div>
+
+   <canvas id="game"></canvas>
+   <script>
+      console.log(window.innerHeight);
+   </script>
+
+   <script src="scripts/lodash.min.js"></script>
+   <script src="scripts/spectra.min.js"></script>
+   <script src="scripts/cookies.min.js"></script>
+   <script src="scripts/zepto.min.js"></script>
+   <script src="Excalibur.js?COMMIT_NUMBER"></script>
+   <script src="game.js?COMMIT_NUMBER"></script>
+   <script>
+      (function (i, s, o, g, r, a, m) {
+         i['GoogleAnalyticsObject'] = r;
+         i[r] = i[r] || function () {
+            (i[r].q = i[r].q || []).push(arguments)
+         }, i[r].l = 1 * new Date();
+         a = s.createElement(o),
+             m = s.getElementsByTagName(o)[0];
+         a.async = 1;
+         a.src = g;
+         m.parentNode.insertBefore(a, m)
+      })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+      ga('create', 'UA-46390208-1', 'auto');
+      ga('send', 'pageview');
+
+   </script>
 </body>
 </html>
