@@ -8,8 +8,13 @@
         "type": "git",
         "url": "https://github.com/excaliburjs/sweep.git"
     },
+    "scripts": {
+        "build": "tsc --sourcemap ./Src/game/game.ts --out ./Src/game.js",
+        "serve": "serve src/"
+    },
     "dependencies": { },
     "devDependencies": { 
-        "typescript": "1.3.0"
+        "typescript": "1.3.0",
+        "serve": "14.2.3"
     }
 }

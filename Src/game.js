@@ -1,49 +1,64 @@
-var __extends = this.__extends || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
-var Background = (function (_super) {
-    __extends(Background, _super);
-    function Background(corner, texture) {
-        _super.call(this, corner.x, corner.y, game.getWidth() + texture.width, game.getHeight() + texture.height);
-        this.corner = corner;
-        this.texture = texture;
-        this.addDrawing(texture);
+/// <reference path="../scripts/typings/Spectra.d.ts"/>
+var Util = (function () {
+    function Util() {
     }
-    Background.prototype.update = function (engine, delta) {
-        this.corner = engine.screenToWorldCoordinates(new ex.Point(0, 0));
-        this.x = this.corner.x - 20;
-        _super.prototype.update.call(this, engine, delta);
-        if (this.x < this.corner.x - this.texture.width || this.x > game.getWidth()) {
-            this.x = this.corner.x;
-            this.y = this.corner.y;
-        }
-        ;
-        if (this.y < this.corner.y - this.texture.height || this.y > game.getHeight()) {
-            this.x = this.corner.x;
-            this.y = this.corner.y;
-        }
+    Util.darken = function (color, amount) {
+        var r = Math.floor(color.r - (color.r * amount));
+        var g = Math.floor(color.g - (color.g * amount));
+        var b = Math.floor(color.b - (color.b * amount));
+        return new ex.Color(r, g, b, color.a);
     };
-    Background.prototype.draw = function (ctx, delta) {
-        for (var i = 0; i < Math.ceil(game.getWidth() / this.texture.width) + 5; i++) {
-            if (this.dx <= 0) {
-                this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y);
-            }
-            else {
-                this.currentDrawing.draw(ctx, this.x - i * this.texture.width, this.y);
-            }
-            if (this.dy <= 0) {
-                this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y + this.texture.height);
-            }
-            else {
-                this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y - this.texture.height);
-            }
-        }
+    Util.lighten = function (color, amount) {
+        if (color.a <= 0)
+            return color;
+        var c = Spectra({ r: color.r, g: color.g, b: color.b, a: color.a });
+        var newColor = c.lighten(amount * 100);
+        return new ex.Color(newColor.red(), newColor.green(), newColor.blue(), newColor.alpha());
     };
-    return Background;
-})(ex.Actor);
+    Util.saturate = function (color, amount) {
+        if (color.a <= 0)
+            return color;
+        var c = Spectra({ r: color.r, g: color.g, b: color.b, a: color.a });
+        var newColor = c.saturate(amount * 100);
+        return new ex.Color(newColor.red(), newColor.green(), newColor.blue(), newColor.alpha());
+    };
+    Util.getColorOfPixel = function (imageData, x, y) {
+        var firstPixel = (x + y * imageData.width) * 4;
+        var pixels = imageData.data;
+        return new ex.Color(pixels[firstPixel + 0], pixels[firstPixel + 1], pixels[firstPixel + 2], pixels[firstPixel + 3]);
+    };
+    Util.setPixelToColor = function (imageData, x, y, color) {
+        var firstPixel = (x + y * imageData.width) * 4;
+        var pixel = imageData.data;
+        pixel[firstPixel + 0] = color.r;
+        pixel[firstPixel + 1] = color.g;
+        pixel[firstPixel + 2] = color.b;
+        pixel[firstPixel + 3] = ex.Util.clamp(Math.floor(color.a * 255), 0, 255);
+    };
+    return Util;
+})();
+var LightenEffect = (function () {
+    function LightenEffect(amount) {
+        this.amount = amount;
+    }
+    LightenEffect.prototype.updatePixel = function (x, y, imageData) {
+        var pixelColor = Util.getColorOfPixel(imageData, x, y);
+        var lightenedColor = Util.lighten(pixelColor, this.amount);
+        Util.setPixelToColor(imageData, x, y, lightenedColor);
+    };
+    return LightenEffect;
+})();
+var SaturateEffect = (function () {
+    function SaturateEffect(amount) {
+        this.amount = amount;
+    }
+    SaturateEffect.prototype.updatePixel = function (x, y, imageData) {
+        var pixelColor = Util.getColorOfPixel(imageData, x, y);
+        var lightenedColor = Util.saturate(pixelColor, this.amount);
+        Util.setPixelToColor(imageData, x, y, lightenedColor);
+    };
+    return SaturateEffect;
+})();
 var GameMode;
 (function (GameMode) {
     GameMode[GameMode["Standard"] = 0] = "Standard";
@@ -155,102 +170,6 @@ var Config = (function () {
     Config.MegaSweepDelay = 600;
     return Config;
 })();
-var Effects = (function () {
-    function Effects() {
-    }
-    Effects.prototype.clearEffect = function (piece) {
-        //TODO move emitter to Cell
-        var emitter = new ex.ParticleEmitter(piece.x, piece.y, 1, 1);
-        emitter.minVel = 30;
-        emitter.maxVel = 125;
-        emitter.minAngle = Math.PI / 4;
-        emitter.maxAngle = (Math.PI * 3) / 4;
-        emitter.isEmitting = false;
-        emitter.emitRate = 5;
-        emitter.opacity = 0.84;
-        emitter.fadeFlag = true;
-        emitter.particleLife = 1000;
-        emitter.maxSize = 0.4;
-        emitter.minSize = 0.2;
-        emitter.acceleration = new ex.Vector(0, -500);
-        emitter.beginColor = ex.Color.Red;
-        emitter.endColor = ex.Color.Yellow;
-        emitter.startSize = gameScale.x * 0.5;
-        emitter.endSize = 0.01;
-        emitter.particleSprite = piece.currentDrawing.clone();
-        emitter.particleSprite.transformAboutPoint(new ex.Point(.5, .5));
-        emitter.particleRotationalVelocity = Math.PI / 10;
-        emitter.randomRotation = true;
-        emitter.fadeFlag = true;
-        emitter.focus = new ex.Vector(0, emitter.y - 1000); // relative to the emitter
-        emitter.focusAccel = 900;
-        game.addChild(emitter);
-        emitter.emit(5);
-        emitter.moveTo(emitter.x + 3, emitter.y + 1, 1).die();
-    };
-    return Effects;
-})();
-/// <reference path="../scripts/typings/Spectra.d.ts"/>
-var Util = (function () {
-    function Util() {
-    }
-    Util.darken = function (color, amount) {
-        var r = Math.floor(color.r - (color.r * amount));
-        var g = Math.floor(color.g - (color.g * amount));
-        var b = Math.floor(color.b - (color.b * amount));
-        return new ex.Color(r, g, b, color.a);
-    };
-    Util.lighten = function (color, amount) {
-        if (color.a <= 0)
-            return color;
-        var c = Spectra({ r: color.r, g: color.g, b: color.b, a: color.a });
-        var newColor = c.lighten(amount * 100);
-        return new ex.Color(newColor.red(), newColor.green(), newColor.blue(), newColor.alpha());
-    };
-    Util.saturate = function (color, amount) {
-        if (color.a <= 0)
-            return color;
-        var c = Spectra({ r: color.r, g: color.g, b: color.b, a: color.a });
-        var newColor = c.saturate(amount * 100);
-        return new ex.Color(newColor.red(), newColor.green(), newColor.blue(), newColor.alpha());
-    };
-    Util.getColorOfPixel = function (imageData, x, y) {
-        var firstPixel = (x + y * imageData.width) * 4;
-        var pixels = imageData.data;
-        return new ex.Color(pixels[firstPixel + 0], pixels[firstPixel + 1], pixels[firstPixel + 2], pixels[firstPixel + 3]);
-    };
-    Util.setPixelToColor = function (imageData, x, y, color) {
-        var firstPixel = (x + y * imageData.width) * 4;
-        var pixel = imageData.data;
-        pixel[firstPixel + 0] = color.r;
-        pixel[firstPixel + 1] = color.g;
-        pixel[firstPixel + 2] = color.b;
-        pixel[firstPixel + 3] = ex.Util.clamp(Math.floor(color.a * 255), 0, 255);
-    };
-    return Util;
-})();
-var LightenEffect = (function () {
-    function LightenEffect(amount) {
-        this.amount = amount;
-    }
-    LightenEffect.prototype.updatePixel = function (x, y, imageData) {
-        var pixelColor = Util.getColorOfPixel(imageData, x, y);
-        var lightenedColor = Util.lighten(pixelColor, this.amount);
-        Util.setPixelToColor(imageData, x, y, lightenedColor);
-    };
-    return LightenEffect;
-})();
-var SaturateEffect = (function () {
-    function SaturateEffect(amount) {
-        this.amount = amount;
-    }
-    SaturateEffect.prototype.updatePixel = function (x, y, imageData) {
-        var pixelColor = Util.getColorOfPixel(imageData, x, y);
-        var lightenedColor = Util.saturate(pixelColor, this.amount);
-        Util.setPixelToColor(imageData, x, y, lightenedColor);
-    };
-    return SaturateEffect;
-})();
 /// <reference path="util.ts"/>
 var Resources = {
     LoopSound: new ex.Sound('sounds/loop.mp3'),
@@ -293,13 +212,19 @@ var Palette = {
     GameBackgroundColor: ex.Color.fromHex("#efefef"),
     GridBackgroundColor: new ex.Color(0, 20, 25, 0.9),
     // Beach
-    PieceColor1: ex.Color.fromHex("#00718D"),
-    PieceColor2: ex.Color.fromHex("#7A5CA7"),
-    PieceColor3: ex.Color.fromHex("#4c603a"),
-    PieceColor4: ex.Color.fromHex("#c17b55"),
+    PieceColor1: ex.Color.fromHex("#006FAA"),
+    PieceColor2: ex.Color.fromHex("#CC79A7"),
+    PieceColor3: ex.Color.fromHex("#009E73"),
+    PieceColor4: ex.Color.fromHex("#F0E442"),
     MegaSweepColor: ex.Color.fromHex("#55c192"),
     PolylineColor: ex.Color.fromHex("#F48347"),
     PolylineBorderColor: new ex.Color(255, 255, 255, 0.7)
+};
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
 };
 var PieceType;
 (function (PieceType) {
@@ -1846,6 +1771,81 @@ var Sweeper = (function (_super) {
     };
     return Sweeper;
 })(ex.Actor);
+var Background = (function (_super) {
+    __extends(Background, _super);
+    function Background(corner, texture) {
+        _super.call(this, corner.x, corner.y, game.getWidth() + texture.width, game.getHeight() + texture.height);
+        this.corner = corner;
+        this.texture = texture;
+        this.addDrawing(texture);
+    }
+    Background.prototype.update = function (engine, delta) {
+        this.corner = engine.screenToWorldCoordinates(new ex.Point(0, 0));
+        this.x = this.corner.x - 20;
+        _super.prototype.update.call(this, engine, delta);
+        if (this.x < this.corner.x - this.texture.width || this.x > game.getWidth()) {
+            this.x = this.corner.x;
+            this.y = this.corner.y;
+        }
+        ;
+        if (this.y < this.corner.y - this.texture.height || this.y > game.getHeight()) {
+            this.x = this.corner.x;
+            this.y = this.corner.y;
+        }
+    };
+    Background.prototype.draw = function (ctx, delta) {
+        for (var i = 0; i < Math.ceil(game.getWidth() / this.texture.width) + 5; i++) {
+            if (this.dx <= 0) {
+                this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y);
+            }
+            else {
+                this.currentDrawing.draw(ctx, this.x - i * this.texture.width, this.y);
+            }
+            if (this.dy <= 0) {
+                this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y + this.texture.height);
+            }
+            else {
+                this.currentDrawing.draw(ctx, this.x + i * this.texture.width, this.y - this.texture.height);
+            }
+        }
+    };
+    return Background;
+})(ex.Actor);
+var Effects = (function () {
+    function Effects() {
+    }
+    Effects.prototype.clearEffect = function (piece) {
+        //TODO move emitter to Cell
+        var emitter = new ex.ParticleEmitter(piece.x, piece.y, 1, 1);
+        emitter.minVel = 30;
+        emitter.maxVel = 125;
+        emitter.minAngle = Math.PI / 4;
+        emitter.maxAngle = (Math.PI * 3) / 4;
+        emitter.isEmitting = false;
+        emitter.emitRate = 5;
+        emitter.opacity = 0.84;
+        emitter.fadeFlag = true;
+        emitter.particleLife = 1000;
+        emitter.maxSize = 0.4;
+        emitter.minSize = 0.2;
+        emitter.acceleration = new ex.Vector(0, -500);
+        emitter.beginColor = ex.Color.Red;
+        emitter.endColor = ex.Color.Yellow;
+        emitter.startSize = gameScale.x * 0.5;
+        emitter.endSize = 0.01;
+        emitter.particleSprite = piece.currentDrawing.clone();
+        emitter.particleSprite.transformAboutPoint(new ex.Point(.5, .5));
+        emitter.particleRotationalVelocity = Math.PI / 10;
+        emitter.randomRotation = true;
+        emitter.fadeFlag = true;
+        emitter.focus = new ex.Vector(0, emitter.y - 1000); // relative to the emitter
+        emitter.focusAccel = 900;
+        game.addChild(emitter);
+        emitter.emit(5);
+        emitter.moveTo(emitter.x + 3, emitter.y + 1, 1).die();
+    };
+    return Effects;
+})();
 var NoMoves = (function (_super) {
     __extends(NoMoves, _super);
     function NoMoves() {
@@ -2222,3 +2222,4 @@ game.start(loader).then(function () {
     gameScale.setTo(1 + scaleDiff, 1 + scaleDiff);
     InitSetup();
 });
+//# sourceMappingURL=game.js.map
